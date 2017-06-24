@@ -34,7 +34,48 @@ G_i({\bf l}, {\bf v}, {\bf h}) = \frac{\chi^+({\bf l} \cdot {\bf h}) \chi^+({\bf
 
 ## 問題と制限(Issues and Limitations)
 
-TODO
+### Coarse Microgeometry
+
+こんにちのNDFはとてもきめ細かい(fine-grained)microgeometryをうまく表現できる。しかし、多くの表面はきめの荒い(coarse-grained)微小構造(microstructure)を持つため、複雑な"輝き(glint)"を見せるが、現在のモデルではこれを表現しきれない。
+
+### Shape Control
+
+GGXは比較的長いテールを持つが、多くの材質ではさらに長いテールが必要になる。そこでテールの長さを調節できるならばとても便利だし、実際にGTRがテールの長さを調節できる方法を提示したが、ここ数年を見てもあまり使われていない。
+これは、形状の不変性(shape invariance)に起因していると思われる。
+
+### Shape Invariance
+
+2014年のEric Heitzの論文[^Heitz14]によれば、以下の形式に沿う場合、それはshape-invariantである、としている。これに従えば、GGXやBeckmannはshape-invariantであり、GTRはそうではない。
+
+\[D(\theta_m, \alpha) = \frac{f(\frac{\tan\theta_m}{\alpha})}{\alpha^2\cos^4\theta_m}\]
+
+二次元の傾斜(slope)分布で表すと以下のようになる。
+
+\[
+\begin{split}
+P^{22}(x_{\tilde{m}}, y_{\tilde{m}}) &= D(\theta_m, \alpha) \cos^4\theta_m \\
+&= \frac{1}{\alpha^2} f\left(\frac{\tan \theta_m}{\alpha}\right)
+\end{split}
+\]
+
+つまり、slope空間ではラフネス$\alpha$のスケーリングに対して分布が線形に伸長することを示す。分布の伸長はmicrogeometryの伸長であるから、shape-invariantなNDFでは、ラフネスのスケーリングはその逆数倍でmicrogeometryが伸長することと等価であると言える。
+
+NDFがshape-invariantであることには、多くの利点がある。
+
+- anisotropicな形式への拡張が比較的容易になる。
+- Smithのshadowing-masking関数の導出が比較的容易になる。
+- 重点サンプリングの導出が比較的容易になる。
+
+以上を踏まえて、GTRのようなshapeを変化させるパラメータを持ち、なおかつ、ラフネスに関してshape-invariantなNDFが望まれる。現状、このようなNDFはproduction use(仕事で使うような品質のもの)では存在しない。
+
+## 用語
+
+テール(tail)
+: 縦軸の値が0に近づいてゆく関数をグラフで見たときの形状を動物の尻尾に見立てた呼び方。
+  横軸の値が大きくなっても、縦軸の値がなかなか0にならないことを、"長い(long)"と形容する。
+
+NDF(Normal Distribution Function)
+: マイクロファセットモデルのD項に用いられる、微視的な法線分布を表す関数。
 
 ## 英語表現
 
