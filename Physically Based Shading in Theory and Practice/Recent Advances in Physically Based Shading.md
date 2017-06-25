@@ -68,6 +68,24 @@ NDFがshape-invariantであることには、多くの利点がある。
 
 以上を踏まえて、GTRのようなshapeを変化させるパラメータを持ち、なおかつ、ラフネスに関してshape-invariantなNDFが望まれる。現状、このようなNDFはproduction use(仕事で使うような品質のもの)では存在しない。
 
+### Microfacet Theory
+
+microfacet理論は、表面の物理特性からそのままBRDFの数式を導くelegantな(スッキリと簡潔にまとめられた)ツールであるが、それ自体が思い切った仮定のもとに成り立っているため、シェーディングモデルの現実感や正確性に制約をかけてしまっている。
+
+例えば、microfacet理論ではG項は、入射光を遮蔽するshadowingと反射光を遮蔽するmaskingを考慮するが、microfacet内で複数回反射する光を考慮しておらず、その分のエネルギー損失により若干暗くなってしまう。これを補正するため、Disneyのモデルにおける"sheen"項のような物理的でないパラメータをを導入することもある。
+
+また、microfacet理論の根本的な制約として、光を光線として扱う幾何光学(geometric optics)をもとにしていることが挙げられる。つまり、波としての性質を取り扱う物理工学(physical optics)的要素は取り入れられていない。
+
+## データ駆動microfacetモデル(Data-Driven Microfacet Models)
+
+Extracting Microfacet-based BRDF Parameters from Arbitrary Materials with Power Iterations, Dupuy et al., EGSR 2015
+
+この論文では、microfacetモデルをベースに、F項とD項を計測したBRDFデータ表を用いる手法を提案している。G項はこのD項をもとにSmithの関数により求めるとしている。NDFは、構築段階でshape-invariantになり、slope空間で展開される。
+著者らは、解析的(analytic)なNDFを計測したものにフィッティングすることを試みた結果、GGXが多くのケースでよい(reasonable)合致(fit)を見せることを発見した。
+
+microfacet理論の予測値が計測値と合致するかを見てみると、誘電体(dielectrics)は展開されたdiffuse lobeとうまくマッチしないが、金属では一見の価値がある。その他、NDFについては矛盾らしい矛盾は見当たらないが、Fresnel項の計測値では予測値と異なり、glancing angles下で減少する様が見て取れる。
+2012年のBrent Burleyが示した同様の調査では、ほとんどの材質で増加が見られる。しかし、中には70°前後にピークが来るものがいくつかあり、これらは著者らが示したものと同じ材質である可能性がある。
+
 ## 用語
 
 テール(tail)
@@ -77,10 +95,20 @@ NDFがshape-invariantであることには、多くの利点がある。
 NDF(Normal Distribution Function)
 : マイクロファセットモデルのD項に用いられる、微視的な法線分布を表す関数。
 
+誘電体(dielectrics)
+: プラスチック、セラミックなど。
+  3DCGでは、そもそもの意味よりかは単に、金属でないものという意味合いが強い。[?]
+
 ## 英語表現
 
 - state of the art
   - [形] 最新式の、最高水準の
+
+- tabulate /tˈæbjʊlèɪt(米国英語)/
+  - [動] 表に作る、作表する
+
+- worth doing
+  - する価値があって
 
 ## 参考文献
 
