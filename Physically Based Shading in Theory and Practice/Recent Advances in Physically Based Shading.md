@@ -78,13 +78,48 @@ microfacet理論は、表面の物理特性からそのままBRDFの数式を導
 
 ## データ駆動microfacetモデル(Data-Driven Microfacet Models)
 
-Extracting Microfacet-based BRDF Parameters from Arbitrary Materials with Power Iterations, Dupuy et al., EGSR 2015
+### "Extracting Microfacet-based BRDF Parameters from Arbitrary Materials with Power Iterations", Dupuy et al., EGSR 2015
 
 この論文では、microfacetモデルをベースに、F項とD項を計測したBRDFデータ表を用いる手法を提案している。G項はこのD項をもとにSmithの関数により求めるとしている。NDFは、構築段階でshape-invariantになり、slope空間で展開される。
 著者らは、解析的(analytic)なNDFを計測したものにフィッティングすることを試みた結果、GGXが多くのケースでよい(reasonable)合致(fit)を見せることを発見した。
 
 microfacet理論の予測値が計測値と合致するかを見てみると、誘電体(dielectrics)は展開されたdiffuse lobeとうまくマッチしないが、金属では一見の価値がある。その他、NDFについては矛盾らしい矛盾は見当たらないが、Fresnel項の計測値では予測値と異なり、glancing angles下で減少する様が見て取れる。
 2012年のBrent Burleyが示した同様の調査では、ほとんどの材質で増加が見られる。しかし、中には70°前後にピークが来るものがいくつかあり、これらは著者らが示したものと同じ材質である可能性がある。
+
+
+### "A Non-Parametric Factor Microfacet Model for Isotropic BRDFs", Bagher et al., SIGGRAPH 2016
+
+この論文では、isotropicなBRDFに絞ることで、さらなるフィッティングを行っており、さらには、ランバート項を導入する手法も提案している。
+
+\[
+\rho_d + \rho_s \frac{F({\bf l}, {\bf h}) G({\bf l}, {\bf h}) G({\bf v}, {\bf h}) D({\bf h})}{({\bf n} \cdot {\bf l})({\bf n} \cdot {\bf v})}
+\]
+
+Dupuyらの手法と以上に、microfacet理論に縛られていない。著者らは、色チャネル別に分けたDとGに対してフィッティングを行うとともに、どの理論のモデルにも見られないspecular係数を導入している。G項に関しては、Dupuyらと同様に一般化したSmithの方法を用いてD項から導出する方法と、独自の曲線をフィッティングする方法、の2つを選択肢として提示している。
+
+著者らは、独自のG項が、特にdiffuseな材質で、SmithのG項と比べてよくできていると主張している。これが正しいとすると、正確性の面でひとつ有意差が生まれることになる。
+
+microfacet理論との潜在的な矛盾点として、GやDが色ごとに大幅に異なっているかどうかという点がある。これについては、異なることが分かっている一部の構造化材質(structured materials)以外では非常に似通っているように見える。
+
+## 解析的マイクロファセットモデル(Analytic Microfacet Models)
+
+### "genBRDF: Discovering New Analytic BRDFs with Genetic Programming", Brady et al., SIGGRAPH 2014
+
+この論文では、遺伝的プログラミングを用いて計測した材質にフィットする解析的モデルを探し出すという手法を提案している。
+いくつかの有望な結果が得られた中、少なくとも1つは多少の調整を経て議題に上がるようなモデルが出来上がった。
+
+### NDF: Generalized Beckmann
+
+\[
+D_{\text{GB}}(\theta) = \frac{\gamma}{\pi\alpha^2\Gamma(1/\gamma)\cos^4\theta}e^{-\left( \frac{\tan^2\theta}{\alpha^2} \right)^\gamma}
+\]
+
+Generalized Beckmannは、genBRDFで生まれた結果の1つをベースにして、shape-invarianceを付け加えたものである。
+$\gamma$は分布の尖度(kurtosis)を操作し、$\gamma = 1$のときは通常のBeckmannと同等になる。
+
+### NDF: Hyper-Cauchy
+
+TODO
 
 ## 用語
 
