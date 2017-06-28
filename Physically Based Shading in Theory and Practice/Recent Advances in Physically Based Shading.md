@@ -119,6 +119,29 @@ $\gamma$は分布の尖度(kurtosis)を操作し、$\gamma = 1$のときは通�
 
 ### NDF: Hyper-Cauchy
 
+Hyper-Cauchy分布は2006年にWellemsらにより発表されたもので、Generalized Beckmannのように、shape controlパラメータとroughnessパラメータを持ち、shape-invariantである。
+
+Butler[^Butler14]によれば、Hyper-CauchyはMERLにおけるニッケルのBRDFに対してBeckmannよりもさらに良くフィットする。さらなる興味深い点として、Hyper-Cauchyにおいて$\gamma = 2$としたときの数式がGGXと非常に似通っており、GTRの代替としてうまく機能するかもしれない、たぶん。
+
+## MicroflakeとMultiple Surface Scattering
+
+### Microflakes
+
+マイクロフレークは、衣類や繊維質の織物のような異方的構造を持つボリュームをモデル化するために2010年に初めて導入された。これは、粒子による散乱についての考え方を拡張したものである。
+
+2015年にはHeitzら[^Heitz15]により、マイクロファセットにおけるGGXを全球に拡張したをマイクロフレークにおけるSGGX分布がもたらされた。これには、線形に補間できる、解析的に評価できる、可視法線の重点サンプリングが可能になる、という既存のマイクロフレーク分布を超える多くの優位性を持っている。
+
+### Multiple Surface Scattering
+
+マイクロファセット理論は、複数回に及ぶ表面上での散乱を考慮していない。
+その失ったエネルギーを是正しようとする試みは、KelemenとSzirmay-KalosによるEurographics 2001の論文やJakobらによるSIGGRAPH 2014の論文など、これまでにいくつか存在している。
+
+### "Multiple-Scattering Microfacet BSDFs with the Smith Model" Heitz et al., SIGGRAPH 2016
+
+この論文では、ある特性を持ったマイクロフレークのボリュームとして表面をモデル化する。関与媒質をレンダリングする典型的な方法ならば、マイクロファセット上の複数回バウンスを効果的にレンダリングすることができる。とはいえ、このモデルは確率的であり、リアルタイムレンダリングには適さない。
+
+### "Additional Progress Towards the Unification of Microfacet and Microflake Theories", Dupuy et al., EGSR 2016
+
 TODO
 
 ## 用語
@@ -151,8 +174,11 @@ NDF(Normal Distribution Function)
 - http://graphicrants.blogspot.jp/2013/08/specular-brdf-reference.html
 - http://graphics.hatenablog.com/entry/2014/02/12/060548
 - http://qiita.com/\_Pheema_/items/f1ffb2e38cc766e6e668
+- https://www.slideshare.net/imagire/the-sggx-microflake-distribution
 
 [^GGX]: https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
 [^GTR]: https://disney-animation.s3.amazonaws.com/library/s2012_pbs_disney_brdf_notes_v2.pdf
 [^Heitz14]: http://jcgt.org/published/0003/02/03/paper.pdf
 [^Gulbrandsen14]: http://jcgt.org/published/0003/04/03/
+[^Butler14]: "Robust Categorization of Microfacet BRDF Models to Enable Flexible Application-specific BRDF Adaptation", Butler & Marciniak, Proc. SPIE 9205, Reflection, Scattering, and Diffraction from Surfaces IV, 2014
+[Heitz15]: https://drive.google.com/file/d/0BzvWIdpUpRx_dXJIMk9rdEdrd00/view
