@@ -142,6 +142,28 @@ Butler[^Butler14]によれば、Hyper-CauchyはMERLにおけるニッケルのBR
 
 ### "Additional Progress Towards the Unification of Microfacet and Microflake Theories", Dupuy et al., EGSR 2016
 
+この論文では、先の可変密度ボリュームの代わりに、半無限の均質(homogeneous)ボリュームを用いたマイクロフレークに基づく多重表面上散乱の導出を行う。
+
+## Coarse Microgeometry
+
+### "Discrete Stochastic Microfacet Models", Jakob et al., SIGGRAPH 2014
+
+この論文では、通常の連続的な分布の代わりとして、散乱粒子の離散的な分布によるマイクロファセットモデルを用いる。粒子は、表面上のピクセル面積とマイクロファセットの方向の集合を考慮した四次元領域上に、時間的に一貫性のある方法により確率的に生成される。
+
+## Multiscale BRDF
+
+*multiscale BRDF* は、従来の無限小(infinitesimal)の点と光線の代わりに、patches of surfaceとcones of areaにより定義される重要な概念である。この概念は、実際にBRDFが実装される方法に近く、スケーリングに関するBRDFモデルの密接な関係を備えており、原義よりfundamentalであると考えられるのではないかと思われる。
+
+### "Real-time Rendering of Procedural Multiscale Materials", Zirr & Kaplanyan, I3D 2016
+
+この論文では、multiscale NDFを評価するためにリアルタイム処理に適したデータ構造を選定することで高速化を図った。
+
+### "Multi-Scale Rendering of Scratched Materials using a Structured SV-BRDF Model", Raynond et al., SIGGRAPH 2016
+
+この論文は、引っかき傷(scratches)に特化して、傷内部で複数回バウンスするものも含めた、さまざまなBRDFを事前計算する手法を提案している。データは2Dパラメータ化した上で保存され、local scratch densityと組み合わせて、空間的に変化する(spatially varying)BRDFを組み立てる。
+
+## Physical Optics (Wave) Models
+
 TODO
 
 ## 用語
