@@ -118,6 +118,52 @@ F_{\text{Schlick}}(F_0, {\bf l}, {\bf n}) = F_0 + (1 - F_0)(1 - ({\bf l} \cdot {
 
 マイクロファセットBRDFの場合、$n = h$に置き換える。
 
+#### Normal Distribution Function (NDF)
+
+$D$はマイクロファセットの法線の分布関数であり、$\bf h$の方向に向いているマイクロファセットがどれだけあるかを表す。NDFはハイライトの大きさと形を決定する。
+PhongのようなNDFは、ぼんやりとしたハイライトを持つガウス関数的である。
+GGXのようなNDFは、明るい部分に囲まれて現れるくっきりとしたハイライトに見られる、ロングテールと尖った形を持つ。
+
+大抵の面は滑らかな関数ではうまく表現できない。
+プロダクションで用いられるBRDFや法線フィルタリングは等方的でも異方的でも滑らかなlobeを使うが、多くの面は比較的荒い(coarse) microgeometryを持つため"glinty"な見た目が生じる。これを表現するための手法のうち、映像業界で使われそうなものは登場したが、ゲーム用途としてはまだコストが高すぎるため、アドホックな方法を使い続けている。
+
+SIGGRAPH 2015でNaganoらにより、人肌などの変形する表面をキャプチャすることでその変形効果をNDFに取り入れる手法が提案されている。
+
+#### Geometry Function
+
+$G$はジオメトリ構造、またはshadowingとmaskingの効果を表す関数であり、$\bf h$を向いているマイクロファセットのうち、視線$\bf v$と光の向き$\bf l$において他のマイクロファセットの影に入らず反射光が遮蔽されないものはどれだけあるかを示す。
+
+Eric Heitzによれば、Smithの関数は数学的な妥当性と物理的な現実感を兼ね備えているのでおすすめ。
+
+### Subsurface Reflection
+
+さて、ここまでは表面上での反射(specular)を考えてきたが、ここからは表面下での反射(diffuse)を考える。
+
+なんだかんだ言っても、プロダクションではLambertモデルがもっとも標準的に使われている。
+
+\[
+f_{\text{Lambert}}({\bf l}, {\bf v}) = \frac{{\bf c}_\text{diff}}{\pi}
+\]
+
+しかし重要な物理現象のうち、Lambertが考慮していない部分もある。
+
+#### Diffuse-Specular Tradeoff
+
+diffuseは屈折光から成り、supecularは反射光から成る。言うなれば、specularが使った入射エネルギーの余った分でdiffuse効果が行われるとも言える。
+Lambertはspecularがどうなっているかは考慮していないため、specularと合わせるとエネルギー過多になりうる。
+
+#### Surface Roughness
+
+Lambertは面の粗さを考慮していない。
+大抵の場合、微視的な粗さはspecularにのみ影響を与える。ある点でのdiffuseの反射率はある領域上に入射する光に由来する。これは、microgeometryの些細な違いは平均化されてしまうことを意味する。しかし、散乱範囲より大きいmicrogeometryの場合、diffuse反射率に影響を及ぼす。これを表現するにはOren-Nayarのようなモデルが必要になる。
+
+Oren-NayarやDisneyのdiffuseモデルなどの荒いdiffuseモデルにspecularのラフネスをそのまま使うことが当たり前になっているが、これはあまりよろしくない(と発表者は考えている)。
+LightStageがnormal mapをdiffuseとspecularに分けていることからも分かるように、diffuse応答は実際的に小さな凹凸(small bumps)を滑らかにしてしまうことが知られている。ラフネスではこれがより強く現れる。理想ではそれぞれのモデルに個別のラフネス値を設定すべきだが、せめて、microgeometryが散乱距離より大きいことが分かっている材質のみで用いるべきだろう。
+
+## Diffraction from Opticaly-Smooth Surface
+
+いくつかの例外を除いて、今まで3DCGコミュニティーでは、nanogeometryの回折効果は無視されていたか、些細なことと切り捨てられていた。昨今のMaterial Appearance Modelingシンポジウムにおいて、HolzschuchとPacanowskiは、BRDFの振る舞いの一部(特にハイライトのロングテール)がこの現象に由来するという説得力のある証拠(convincing evidence)を示した。
+
 ## 英語表現
 
 - irregularity /ìrègjʊlˈærəṭi(米国英語)/
