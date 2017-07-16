@@ -21,7 +21,7 @@ Deferred Renderingは不透明オブジェクトしか扱えないという欠�
 Forward+ (Tiled Forward Shading)は、考慮しなければならない光源数を削減するTiled Light CullingとForward Renderingを組み合わせた手法である。はじめに、スクリーン空間を等間隔のタイルに分割して、そのタイルごとに計算を行うであろう光源のリストを作成する。そして、シェーディングを行うピクセルを含むタイルの光源リストを参照してForward Renderingを行う。
 これにより、計算する必要のない光源を大幅に取り除くことができ、パフォーマンスが飛躍的に向上する。また、本質的にはForward Renderingなので、不透明と透明の両方を同じ処理系で扱うことができるし、複数のマテリアルやライティングモデルを取り扱うこともできる。
 
-## 用語の定義
+## Definitions
 
 以下の定義は基本的に一般的な解釈に基づくが、この記事中でのみ有効なニュアンスを含むことがあることに注意する。
 
@@ -52,3 +52,29 @@ Forward+ または Tiled Forward Rendering
 
 減衰(attenuation)
 : ポイントライトやスポットライトで光源との距離に応じてその光量が減少すること。
+
+## Forward Rendering
+
+Forward Renderingは今回取り上げる3つの中では一番シンプルであり、ゲームなどのリアルタイム系でよく使われているテクニックである。このテクニックではライティング計算は比較的高価であるため、大量の動的な光源を扱えなくしてある場合が多い。一方で、光源が静的ならば、lightmappingやlight probesによりその寄与を事前計算することができるため、大量に取り扱うことができる。
+
+本実験では、Forward Renderingは他のテクニックの比較を行うためのground truth[^ground_truth]として用いる。また、他のテクニックのパフォーマンスを比較するための基準値としても用いる。
+
+[^ground_truth]: 実際のシステムを直接観察することで得た情報。計算機科学界隈では、アルゴリズムの特性を調べるために用意された正解データを指す。
+
+Forward Renderingで用いられた多くの機能(functions)はDeferred RenderingやForward+でも引き続き利用されている。たとえば、頂点シェーダはほぼそのまま用いられるし、ライティングやシェーディングの計算方法はあらゆるレンダリングテクニックで再利用されている。
+
+### Vertex Shader
+
+頂点シェーダは色んなレンダリングテクニックで共通している。本実験では、静的なジオメトリのみを扱い、異なる頂点シェーダが必要になる骨格(skeletal)アニメーションや地形(terrain)は扱わない。
+
+```hlsl
+struct AppData {
+    float3 position : POSITION;
+    float3 tangent : TANGENT;
+    float3 binormal : BONORMAL;
+    float3 normal : NORMAL;
+    float2 texcood : TEXCOORD0;
+};
+```
+
+`AppData`はアプリケーションから頂点シェーダへ送られるデータの構造を定義する。それぞれ頂点に対して、`position`は位置、`normal`は法線、`tangent`は接線、`binormal`従法線、`texcood`はテクスチャ座標が格納される。従法線は法線と接線の外積として求められるため、通常は必要はない。
