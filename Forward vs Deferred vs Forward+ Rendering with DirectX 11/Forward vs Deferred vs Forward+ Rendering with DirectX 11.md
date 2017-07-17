@@ -67,14 +67,62 @@ Forward Renderingで用いられた多くの機能(functions)はDeferred Renderi
 
 頂点シェーダは色んなレンダリングテクニックで共通している。本実験では、静的なジオメトリのみを扱い、異なる頂点シェーダが必要になる骨格(skeletal)アニメーションや地形(terrain)は扱わない。
 
+#### 入力データ
+
 ```hlsl
-struct AppData {
+struct VSInput {
     float3 position : POSITION;
     float3 tangent : TANGENT;
     float3 binormal : BONORMAL;
     float3 normal : NORMAL;
-    float2 texcood : TEXCOORD0;
+    float2 texcood : TEXCOORD;
 };
 ```
 
-`AppData`はアプリケーションから頂点シェーダへ送られるデータの構造を定義する。それぞれ頂点に対して、`position`は位置、`normal`は法線、`tangent`は接線、`binormal`従法線、`texcood`はテクスチャ座標が格納される。従法線は法線と接線の外積として求められるため、通常は必要はない。
+`VSInput`はアプリケーションから頂点シェーダへ送られるデータの構造を定義する。それぞれ頂点に対して、`position`は位置、`normal`は法線、`tangent`は接線、`binormal`従法線、`texcood`はテクスチャ座標が格納される。従法線は法線と接線の外積として求められるため、通常は必要はない。
+
+#### 変換行列
+
+```hlsl
+cbuffer PerObject : register(b0) {
+    float4x4 MVP;
+    float4x4 MV;
+}
+```
+
+ベクトルはその基準点を決める座標系に属している。例えば、アプリケーションから送られる頂点の位置ベクトルは、オブジェクト独自の基準点を採用したobject空間に属する。一方で、ラスタライザはclip空間における頂点の位置ベクトルを要求するため、頂点シェーダは頂点の位置ベクトルをobject空間からclip空間へ変換しなければならない。この変換は事前計された行列として与えられ、定数バッファなどに格納される。
+
+#### 出力データ
+
+```hlsl
+struct VSOutput {
+    float4 position : SV_Position;
+    float3 texcood : TEXCOORD;
+    float3 position_v : POSITION_V;
+    float3 tangent_v : TANGENT;
+    float3 binormal_v : BINORMAL;
+    float3 normal_v : NORMAL;
+};
+```
+
+`VertexShaderOutput`は頂点シェーダの出力及び後段のシェーダの入力に対応したデータ構造である。接尾の`v`はそのベクトルがview空間に属することを示している。
+頂点シェーダの出力としての`SV_Position`セマンティックは、clip空間における頂点の位置を示す4次元ベクトルを表す。
+
+#### シェーダコード
+
+```hlsl
+VSOutput vsmain(VSInput input) {
+    VSOutput output;
+    output.position = mul(MVP, float4(input.position, 1.f));
+    output.texcoord = input.texcoord;
+    output.position_v = mul(MV, float4(input.position, 1.f)).xyz;
+    output.tangent_v = mul((float3x3)MV, input.tangent);
+    output.binormal_v = mul((float3x3)MV, input.binormal);
+    output.normal_v = mul((float3x3)MV, input.normal);
+    return output;
+}
+```
+
+### Pixel Shader
+
+TODO
