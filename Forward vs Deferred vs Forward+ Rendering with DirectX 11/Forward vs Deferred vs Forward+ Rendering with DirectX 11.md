@@ -123,6 +123,85 @@ VSOutput vsmain(VSInput input) {
 }
 ```
 
+頂点シェーダでは、基本的には入力データを変換するのみを行う。
+
 ### Pixel Shader
+
+ピクセルシェーダでは、ピクセル1つに対するすべてのライティング及びシェーディング計算を行う。
+
+#### Material
+
+```hlsl
+struct Material {
+    float4 global_ambient; // すべてのオブジェクトに適用される環境光の寄与
+    float4 ambient_color; // 環境色
+    float4 emissive_color; // 発光色
+    float4 diffuse_color; // 拡散色
+    float4 specular_color; // 鏡面色
+    float4 reflectance; // 環境マッピングで用いる反射率
+    float opacity; // 不透明度
+    float specular_power; // 鏡面反射の強さ。shininess
+    float index_of_refraction; // 環境マッピングで用いる屈折率
+    bool has_ambient_texture;
+    bool has_emissive_texture;
+    bool has_diffuse_texture;
+    bool has_specular_texture;
+    bool has_specular_power_texture;
+    float bump_intensity; // バンプマップの高さの倍率
+    float specular_scale; // テクスチャから読み取ったspecular_power値の倍率
+    float alpha_threshold; // ピクセルを破棄(discard)するアルファ値のしきい値
+    float2 _padding;
+}
+
+cbuffer Material : register(b2) {
+    Material MATERIAL;
+}
+```
+
+`Material`はシェーディングを行うために必要なデータの構造を定義する。いくつかの値はテクスチャとして持つこともできるため、その切り替えフラグも一緒に格納してある。
+
+#### Textures
+
+テクスチャはマテリアルに付随するため、各テクスチャを使うかどうかはモデルを作るアーティストの判断に委ねられる。
+
+```hlsl
+Texture2D AMBIENT_TEXTURE : register(t0);
+Texture2D EMISSIVE_TEXTURE : register(t1);
+Texture2D DIFFUSE_TEXTURE : register(t2);
+Texture2D SPECULAR_TEXTURE : register(t3);
+Texture2D SPECULAR_POWER_TEXTURE : register(t4);
+Texture2D NORMAL_TEXTURE : register(t5);
+Texture2D BUMP_TEXTURE : register(t6);
+Texture2D OPACITY_TEXTURE : register(t7);
+```
+
+#### Lights
+
+```hlsl
+struct Light {
+    float4 position_w; // world空間における位置
+    float4 direction_w; // world空間における方向
+    float4 position_v; // view空間における位置
+    float4 direction_v; // view空間における方向
+    float4 color; // 拡散光の色及び鏡面光の色
+    float spotlight_angle; // スポットライトの照射角度 * 0.5
+    float range; // 発する光が届く最大距離
+    float intensity; // 光源の強さ
+    bool enabled; // 有効か
+    bool selected; // エディタが選択しているか
+    uint type; // 光源の形
+    float2 _padding;
+}
+
+StructuredBuffer<Light> LIGHTS : registerr(t8);
+```
+
+`Light`はライティングを行うために必要なデータの構造を定義する。ここでは、スポットライト、ポイントライト、ディレクショナルライトの3つを別構造に分けずに1つの構造で管理する。
+ライトタイプによっては必要のないパラメータもあるが、ここでは取り回しの良さを優先してすべて用意する。
+通常のライトモデルでは拡散色と鏡面色の2つの色を持つが、ここでは簡略化のため統合している。
+
+ここでは`Light`の配列をStructuredBufferとして渡している。StructuredBufferは定数バッファと比べてサイズ制限がゆるく、より多くのライトを取り扱うことができる。
+
+#### シェーダコード
 
 TODO
