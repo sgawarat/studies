@@ -147,6 +147,9 @@ struct Material {
     bool has_diffuse_texture;
     bool has_specular_texture;
     bool has_specular_power_texture;
+    bool has_normal_texture;
+    bool has_bump_texture;
+    bool has_opacity_texture;
     float bump_intensity; // バンプマップの高さの倍率
     float specular_scale; // テクスチャから読み取ったspecular_power値の倍率
     float alpha_threshold; // ピクセルを破棄(discard)するアルファ値のしきい値
@@ -204,4 +207,185 @@ StructuredBuffer<Light> LIGHTS : registerr(t8);
 
 #### シェーダコード
 
-TODO
+```hlsl
+[earlydepthstencil]
+float4 psmain(VSOutput input) : SV_Target {
+    Material material = MATERIAL;
+
+    // 拡散色
+    float4 diffuse = material.diffuse_color;
+    if (material.has_diffuse_texture) {
+        float4 diffuse_tex = DIFFUSE_TEXTURE.Sample(SAMPLER, input.texcoord);
+        if (any(diffuse.rgb)) {
+            // materialのdiffuse_colorが0でなければ、テクスチャの値とブレンドする。
+            diffuse *= diffuse_tex;
+        } else {
+            // materialのdiffuse_colorが0であれば、テクスチャの値に差し替える。
+            diffuse = diffuse_tex;
+        }
+    }
+
+    // 不透明度(アルファ値)
+    float alpha = diffuse.a;
+    if (material.has_opacity_texture) {
+        // テクスチャを持っているならば、テクスチャの値に差し替える。
+        alpha = OPACITY_TEXTURE.Sample(SAMPLER, input.texcoord).r;
+    }
+
+    // 環境色
+    float4 ambient = material.ambient_color;
+    if (material.has_ambient_texture) {
+        float4 ambient_tex = AMBIENT_TEXTURE.Sample(SAMPLER, input.texcoord);
+        if (any(ambient.rgb)) {
+            // materialのambient_colorが0でなければ、テクスチャの値とブレンドする。
+            ambient *= ambient_tex;
+        } else {
+            // ambient_colorが0であれば、テクスチャの値に差し替える。
+            ambient = ambient_tex;
+        }
+    }
+    ambient *= material.global_ambient;
+
+    // 発光色
+    float4 emissive = material.emissive_color;
+    if (material.has_emissive_texture) {
+        float4 emissive_tex = EMISSIVE_TEXTURE.Sample(SAMPLER, input.texcoord);
+        if (any(emissive.rgb)) {
+            // materialのemissive_colorが0でなければ、テクスチャの値とブレンドする。
+            emissive *= emissive_tex;
+        } else {
+            // emissive_colorが0であれば、テクスチャの値に差し替える。
+            emissive = emissive_tex;
+        }
+    }
+
+    // Specular Power
+    float specular_power;
+    if (material.has_specular_power_texture) {
+        specular_power = SPECULAR_POWER_TEXTURE.Sample(SAMPLER, input.texcoord).r * material .specular_scale;
+    } else {
+        specular_power = material.specular_power;
+    }
+
+    // 法線
+    float4 normal;
+    if (material.has_normal_texture) {
+        // 法線マッピング
+        // [0, 1]に圧縮して保存されていたtangent空間に属する法線を[-1, +1]に伸長する。
+        float3 tex = NORMAL_TEXTURE.Sample(SAMPLER, input.texcoord).rgb;
+        float3 normal_t = 2.f * tex - 1.f;
+
+        // 法線をtangent空間からview空間へ変換する
+        float3x3 tbn = float3x3(normalize(input.tanget_v),
+                                normalize(input.binormal_v),
+                                normalize(input.normal_v));
+        normal = normalize(float4(mul(normal_t, tbn), 0.f));
+    } else if (material.has_bump_texture) {
+        // バンプマッピング
+        // 高さの勾配からtangent空間の法線を求める
+        float3 height = BUMP_TEXTURE.Sample(SAMPLER, input.texcoord).r;
+        float3 height_u = BUMP_TEXTURE.Sample(SAMPLER, input.texcoord, int2(1, 0)).r;
+        float3 height_v = BUMP_TEXTURE.Sample(SAMPLER, input.texcoord, int2(0, 1)).r;
+        float3 p = {0.f, 0.f, height};
+        float3 pu = {1.f, 0.f, height_u};
+        float3 pv = {0.f, 1.f, height_v};
+        float3 normal_t = cross(normalize(pu - p), normalize(pv - p));
+
+        // 法線をtangent空間からview空間へ変換する
+        float3x3 tbn = float3x3(normalize(input.tanget_v),
+                                -normalize(input.binormal_v),
+                                normalize(input.normal_v));
+        normal = normalize(float4(mul(normal_t, tbn), 0.f));
+    } else {
+        // モデルの法線をそのまま利用する
+        normal = normalize(float4(input.normal_v, 0.f));
+    }
+
+    // ライティング
+    float4 eye = {0.f, 0.f, 0.f, 1.f}; // view空間でのカメラ位置
+    float4 light_diffuse = 0.f;
+    float4 light_specular = 0.f;
+    for (int i = 0; i < NUM_LIGHTS; ++i) {
+        Light light = LIGHTS[i];
+        if (!light.enabled) continue;
+        switch (light.type) {
+            case DIRECTIONAL_LIGHT: {
+                float4 l = normalize(-light.direction_v); // 光源方向
+                float4 v = normalize(eye - input.positon_v); // 視線方向
+                float4 r = normalize(reflect(-l, n)); // 反射方向
+                light_diffuse += light.intensity * CalcDiffuse(...);
+                light_specular += light.intensity * CalcSpecular(...);
+                break;
+            }
+            case POINT_LIGHT: {
+                // 範囲外なら計算を省略する
+                if (length(light.position_v - input.position_v) > light.range) continue;
+
+                float4 l = normalize(light.position_v - input.position_v); // 光源方向
+                float4 v = normalize(eye - input.positon_v); // 視線方向
+                float4 r = normalize(reflect(-l, n)); // 反射方向
+                float attn = CalcAttenuation(...); // 減衰係数
+                light_diffuse += light.intensity * attn * CalcDiffuse(...);
+                light_specular += light.intensity * attn * CalcSpecular(...);
+                break;
+            }
+            case SPOT_LIGHT: {
+                // 範囲外なら計算を省略する
+                if (length(light.position_v - input.position_v) > light.range) continue;
+
+                float4 l = normalize(light.position_v - input.position_v); // 光源方向
+                float4 v = normalize(eye - input.positon_v); // 視線方向
+                float4 r = normalize(reflect(-l, n)); // 反射方向
+                float attn = CalcAttenuation(...); // 減衰係数
+                float spot_intensity = CalcSpotCone(...); // 角度による強度
+                light_diffuse += light.intensity * attn * spot_intensity * CalcDiffuse(...);
+                light_specular += light.intensity * attn * spot_intensity * CalcSpecular(...);
+                break;
+            }
+        }
+    }
+
+    // 鏡面色
+    float4 specular = 0.f;
+    if (spucular_power > 1.f) { // spucular_powerが小さいときは鏡面色を使わない
+        specular = material.specular_color;
+        if (material.has_specular_texture) {
+            float4 specular_tex = SPECULAR_TEXTURE.Sample(SAMPLER, input.texcoord);
+            if (any(specular.rgb)) {
+                // materialのspecular_colorが0でなければ、テクスチャの値とブレンドする。
+                sperular *= specular_tex;
+            } else {
+                // materialのspecular_colorが0であれば、テクスチャの値に差し替える。
+                sperular = sperular_tex;
+            }
+        }
+    }
+
+    // 合成
+    return float4(
+            (ambient + emissive +
+                (diffuse * light_diffuse) +
+                (specular * light_specular)).rgb,
+            alpha * material.opacity);
+}
+```
+
+`earlydepthstencil`アトリビュートは、ピクセルシェーダを起動する前に深度ステンシルテストを行うことを明示する。これを有効にすると、不合格ピクセルの計算処理を省略できるので、パフォーマンスが改善することがあるが、ピクセルシェーダで深度値を変更できなくなる。
+
+##### Normal Mapping
+
+法線マッピングは、法線マップを用いてモデルに細かなディテールを付与する技法である。法線マップにはtangent空間に属する法線ベクトルが格納されている。
+
+tangent空間からview空間への変換行列`tbn`は以下のように考えられる。
+前提として、tangent空間は接線、従法線、法線がそれぞれXYZ座標軸となる直交座標系である。view空間も直交座標系である。view空間とtangent空間はともに拡大縮小を含まない。法線は平行移動を考慮しない。
+つまり、tangent空間からview空間への法線の変換は座標系を回転させる変換行列として求められる。したがって、回転行列の逆行列はその転置と同等であるため、`tbn`はview空間からtangent空間へ座標軸を回転させる行列の転置として求められる。
+
+#### Bump Mapping
+
+バンプマッピングは、高さマップ(height map)に格納された高さ情報をもとに計算された法線を用いて、モデルに細かなディテールを付与する技法である。高さの勾配からtangent空間の法線が求まるため、法線マッピングと同様に、view空間へ変換しなければならない。
+
+#### Lighting
+
+`CalcDiffuse(...)`および`CalcSpecular(...)`は光源の寄与を計算する。
+`CalcAttenuation(...)`は光源との距離から光量の減衰率を計算する。
+`CalcSpotCone(...)`は照射角度を定義するための光源強度の減衰率を計算する。
