@@ -389,3 +389,54 @@ tangent空間からview空間への変換行列`tbn`は以下のように考え�
 `CalcDiffuse(...)`および`CalcSpecular(...)`は光源の寄与を計算する。
 `CalcAttenuation(...)`は光源との距離から光量の減衰率を計算する。
 `CalcSpotCone(...)`は照射角度を定義するための光源強度の減衰率を計算する。
+
+## Deferred Rendering
+
+Deferred RenderingはGバッファパス、ライティングぱすの2パスと透明パスからなる。
+
+### G-buffer pass
+
+Gバッファパスでは、Gバッファとなるテクスチャにジオメトリ情報をレンダリングする。
+レンダリングする情報は、深度ステンシル、拡散色、鏡面色、法線などがあるが、その量はパフォーマンスに直結するため、パッキングするなりしてできる限り切り詰めたほうが良い。
+
+#### G-buffer layout
+
+深度ステンシルは通常のレンダリングパイプラインで書き込みを行う。
+
+Light accumulationバッファはライティングパスが最終結果を格納するバッファである。本実験ではGバッファに含めている。
+
+拡散色と鏡面色はライティングされていないマテリアルの色をそのまま受け渡す。Deferred Renderingで扱うオブジェクトはすべて不透明であるため、アルファ値は常に1であると仮定できる。そうすると、本来アルファ値を格納するスペースに別の値を格納することもできる。
+
+法線をview空間で扱う場合、法線のz値が正負一方しか現れないことを利用して、Gバッファパスではxy要素のみを格納してライティングパスで外積によりz要素を復元するという手段を取ることができる。[^view_space_normal]
+
+[^view_space_normal]: ベクトル計算は属する空間によって若干の利点欠点が存在する。
+view空間で行う場合、その座標系が視点に依存するため、背面が必要ないならば法線のz要素はxy要素から復元できるが、視点が頻繁に更新されることで、座標系を揃えるための実行時計算を必要とする。
+一方、world空間で行う場合、法線のz要素を省略できない代わりに、その座標系が変化しないことでworld空間のベクトルデータを事前計算できる。
+
+#### Pixel Shader
+
+```hlsl
+struct PSOutput {
+    float4 light_accumulation : SV_Target0;
+    float4 diffuse : SV_Target1;
+    float4 specular : SV_Target2;
+    float4 normal_v : SV_Target3;
+}
+
+PSOutput ps_geometry(VSOutput input) {
+    PSOutput output;
+
+    // ...
+
+    output.light_accumulation = (ambient + emissive);
+    output.diffuse = diffuse;
+    output.specular = float4(specular.rgb, log2(specular_power) / 10.5f);
+    output.normal_v = normal;
+}
+```
+
+Gバッファパスのピクセルシェーダは、ライティングを行わないこと以外はForward Renderingと同じように計算を行い、Gバッファに格納する要素を出力する。
+
+### Lighting pass
+
+TODO
