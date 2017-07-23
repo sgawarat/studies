@@ -30,15 +30,15 @@
 
 この文書で述べられるアイデアは以下の3つの先行研究に強く影響を受けている:
 
-- Smithのmasking関数は、コンピュータグラフィクスの文献のなかで最も有名なものの一つである。しかし、この関数が、正しいmasking関数から期待される性質である、visible projected areaを保持することを保証する性質を持つことを文書の最後に指摘していることはあまり知られていない。
+- Smithのmasking関数は、コンピュータグラフィクスの文献のなかで最も有名なものの一つである。しかし、この関数が、正しいmasking関数から期待される性質である、可視射影面積(visible projected area)を保持することを保証する性質を持つことを文書の最後に指摘していることはあまり知られていない。
 
-- Ashikhminらはvisible projected areaが幾何学的表面からマイクロサーフェスに至るまで保存されている量であることを見つけ出した。この知見は、正しく正規化されていることとエネルギーが保存されていることを保証する、正しいmasking項の一般式を導出するために使われた。この導出の最中には、自然とSmithのmasking関数を再発明していた。彼らのmasking項は積分形式で表されており、閉形式を導くことはできない。彼らは数値的に前計算を行い、ルックアップテーブルに格納する方法を取った。
+- Ashikhminらは可視射影面積(visible projected area)が幾何学的表面からマイクロサーフェスに至るまで保存されている量であることを見つけ出した。この知見は、正しく正規化されていることとエネルギーが保存されていることを保証する、正しいmasking項の一般式を導出するために使われた。この導出の最中には、自然とSmithのmasking関数を再発明していた。彼らのmasking項は積分形式で表されており、閉形式を導くことはできない。彼らは数値的に前計算を行い、ルックアップテーブルに格納する方法を取った。
 
 - Rossらは海面の反射率に関する研究を提案した。ガウス的な荒い表面(Beckmann分布)で海面をモデル化し、Smithのmasking-shadowing関数を組み込んだ正規化済みBRDFを計算した。彼らはガウス的表面ではBRDFの正規化係数とSmithのmasking関数が打ち消し合う?似通った式を持つことを発見した。この性質は計算機処理目的では便利だが、彼らはこれが発生する物理的理由を示さなかった。
 
 ###
 
-この文書では、visible projected areaの保存の観点からこれまでのすべての研究結果を直接導き出せる、統一されたマイクロファセットフレームワークを提案する。
+この文書では、可視射影面積(visible projected area)の保存の観点からこれまでのすべての研究結果を直接導き出せる、統一されたマイクロファセットフレームワークを提案する。
 
 <<各章の概要>>
 
@@ -46,9 +46,9 @@
 
 ### 2.1 表面上での放射輝度の計測(Measuring Radiance on a Surface)
 
-![Figure1.png](Figure1.png)
+![](Figure1.png)
 
-放射輝度(radiance)は立体角からある領域を通過するエネルギー密度で、単位は$W/sr/m^2$である。方向$omega_o$に出射する面$\mathcal M$の放射輝度$L(\boldsymbol{\omega}_o, \mathcal{M})$は、出射方向に観測されるprojected areaにより重み付けされた、表面上の各区間(patch)の中心点$p_m$と出射方向$\boldsymbol{\omega}_o$に対する放射輝度$L(\boldsymbol{\omega}_o, p_m)$を積分したものである。
+放射輝度(radiance)は立体角からある領域を通過するエネルギー密度で、単位は$W/sr/m^2$である。方向$omega_o$に出射する面$\mathcal M$の放射輝度$L(\boldsymbol{\omega}_o, \mathcal{M})$は、出射方向に観測される射影面積(projected area)により重み付けされた、表面上の各区間(patch)の中心点$p_m$と出射方向$\boldsymbol{\omega}_o$に対する放射輝度$L(\boldsymbol{\omega}_o, p_m)$を積分したものである。
 
 \[
 L(\boldsymbol{\omega}_o, \mathcal M) = \frac{\int_{\mathcal M} \text{projected area}(p_m) L(\boldsymbol{\omega}_o, p_m) dp_m}{\int_{\mathcal M} \text{projected area}(p_m) dp_m}
@@ -59,6 +59,8 @@ L(\boldsymbol{\omega}_o, \mathcal M) = \frac{\int_{\mathcal M} \text{projected a
 ### 2.2 マイクロファセット統計学(Microfacet Statistics)
 
 幾何学的表面$\mathcal G$と呼ばれる表面の平面領域を考える。その面積は慣例に従い、$\int_{\mathcal G}dp_g = 1 [\text{m}^2]$である。マイクロファセットモデルは、マイクロサーフェス$\mathcal M$と呼ばれるマイクロファセットの集合の形に幾何学的表面からオフセットしたものが真の表面であると仮定する。正確に言うならば、ジオメトリ$\mathcal G$の法線が$\boldsymbol{\omega}_g$であるとすると、$\mathcal M$は$\boldsymbol{\omega}_g$方向に$\mathcal G$上に投影されたマイクロファセットの点の集合である。マイクロサーフェス$\mathcal M$の各点$p_m$は法線$\boldsymbol{\omega}_m(p_m)$を持つ。すなわち、$\boldsymbol{\omega}_m : \mathcal{M} \rightarrow \Omega$は、マイクロサーフェス上の点からその点の面法線ベクトルへの写像である。このベクトルは$(x_m, y_m, z_m)$として表される。
+
+![](Figure2.png)
 
 マイクロファセット理論はマイクロサーフェスの散乱の特性を統計学的にモデル化したものである。したがって、数式は空間的に記述するよりも統計学的に記述したほうがこの研究では便利に扱うことができる。マイクロファセット理論において、球領域$\Omega$における法線空間として定義される。
 
@@ -89,6 +91,72 @@ p_m \in \mathcal{M}' \iff \boldsymbol{\omega}_m(p_m) \in \Omega'
 \text{microsurface area} = \int_{\mathcal M} dp_m = \int_{\Omega} D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
 \]
 
-#### 空間的な数式と統計学的な数式
+#### 空間的な数式と統計学的な数式(Spatial and Statistical Equations)
 
-TODO
+$D$の定義の結果として、$f(\boldsymbol{\omega}_m)$がいかなるマイクロサーフェスの法線の関数であっても、$f$の空間的な積分は統計学的な積分に入れ替えることができる。
+
+\[
+\int_{\mathcal M} f(\boldsymbol{\omega}_m(p_m))dp_m = \int_{\Omega}f(\boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+\]
+
+ここで、左辺は空間的な積分であり、右辺は統計学的な積分である。この性質は、図3(a)にて$f$が内積の場合として用いられている。
+
+#### 確率学的関数(Statistical Functions)
+
+$g(p_m)$がマイクロサーフェス上に定義された空間的な関数であるとすると、関連する統計的な関数$g(\boldsymbol{\omega}_m)$を定義することができる。
+
+\[
+g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbol{\omega}(p_m)) g(p_m) dp_m}{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m)) dp_m}
+\]
+
+この統計学的な関数は、以下のような統計学的な積分で用いることができる。
+
+\[
+\int_{\mathcal M} g(p_m)dp_m = \int_{\Omega}g(\boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+\]
+
+この性質は、図3(c)にて$g$がmasking関数$G_1$の場合として用いられている。
+
+
+### 2.3 マイクロファセットの射影(Microfacet Projections)
+
+#### (a) 幾何学的な法線$\boldsymbol{\omega}_g$の方向に射影したときのマイクロサーフェスの射影面積
+
+幾何学的な法線の方向に射影したマイクロサーフェスの面積は幾何学的表面の面積であり、その値は慣例的に$1\text{ m}^2$である(図3(a))。したがって、ジオメトリへの法線分布の射影は正規化される。
+
+\[
+\int_\Omega (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m = \int_\mathcal{M} (\boldsymbol{\omega}_m(p_m) \cdot \boldsymbol{\omega}_g) dp_m = \int_\mathcal{G} dp_g = 1 \text{ [m}^2]
+\]
+
+#### (b) 出射方向$\boldsymbol{\omega}_o$に射影したときの幾何学的表面の射影面積
+
+幾何学的表面は$1\text{ [m}^2]$であり、それが出射方向$\boldsymbol{\omega}_o$に射影したときの射影面積は、入射角$\theta_o$のコサインをかけた面積に等しい(図3(b))。
+
+\[
+\text{projected area} = (\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_g) . \text{area} = cos \theta_o
+\]
+
+#### (c) 出射方向$\boldsymbol{\omega}_o$に射影したときの可視(visible)マイクロサーフェスの射影面積
+
+出射方向に射影したときの幾何学的表面の面積は、射影された"見えている(visible)"マイクロサーフェスの面積である(図3(c))。これはそれぞれの可視マイクロサーフェスの射影面積を合計したものである。法線$\boldsymbol{\omega}_m$を持つマイクロファセットの射影面積はgeometric projection factor$\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle$として現れる[^clamped_dot_product]。マイクロサーフェスに遮蔽されているマイクロファセットは射影面積にその影響を与えず、合計からは除外されなければならない。これは、点$p_m$が遮蔽されていれば$0$を、見えていれば$1$を返す空間的なmasking関数$G_1(\boldsymbol{\omega}_o, p_m)$をかけることにより達成される。この射影面積は以下で求められる。
+
+
+[^clamped_dot_product]: $\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle$は$[0, 1]$にクランプされる内積であり、背面を向いたマイクロファセットは見えないことを表す。
+
+\[
+\text{projected area} = \int_\mathcal{M} G_1(\boldsymbol{\omega}_o, p_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m(p_m) \rangle dp_m
+\]
+
+統計学的なmasking関数$G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$は範囲$[0, 1]$を持ち、以下の出射方向$\boldsymbol{\omega}_o$に対して可視である法線$\boldsymbol{\omega}_m$を持つマイクロファセットの分数式により求められる。
+
+\[
+G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}) = \frac{\int_\mathcal{M}\delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m))G_1(\boldsymbol{\omega}_o, p_m)dp_m}{\int_\mathcal{M}\delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m))dp_m}
+\]
+
+統計学的な数式は以下として求められる。
+
+\[
+\text{projected area} = \int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+\]
+
+![](Figure3.png)
