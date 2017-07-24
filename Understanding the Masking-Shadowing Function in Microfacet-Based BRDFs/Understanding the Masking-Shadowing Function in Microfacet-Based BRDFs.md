@@ -46,12 +46,13 @@
 
 ### 2.1 表面上での放射輝度の計測(Measuring Radiance on a Surface)
 
-![](Figure1.png)
+![図1](Figure1.png)
 
 放射輝度(radiance)は立体角からある領域を通過するエネルギー密度で、単位は$W/sr/m^2$である。方向$omega_o$に出射する面$\mathcal M$の放射輝度$L(\boldsymbol{\omega}_o, \mathcal{M})$は、出射方向に観測される射影面積(projected area)により重み付けされた、表面上の各区間(patch)の中心点$p_m$と出射方向$\boldsymbol{\omega}_o$に対する放射輝度$L(\boldsymbol{\omega}_o, p_m)$を積分したものである。
 
 \[
 L(\boldsymbol{\omega}_o, \mathcal M) = \frac{\int_{\mathcal M} \text{projected area}(p_m) L(\boldsymbol{\omega}_o, p_m) dp_m}{\int_{\mathcal M} \text{projected area}(p_m) dp_m}
+\tag{1}
 \]
 
 出射方向に投影される表面上の各地点での面積は視点依存であり、分母の積分$\int_{\mathcal M} \text{projected area}(p_m) dp_m$は正規化係数である。この正規化係数は式全体が放射輝度を単位とするよう調整している。
@@ -60,7 +61,7 @@ L(\boldsymbol{\omega}_o, \mathcal M) = \frac{\int_{\mathcal M} \text{projected a
 
 幾何学的表面$\mathcal G$と呼ばれる表面の平面領域を考える。その面積は慣例に従い、$\int_{\mathcal G}dp_g = 1 [\text{m}^2]$である。マイクロファセットモデルは、マイクロサーフェス$\mathcal M$と呼ばれるマイクロファセットの集合の形に幾何学的表面からオフセットしたものが真の表面であると仮定する。正確に言うならば、ジオメトリ$\mathcal G$の法線が$\boldsymbol{\omega}_g$であるとすると、$\mathcal M$は$\boldsymbol{\omega}_g$方向に$\mathcal G$上に投影されたマイクロファセットの点の集合である。マイクロサーフェス$\mathcal M$の各点$p_m$は法線$\boldsymbol{\omega}_m(p_m)$を持つ。すなわち、$\boldsymbol{\omega}_m : \mathcal{M} \rightarrow \Omega$は、マイクロサーフェス上の点からその点の面法線ベクトルへの写像である。このベクトルは$(x_m, y_m, z_m)$として表される。
 
-![](Figure2.png)
+![図2](Figure2.png)
 
 マイクロファセット理論はマイクロサーフェスの散乱の特性を統計学的にモデル化したものである。したがって、数式は空間的に記述するよりも統計学的に記述したほうがこの研究では便利に扱うことができる。マイクロファセット理論において、球領域$\Omega$における法線空間として定義される。
 
@@ -70,6 +71,7 @@ L(\boldsymbol{\omega}_o, \mathcal M) = \frac{\int_{\mathcal M} \text{projected a
 
 \[
 D(\boldsymbol{\omega}) = \int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m)) d p_m
+\tag{2}
 \]
 
 ここで、Diracのデルタ分布は、その引数の逆数である、$1/\text{sr}$を単位とする。
@@ -77,18 +79,21 @@ D(\boldsymbol{\omega}) = \int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbo
 
 \[
 p_m \in \mathcal{M}' \iff \boldsymbol{\omega}_m(p_m) \in \Omega'
+\tag{3}
 \]
 
 つまり、単位球$\Omega$のいずれの領域$\Omega' \subset \Omega$上での法線分布の積分が、$\Omega'$に対応する法線を有するすべての点の集合$\mathcal M'$の面積として求められる、という性質を持つ。
 
 \[
 \int_{\mathcal M'} dp_m = \int_{\Omega'} D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+\tag{4}
 \]
 
 結果として、法線分布の積分はマイクロサーフェスの面積と同じになる。
 
 \[
 \text{microsurface area} = \int_{\mathcal M} dp_m = \int_{\Omega} D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+\tag{5}
 \]
 
 #### 空間的な数式と統計学的な数式(Spatial and Statistical Equations)
@@ -97,6 +102,7 @@ $D$の定義の結果として、$f(\boldsymbol{\omega}_m)$がいかなるマイ
 
 \[
 \int_{\mathcal M} f(\boldsymbol{\omega}_m(p_m))dp_m = \int_{\Omega}f(\boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+\tag{6}
 \]
 
 ここで、左辺は空間的な積分であり、右辺は統計学的な積分である。この性質は、図3(a)にて$f$が内積の場合として用いられている。
@@ -107,12 +113,14 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 
 \[
 g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbol{\omega}(p_m)) g(p_m) dp_m}{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m)) dp_m}
+\tag{7}
 \]
 
 この統計学的な関数は、以下のような統計学的な積分で用いることができる。
 
 \[
 \int_{\mathcal M} g(p_m)dp_m = \int_{\Omega}g(\boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+\tag{8}
 \]
 
 この性質は、図3(c)にて$g$がmasking関数$G_1$の場合として用いられている。
@@ -126,6 +134,7 @@ g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\bol
 
 \[
 \int_\Omega (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m = \int_\mathcal{M} (\boldsymbol{\omega}_m(p_m) \cdot \boldsymbol{\omega}_g) dp_m = \int_\mathcal{G} dp_g = 1 \text{ [m}^2]
+\tag{9}
 \]
 
 #### (b) 出射方向$\boldsymbol{\omega}_o$に射影したときの幾何学的表面の射影面積
@@ -133,7 +142,8 @@ g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\bol
 幾何学的表面は$1\text{ [m}^2]$であり、それが出射方向$\boldsymbol{\omega}_o$に射影したときの射影面積は、入射角$\theta_o$のコサインをかけた面積に等しい(図3(b))。
 
 \[
-\text{projected area} = (\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_g) . \text{area} = cos \theta_o
+\text{projected area} = (\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_g) . \text{area} = \cos \theta_o
+\tag{10}
 \]
 
 #### (c) 出射方向$\boldsymbol{\omega}_o$に射影したときの可視(visible)マイクロサーフェスの射影面積
@@ -141,22 +151,55 @@ g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\bol
 出射方向に射影したときの幾何学的表面の面積は、射影された"見えている(visible)"マイクロサーフェスの面積である(図3(c))。これはそれぞれの可視マイクロサーフェスの射影面積を合計したものである。法線$\boldsymbol{\omega}_m$を持つマイクロファセットの射影面積はgeometric projection factor$\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle$として現れる[^clamped_dot_product]。マイクロサーフェスに遮蔽されているマイクロファセットは射影面積にその影響を与えず、合計からは除外されなければならない。これは、点$p_m$が遮蔽されていれば$0$を、見えていれば$1$を返す空間的なmasking関数$G_1(\boldsymbol{\omega}_o, p_m)$をかけることにより達成される。この射影面積は以下で求められる。
 
 
-[^clamped_dot_product]: $\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle$は$[0, 1]$にクランプされる内積であり、背面を向いたマイクロファセットは見えないことを表す。
+[^clamped_dot_product]: _ $\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle$は$[0, 1]$にクランプされる内積であり、背面を向いたマイクロファセットは見えないことを表す。
 
 \[
 \text{projected area} = \int_\mathcal{M} G_1(\boldsymbol{\omega}_o, p_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m(p_m) \rangle dp_m
+\tag{11}
 \]
 
 統計学的なmasking関数$G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$は範囲$[0, 1]$を持ち、以下の出射方向$\boldsymbol{\omega}_o$に対して可視である法線$\boldsymbol{\omega}_m$を持つマイクロファセットの分数式により求められる。
 
 \[
 G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}) = \frac{\int_\mathcal{M}\delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m))G_1(\boldsymbol{\omega}_o, p_m)dp_m}{\int_\mathcal{M}\delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m))dp_m}
+\tag{12}
 \]
 
 統計学的な数式は以下として求められる。
 
 \[
 \text{projected area} = \int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+\tag{13}
 \]
 
-![](Figure3.png)
+![図3](Figure3.png)
+
+### 2.4 masking関数の制約(A Constraint on the Masking Function)
+
+図3では、式$\eqref{eq:13}$で示される可視マイクロサーフェスの射影面積は、式$\eqref{eq:10}$で示される幾何学的表面の射影面積にピタリと一致する、というマイクロファセット理論の根本的な性質を取り上げた。この等価性は統計学的なmasking関数に以下の式で表される制約を課す。
+
+\[
+\cos \theta_o = \int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+\label{eq:14} \tag{14}
+\]
+
+物理ベースのmasking関数$G_1$はこの制約を常に満たさなければならない。しかし、この制約は$G_1$を完全に決定するものではない。なぜなら、masking関数$G_1$は$\boldsymbol{\omega}_o$と $\boldsymbol{\omega}_m)$の2つを取る関数であり、出射方向$\boldsymbol{\omega}_o$を定めても、この制約を満たす$G_1$は無限に存在するためである。そこで、解をひとつに定めるため、著者らは第２の制約としてマイクロサーフェス・プロファイル(microsurface profile)を導入する。
+
+これを直感的に理解する方法は、法線分布はマイクロサーフェス上の各法線の割合のみを示すヒストグラムのようなものだと考えることである。そうすると、法線分布からは法線がどのように組織しているかという情報が得られないことが分かる。そのため、マイクロサーフェス・プロファイルが必要になる。さらに、図4に示す通り、プロファイルの選択は、出来上がるBRDFの形状に重大な影響力を持ち得る。マイクロサーフェス・プロファイルが決まれば、masking関数は完全に決定され、その完全形式(exact form)を導き出すことができる。
+
+### 2.5 まとめ(Summary)
+
+"masking関数(または、幾何減衰因数(geometric attenuation factor))の中から一体どれを使えば良いの？それって物理ベースなの？"、というmasking関数に関するよくある質問がある。
+この章では以下を示した。
+
+- いずれの方向に射影しても、可視マイクロサーフェスの射影面積は幾何学的表面の射影面積と等価である。
+- masking関数はこの等価性により制約を受ける。より正しく言うなら、物理ベースのmasking関数は式$\eqref{eq:14}$で示される数式を常に満たす。
+- とはいえ、masking関数はこの制約により完全に定まるものではない。
+- masking関数はマイクロサーフェス・プロファイルを選択することで一意に定まる。
+- マイクロサーフェス・プロファイルはBRDFの形状に影響を及ぼす。
+
+![図4](Figure4.png)
+
+## 3. マイクロファセットベースBRDF(Microfacet-Based BRDFs)
+
+TODO
