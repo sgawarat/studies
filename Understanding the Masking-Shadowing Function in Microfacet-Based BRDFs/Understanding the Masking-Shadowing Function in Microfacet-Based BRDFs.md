@@ -44,15 +44,15 @@
 
 ## 2. Masking関数の導出(Derivation of the Masking Function)
 
-### 2.1 表面上での放射輝度の計測(Measuring Radiance on a Surface)
+### <a name="2.1" /> 2.1 表面上での放射輝度の計測(Measuring Radiance on a Surface)
 
-![図1](Figure1.png)
+<a name="Fig1" /> ![図1](Figure1.png)
 
 放射輝度(radiance)は立体角からある領域を通過するエネルギー密度で、単位は$W/sr/m^2$である。方向$omega_o$に出射する面$\mathcal M$の放射輝度$L(\boldsymbol{\omega}_o, \mathcal{M})$は、出射方向に観測される射影面積(projected area)により重み付けされた、表面上の各区間(patch)の中心点$p_m$と出射方向$\boldsymbol{\omega}_o$に対する放射輝度$L(\boldsymbol{\omega}_o, p_m)$を積分したものである。
 
 \[
 L(\boldsymbol{\omega}_o, \mathcal M) = \frac{\int_{\mathcal M} \text{projected area}(p_m) L(\boldsymbol{\omega}_o, p_m) dp_m}{\int_{\mathcal M} \text{projected area}(p_m) dp_m}
-\tag{1}
+\label{eq:1} \tag{1}
 \]
 
 出射方向に投影される表面上の各地点での面積は視点依存であり、分母の積分$\int_{\mathcal M} \text{projected area}(p_m) dp_m$は正規化係数である。この正規化係数は式全体が放射輝度を単位とするよう調整している。
@@ -71,7 +71,7 @@ L(\boldsymbol{\omega}_o, \mathcal M) = \frac{\int_{\mathcal M} \text{projected a
 
 \[
 D(\boldsymbol{\omega}) = \int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m)) d p_m
-\tag{2}
+\label{eq:2} \tag{2}
 \]
 
 ここで、Diracのデルタ分布は、その引数の逆数である、$1/\text{sr}$を単位とする。
@@ -79,21 +79,21 @@ D(\boldsymbol{\omega}) = \int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbo
 
 \[
 p_m \in \mathcal{M}' \iff \boldsymbol{\omega}_m(p_m) \in \Omega'
-\tag{3}
+\label{eq:3} \tag{3}
 \]
 
 つまり、単位球$\Omega$のいずれの領域$\Omega' \subset \Omega$上での法線分布の積分が、$\Omega'$に対応する法線を有するすべての点の集合$\mathcal M'$の面積として求められる、という性質を持つ。
 
 \[
 \int_{\mathcal M'} dp_m = \int_{\Omega'} D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
-\tag{4}
+\label{eq:4} \tag{4}
 \]
 
 結果として、法線分布の積分はマイクロサーフェスの面積と同じになる。
 
 \[
 \text{microsurface area} = \int_{\mathcal M} dp_m = \int_{\Omega} D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
-\tag{5}
+\label{eq:5} \tag{5}
 \]
 
 #### 空間的な数式と統計学的な数式(Spatial and Statistical Equations)
@@ -102,7 +102,7 @@ $D$の定義の結果として、$f(\boldsymbol{\omega}_m)$がいかなるマイ
 
 \[
 \int_{\mathcal M} f(\boldsymbol{\omega}_m(p_m))dp_m = \int_{\Omega}f(\boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
-\tag{6}
+\label{eq:6} \tag{6}
 \]
 
 ここで、左辺は空間的な積分であり、右辺は統計学的な積分である。この性質は、図3(a)にて$f$が内積の場合として用いられている。
@@ -113,14 +113,14 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 
 \[
 g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbol{\omega}(p_m)) g(p_m) dp_m}{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m)) dp_m}
-\tag{7}
+\label{eq:7} \tag{7}
 \]
 
 この統計学的な関数は、以下のような統計学的な積分で用いることができる。
 
 \[
 \int_{\mathcal M} g(p_m)dp_m = \int_{\Omega}g(\boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
-\tag{8}
+\label{eq:8} \tag{8}
 \]
 
 この性質は、図3(c)にて$g$がmasking関数$G_1$の場合として用いられている。
@@ -134,7 +134,7 @@ g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\bol
 
 \[
 \int_\Omega (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m = \int_\mathcal{M} (\boldsymbol{\omega}_m(p_m) \cdot \boldsymbol{\omega}_g) dp_m = \int_\mathcal{G} dp_g = 1 \text{ [m}^2]
-\tag{9}
+\label{eq:9} \tag{9}
 \]
 
 #### (b) 出射方向$\boldsymbol{\omega}_o$に射影したときの幾何学的表面の射影面積
@@ -143,7 +143,7 @@ g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\bol
 
 \[
 \text{projected area} = (\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_g) . \text{area} = \cos \theta_o
-\tag{10}
+\label{eq:10} \tag{10}
 \]
 
 #### (c) 出射方向$\boldsymbol{\omega}_o$に射影したときの可視(visible)マイクロサーフェスの射影面積
@@ -155,21 +155,21 @@ g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_\boldsymbol{\omega}(\bol
 
 \[
 \text{projected area} = \int_\mathcal{M} G_1(\boldsymbol{\omega}_o, p_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m(p_m) \rangle dp_m
-\tag{11}
+\label{eq:11} \tag{11}
 \]
 
 統計学的なmasking関数$G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$は範囲$[0, 1]$を持ち、以下の出射方向$\boldsymbol{\omega}_o$に対して可視である法線$\boldsymbol{\omega}_m$を持つマイクロファセットの分数式により求められる。
 
 \[
 G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}) = \frac{\int_\mathcal{M}\delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m))G_1(\boldsymbol{\omega}_o, p_m)dp_m}{\int_\mathcal{M}\delta_\boldsymbol{\omega}(\boldsymbol{\omega}_m(p_m))dp_m}
-\tag{12}
+\label{eq:12} \tag{12}
 \]
 
 統計学的な数式は以下として求められる。
 
 \[
 \text{projected area} = \int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
-\tag{13}
+\label{eq:13} \tag{13}
 \]
 
 ![図3](Figure3.png)
@@ -201,5 +201,48 @@ G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}) = \frac{\int_\mathcal{M}\delta_\
 ![図4](Figure4.png)
 
 ## 3. マイクロファセットベースBRDF(Microfacet-Based BRDFs)
+
+![図5](Figure5.png)
+
+### 3.1 可視法線分布(Distribution of Visible Normals)
+
+式$\eqref{eq:1}$をマイクロファセットのパラダイムで定式化すると以下のようになる。
+
+\[
+L(\boldsymbol{\omega}_o, \mathcal{M}) = \frac{1}{\cos\theta_o} \int_\Omega L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+\label{eq:15} \tag{15}
+\]
+
+ここで、$L(\boldsymbol{\omega}_o, \mathcal{M})$はマイクロサーフェスから出射する放射輝度を、$L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$は法線$\boldsymbol{\omega}_m$を持つマイクロファセットから出射する放射輝度を、$\frac{1}{\cos\theta_o}$はここでは幾何学的表面の射影面積による積分を正規化する因子を表す。つまり、図5で示すように、マイクロサーフェスから出射する放射輝度は、可視法線分布(the distribution of visible normals)で重み付けされた、各マイクロファセットから出射する放射輝度の合計であると理解することができる。この可視法線分布は、各法線の射影面積とmasking関数で重み付けされた法線分布として表される。
+
+\[
+D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) = \frac{G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)}{cos\theta_o}
+\label{eq:16} \tag{16}
+\]
+
+この可視法線分布$D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)$は正規化されているということが重要で、この性質を利用すれば、放射輝度の平均を取るための重み関数として用いることができる。
+
+\[
+L(\boldsymbol{\omega}_o, \mathcal{M}) = \int_\Omega L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+\label{eq:17} \tag{17}
+\]
+
+[2章1節](#2.1)や[図1](#Fig1)で示した通り、放射輝度の平均はその重み関数が正規化されている場合にのみ有効である。上の式は、正しく正規化されることが保証されている式$\eqref{eq:1}$の分母の積分をmasking関数$G_1$で表したものであるため、うまく定義されている(well defined)と言える。もちろん、式$\eqref{eq:14}$を用いて、式$\eqref{eq:16}$を$\cos\theta_o$に入れ替えることで、この法線分布が正規化されていることを確かめることができる。
+
+\[
+\begin{split}
+\int_\Omega D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)d \boldsymbol{\omega}_m &= \int_\Omega \frac{G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)}{\cos\theta_o}d \boldsymbol{\omega}_m \\
+&= \frac{\int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d \boldsymbol{\omega}_m}{\int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)d \boldsymbol{\omega}_m} \\
+&= 1
+\end{split}
+\]
+
+同様にして、式\eqref{eq:15}と式\eqref{eq:17}から平均出射照射輝度(average outgoing radiance)が正しく正規化されていることを強調する式$\eqref{eq:1}$と同じ形式で表現できる。
+
+\[
+L(\boldsymbol{\omega}_o, \mathcal{M}) = \frac{\int_\Omega L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d \boldsymbol{\omega}_m}{\int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)d \boldsymbol{\omega}_m}
+\]
+
+### 3.2 BRDFの構築(Construction of the BRDF)
 
 TODO
