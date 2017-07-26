@@ -572,12 +572,15 @@ cbuffer ScreenToViewParams : register(b3) {
     float2 SCREEN_DIMENSIONS; // スクリーンサイズ
 }
 
+float4 clip_to_view(float4 position_c) {
+    float4 position_v = mul(INV_P, position_c);
+    return position_v / position_v.w;
+}
+
 float4 screen_to_view(float2 position_s, float depth) {
     float2 texcoord = position_s / SCREEN_DIMENSIONS;
     float4 position_c = float4(float2(texcood.x, 1.f - texcoord.y) * 2.f - 1.f, depth, 1.f);
-
-    float4 position_v = mul(INV_P, position_c);
-    return position_v / position_v.w;
+    return clip_to_view(position_c);
 }
 
 cbuffer LightIndexBuffer : register(b4) {
@@ -630,7 +633,7 @@ near面とfar面は、z方向を法線とし、それぞれのclipping面まで�
 ライトカリングの結果を格納するため、タイルを占めるライトのインデックスを格納するlight index listと、タイルがlight index listに格納したインデックスの範囲を指すオフセットと格納したライト数を持つlight gridを導入する。
 例えばタイルサイズを16x16とすると、1280x720の画面サイズなら80x45=3600個のタイルが必要になる。1タイルに最大で200個のライトが必要になると仮定すると、3600x200=720000個のインデックスを格納する領域が必要になる。インデックスが4Bだとすると、light index listひとつに約3MBが必要になる。[^light_index_list]
 
-[^light_index_list]: light index listは図だと隙間のないリストになっていてappendしたかのように見えてしまうが、実際には固定長ブロックのリストとして扱われる一次元配列に格納されるため、未使用領域が間に挟まる。隙間を埋めたいなら、コンパクト化すればよい。(参考実装:https://github.com/bcrusco/Forward-Plus-Renderer/blob/master/Forward-Plus/Forward-Plus/source/shaders/light_culling.comp.glsl)
+[^light_index_list]: ~~light index listは図だと隙間のないリストになっていてappendしたかのように見えてしまうが、実際には固定長ブロックのリストとして扱われる一次元配列に格納されるため、未使用領域が間に挟まる。隙間を埋めたいなら、コンパクト化すればよい。(参考実装:https://github.com/bcrusco/Forward-Plus-Renderer/blob/master/Forward-Plus/Forward-Plus/source/shaders/light_culling.comp.glsl)~~ 訂正:図の通りappendしてました。
 
 #### 視錐台カリング
 
@@ -664,5 +667,187 @@ $Q$は$\boldsymbol n$方向に見たときに最も手前にある底面の円�
 面と底面が並行になるとき、$Q$は底面中のいずれかの点であれば良い。とはいえ、このときは$\boldsymbol{n} \times \boldsymbol{d} = 0$となるため、この判定式でも問題なく処理できる。
 
 ##### シェーダコード
+
+ライトカリングはコンピュートシェーダで行う。
+
+```hlsl
+#ifndef BLOCK_SIZE
+#define BLOCK_SIZE 16
+#endif
+
+// 球
+struct Sphere {
+    float3 c; // 中心点
+    float r;  // 半径
+};
+
+// 円錐
+struct Cone {
+    float3 t; // 頂点
+    float h;  // 底面までの高さ
+    float3 d; // 底面への方向
+    float r;  // 底面の半径
+};
+
+// 面
+struct Plane {
+    float3 n; // 法線
+    float d;  // 原点からの距離
+};
+
+// 視錐台の側面
+struct Frustum {
+    Plane planes[4];
+};
+
+// 入力引数型
+struct CSInput {
+    uint3 group_id : SV_GroupID;
+    uint3 group_thread_id : SV_GroupThreadID;
+    uint3 dispatch_thread_id : SV_DispatchThreadID;
+    uint group_index : SV_GroupIndex;
+};
+
+// 追加情報
+cbuffer DispatchParams : register(b4) {
+    uint3 NUM_THREAD_GROUPS;
+    uint3 NUM_THREADS; // 破棄されるスレッドも含めた総数
+}
+
+// 入力データ
+Texture2D DEPTH_TEXTURE : register(t3);
+StructuredBuffer<Frustum> FRUSTUMS : register(t9);
+
+// 出力データ
+RWStructuredBuffer<uint> OPAQUE_LIGHT_INDEX_COUNTER : register(u1); // 現時点でのライトインデックスの数
+RWStructuredBuffer<uint> TRANSP_LIGHT_INDEX_COUNTER : register(u2);
+RWStructuredBuffer<uint> OPAQUE_LIGHT_INDEX_LIST : register(u3); // 最終結果を格納するライトインデックスの配列
+RWStructuredBuffer<uint> TRANSP_LIGHT_INDEX_LIST : register(u4);
+RWTexture2D<uint2> OPAQUE_LIGHT_GRID : register(u5); // ライトグリッド
+RWTexture2D<uint2> TRANSP_LIGHT_GRID : register(u6);
+
+// タイル内共有データ
+groupshared uint MIN_DEPTH; // uint化された最小深度値
+groupshared uint MAX_DEPTH; // uint化された最大深度値
+groupshared Frustum GROUP_FRUSTUM; // グループが使う視錐台
+groupshared uint OPAQUE_LIGHT_COUNT; // グループが処理した可視ライトの数
+groupshared uint OPAQUE_LIGHT_INDEX_START; // グループが予約したグローバルなライトインデックスリストの開始位置
+groupshared uint OPAQUE_LIGHT_LIST[1024]; // グループが処理した可視ライトの配列
+groupshared uint TRANSP_LIGHT_COUNT;
+groupshared uint TRANSP_LIGHT_INDEX_START;
+groupshared uint TRANSP_LIGHT_LIST[1024];
+
+[numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
+void csmain(CSInput input) {
+    float depth = DEPTH_TEXTURE.Load(int3(input.dispatch_thread_id.xy, 0)).r;
+    uint depth_as_uint = asuint(depth);
+
+    // グループの0番スレッドが初期化を担当する
+    if (input.group_index == 0) {
+        MIN_DEPTH = 0xffffffff;
+        MAX_DEPTH = 0;
+        OPAQUE_LIGHT_COUNT = 0;
+        TRANSP_LIGHT_COUNT = 0;
+        GROUP_FRUSTUM = FRUSTUMS[input.group_id.x + (input.group_id.y * NUM_THREAD_GROUPS)];
+    }
+
+    GroupMemoryBarrierWithGroupSync(); // 0番スレッドが初期化を終えるまでグループは待機する
+
+    // タイル内の深度の最大最小値を求める
+    InterlockedMin(MIN_DEPTH, depth_as_uint);
+    InterlockedMax(MAX_DEPTH, depth_as_uint);
+
+    GroupMemoryBarrierWithGroupSync(); // タイル内の深度の最大最小値が決定するまで待機
+
+    // view空間でのz値を計算する
+    float min_depth = asfloat(MIN_DEPTH);
+    float max_depth = asfloat(MAX_DEPTH);
+    float min_depth_v = clip_to_view(float4(0.f, 0.f, min_depth, 1.f)).z;
+    float max_depth_v = clip_to_view(float4(0.f, 0.f, max_depth, 1.f)).z;
+    float near_v = clip_to_view(float4(0.f, 0.f, 0.f, 1.f)).z;
+    Plane min_plane = {float3(0.f, 0.f, -1.f), -min_depth_v}; // 右手系の場合
+
+    // ライトをカリングする
+    // 各スレッドはgroup_index、group_index+256、group_index+512、…番目のライトを処理する
+    for (uint i = input.group_index; i < NUM_LIGHTS; i += BLOCK_SIZE * BLOCK_SIZE) {
+        if (LIGHTS.enabled) {
+            Light light = LIGHTS[i];
+            switch (light.type) {
+                case POINT_LIGHT: {
+                    Sphere sphere = {light.position_v.xyz, light.range};
+
+                    // ライトボリュームが視錐台の内側にあれば、ライトリストに追加する
+                    if (sphere_inside_frustum_without_near_plane(...)) { // 共通部分だけ先に計算する
+                        // 透明オブジェクトはnear面と判定を行う
+                        if (sphere_inside_near_plane(...)) {
+                            append_transparent_light(i);
+                        }
+
+                        // 不透明オブジェクトはmin_depth面と判定を行う
+                        if (sphere_inside_min_depth_plane(...)) {
+                            append_opaque_light(i);
+                        }
+                    }
+                    break;
+                }
+                case SPOT_LIGHT: {
+                    float radius = tan(light.spotlight_angle) * light.range;
+                    Cone cone = {light.position_v.xyz, light.range, light.direction_v, radius};
+
+                    // ライトボリュームが視錐台の内側にあれば、ライトリストに追加する
+                    if (cone_inside_frustum_without_near_plane(...)) { // 共通部分だけ先に計算する
+                        // 透明オブジェクトはnear面と判定を行う
+                        if (cone_inside_near_plane(...)) {
+                            append_transparent_light(i);
+                        }
+
+                        // 不透明オブジェクトはmin_depth面と判定を行う
+                        if (cone_inside_min_depth_plane(...)) {
+                            append_opaque_light(i);
+                        }
+                    }
+                    break;
+                }
+                case DIRECTIONAL_LIGHT: {
+                    append_transparent_light(i);
+                    append_opaque_light(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    GroupMemoryBarrierWithGroupSync(); // グループがカリング計算を終えるまで待つ
+
+    // グループの0番スレッドが完了処理を担当する
+    if (input.group_index == 0) {
+        // LIGHT_INDEX_COUNTERを始点にLIGHT_COUNT個のLIGHT_LISTの領域を予約する。
+        InterlockedAdd(OPAQUE_LIGHT_INDEX_COUNTER[0], OPAQUE_LIGHT_COUNT, OPAQUE_LIGHT_INDEX_START);
+        InterlockedAdd(TRANSP_LIGHT_INDEX_COUNTER[0], TRANSP_LIGHT_COUNT, TRANSP_LIGHT_INDEX_START);
+
+        // ライトグリッドを更新する
+        OPAQUE_LIGHT_GRID[input.group_id.xy] = uint2(OPAQUE_LIGHT_INDEX_START, OPAQUE_LIGHT_COUNT);
+        TRANSP_LIGHT_GRID[input.group_id.xy] = uint2(TRANSP_LIGHT_INDEX_START, TRANSP_LIGHT_COUNT);
+    }
+
+    GroupMemoryBarrierWithGroupSync(); // 0番スレッドが完了処理を終えるまでグループを待機させる
+
+    // グループ共有に保存したライトリストをUAVバッファにコピーする
+    for (i = input.group_index; i < OPAQUE_LIGHT_COUNT; i += BLOCK_SIZE * BLOCK_SIZE) {
+        OPAQUE_LIGHT_INDEX_LIST[OPAQUE_LIGHT_INDEX_START + i] = OPAQUE_LIGHT_LIST[i];
+    }
+    for (i = input.group_index; i < TRANSP_LIGHT_COUNT; i += BLOCK_SIZE * BLOCK_SIZE) {
+        TRANSP_LIGHT_INDEX_LIST[TRANSP_LIGHT_INDEX_START + i] = TRANSP_LIGHT_LIST[i];
+    }
+}
+```
+
+シェーダモデル5.0は浮動小数点型のアトミック演算をサポートしてないため、アトミック演算が必要な`MIN_DEPTH`と`MAX_DEPTH`の計算には`float`型ではなく`uint`型を採用している。
+
+`SV_GroupIndex`セマンティックはそのスレッドが所属するグループにおけるスレッド番号を受け取る。
+
+ディレクショナルライトのライトボリュームはスクリーン全体なので、問答無用でライトリストにぶち込む。
+
+### シェーディング
 
 TODO
