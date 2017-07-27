@@ -209,7 +209,9 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 図3では、式$\eqref{eq:13}$で示される可視マイクロサーフェスの射影面積は、式$\eqref{eq:10}$で示される幾何学的表面の射影面積にピタリと一致する、というマイクロファセット理論の根本的な性質を取り上げた。この等価性は統計学的なmasking関数に以下の式で表される制約を課す。
 
 \begin{equation}
+    \boxed{
     \cos \theta_o = \int_\Omega G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    }
     \label{eq:14}
 \end{equation}
 
@@ -286,6 +288,83 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 
 \subsection{BRDFの構築(Construction of the BRDF)}
 
+可視法線分布をもとにBRDFを作成することを考える。各マイクロファセットの放射輝度$L(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)$は、各マクロファセットと関連したマイクロBRDF(micro-BRDF)の項$\rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m)$を入射する放射輝度$L(\boldsymbol{\omegaup}_i)$とともに入射方向の領域$\Omega_i$上で積分したものとして表される。
+
+\begin{equation}
+    L(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = \int_{\Omega_i} \frac{dL(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)}{d\boldsymbol{\omegaup}_i} d\boldsymbol{\omegaup}_i = \int_{\Omega_i} \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle L(\boldsymbol{\omegaup}_i) d\boldsymbol{\omegaup}_i
+    \label{eq:20}
+\end{equation}
+
+ここで、マイクロBRDF$\rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m)$は出射する放射輝度の微分$dL(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)$と入射する放射照度の微分$\langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle L(\boldsymbol{\omegaup}_i) d\boldsymbol{\omegaup}_i$の割合を表す。
+
+\begin{equation}
+    \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) = \frac{dL(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)}{\langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle L(\boldsymbol{\omegaup}_i) d\boldsymbol{\omegaup}_i}
+    \label{eq:21}
+\end{equation}
+
+次に、式\eqref{eq:17}を入射する放射照度に関して微分し、式\eqref{eq:21}により$dL(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)$を置き換える。
+
+\begin{equation}
+    \begin{split}
+        dL(\boldsymbol{\omegaup}_o, \mathcal{M})
+        &= \int_{\Omega} dL(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m \\
+        &= L(\boldsymbol{\omegaup}_i) d\boldsymbol{\omegaup}_i \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \end{split}
+    \label{eq:22}
+\end{equation}
+
+ここで、$L(\boldsymbol{\omegaup}_i)d\boldsymbol{\omegaup}_i$は$\boldsymbol{\omegaup}_m$に依存していないので積分の外に出すことができる。
+マクロBRDF(macro-BRDF)は以下の式で定義されるため、
+
+\begin{equation}
+    dL(\boldsymbol{\omegaup}_o, \mathcal{M}) = \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) \cos\theta_i L(\boldsymbol{\omegaup}_i) d\boldsymbol{\omegaup}_i
+    \label{eq:23}
+\end{equation}
+
+以下が成り立つ。
+
+\begin{equation}
+    \begin{split}
+        \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i)
+        &= \frac{dL(\boldsymbol{\omegaup}_o, \mathcal M)}{\cos\theta_i L(\boldsymbol{\omegaup}_i) d\boldsymbol{\omegaup}_i} \\
+        &= \frac{1}{\cos\theta_i} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \end{split}
+    \label{eq:24}
+\end{equation}
+
+$D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m)$を式\eqref{eq:16}で置き換えれば、以下が成り立つ。
+
+\begin{equation}
+    \begin{split}
+        \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i)
+        &= \frac{1}{\cos\theta_o \cos\theta_i} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m \\
+        &= \frac{1}{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \end{split}
+    \label{eq:25}
+\end{equation}
+
+この式は1回目のバウンス(bounce)の後、表面付近(vicinity of the surface)を離れる\textbf{前}に、どれだけのレイ(ray)が反射されたかについてモデル化するだけである(図\ref{fig:6}(b))、という理解が重要である。一方で、BRDFモデルは、すべてのmicroscattering(微正面での散乱)を経て、表面を離れた\textbf{後}にレイがどのように分布しているかを説明しなければならない。反射したレイが表面付近を離れる前に再びマイクロサーフェスに当たって別の方向に反射することもあり得るため、表面付近を離れるのが前か後かによってこの分布は異なってくる(図\ref{fig:6}(d))。ここで導出されるBRDFモデルは、表面での1回目のバウンスのみを説明し、複数回のバウンスに関与するレイ(図\ref{fig:6}(c)の黒矢印)はモデルからは排除される。これは、shadowing関数を導入することで達成される。実際には、masking関数$G_1$をmasking-shadowing関数$G_2$に置き換える。
+
+\begin{equation}
+    \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) = \frac{1}{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \label{eq:26}
+\end{equation}
+
+\subsection{(Construction of the BRDF with specular microfacets)}
+
 TODO
+
+\subsection{(Construction of the BRDF with diffuse microfacets)}
+
+\subsection{(The BRDF Normalization Test)}
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{Figure6_1.png}
+    \includegraphics[width=\textwidth]{Figure6_2.png}
+    \caption{}
+    \label{fig:6}
+\end{figure}
+
+\subsection{(Summary)}
 
 \end{document}
