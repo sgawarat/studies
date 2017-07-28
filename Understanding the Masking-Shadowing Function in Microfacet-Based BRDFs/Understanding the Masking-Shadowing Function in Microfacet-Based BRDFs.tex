@@ -1,4 +1,6 @@
-\documentclass[a4paper,xelatex,ja=standard]{bxjsarticle}
+\documentclass[a4j,xelatex,ja=standard]{bxjsarticle}
+\RequirePackage[l2tabu, orthodox]{nag}
+\usepackage[all, warning]{onlyamsmath}
 \usepackage{fontspec}
 \usepackage{amsmath,txgreeks}
 % \setpagelayout{left=20mm,top=15mm,right=20mm,bottom=15mm,nohead}
@@ -287,6 +289,7 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 \end{equation}
 
 \subsection{BRDFの構築(Construction of the BRDF)}
+\label{sec:3.2}
 
 可視法線分布をもとにBRDFを作成することを考える。各マイクロファセットの放射輝度$L(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)$は、各マクロファセットと関連したマイクロBRDF(micro-BRDF)の項$\rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m)$を入射する放射輝度$L(\boldsymbol{\omegaup}_i)$とともに入射方向の領域$\Omega_i$上で積分したものとして表される。
 
@@ -346,17 +349,114 @@ $D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m)$を式\eqref{eq:16}で置�
 この式は1回目のバウンス(bounce)の後、表面付近(vicinity of the surface)を離れる\textbf{前}に、どれだけのレイ(ray)が反射されたかについてモデル化するだけである(図\ref{fig:6}(b))、という理解が重要である。一方で、BRDFモデルは、すべてのmicroscattering(微正面での散乱)を経て、表面を離れた\textbf{後}にレイがどのように分布しているかを説明しなければならない。反射したレイが表面付近を離れる前に再びマイクロサーフェスに当たって別の方向に反射することもあり得るため、表面付近を離れるのが前か後かによってこの分布は異なってくる(図\ref{fig:6}(d))。ここで導出されるBRDFモデルは、表面での1回目のバウンスのみを説明し、複数回のバウンスに関与するレイ(図\ref{fig:6}(c)の黒矢印)はモデルからは排除される。これは、shadowing関数を導入することで達成される。実際には、masking関数$G_1$をmasking-shadowing関数$G_2$に置き換える。
 
 \begin{equation}
-    \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) = \frac{1}{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) = \frac{1}{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
     \label{eq:26}
 \end{equation}
 
-\subsection{(Construction of the BRDF with specular microfacets)}
+\subsection{鏡面的マイクロファセットにおけるBRDFの構築(Construction of the BRDF with specular microfacets)}
 
-TODO
+鏡のようなマイクロファセットのマイクロBRDFは以下のようになる。
 
-\subsection{(Construction of the BRDF with diffuse microfacets)}
+\begin{equation}
+    \begin{split}
+        \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m)
+        &= \left\lVert \frac{\partial \boldsymbol{\omegaup}_h}{\partial \boldsymbol{\omegaup}_i} \right\rVert \frac{F(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_h) \delta_{\boldsymbol{\omegaup}_h}(\boldsymbol{\omegaup}_m)}{| \boldsymbol{\omegaup}_i \cdot \boldsymbol{\omegaup}_h |} \\
+        &= \frac{F(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_h) \delta_{\boldsymbol{\omegaup}_h}(\boldsymbol{\omegaup}_m)}{4 | \boldsymbol{\omegaup}_i \cdot \boldsymbol{\omegaup}_h |^2}
+    \end{split}
+    \label{eq:27}
+\end{equation}
 
-\subsection{(The BRDF Normalization Test)}
+ここで、$\left\lVert \frac{\partial \boldsymbol{\omegaup}_h}{\partial \boldsymbol{\omegaup}_i} \right\rVert = \frac{1}{4|\boldsymbol{\omegaup}_i \cdot \boldsymbol{\omegaup}_h|}$は鏡映変換(reflection transformation)のヤコビアン(Jacobian)を、$F$はフレネル項を表す。式\eqref{eq:26}について、$\rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m)$をを式\eqref{eq:27}で、$D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m)$を式\eqref{eq:16}で置き換えると、以下が求められる。
+
+\begin{equation}
+    \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) = \frac{1}{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|} \int_{\Omega} \frac{F(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_h)\delta_{\boldsymbol{\omegaup}_h}(\boldsymbol{\omegaup}_m)}{4|\boldsymbol{\omegaup}_i \cdot \boldsymbol{\omegaup}_h|^2} \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \label{eq:28}
+\end{equation}
+
+デルタ関数$\delta_{\boldsymbol{\omegaup}_h}(\boldsymbol{\omegaup}_m)$の積分は$\boldsymbol{\omegaup}_m = \boldsymbol{\omegaup}_h$とした被積分関数に置き換えることができ、$\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_h = \boldsymbol{\omegaup}_i \cdot \boldsymbol{\omegaup}_h$が成り立つため、式を以下にまで簡略化できる。
+
+\begin{equation}
+    \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) = \frac{F(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_h) G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_h) D(\boldsymbol{\omegaup}_h)}{4|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|}
+    \label{eq:29}
+\end{equation}
+
+これにより、よく知られた、鏡面的マイクロファセットベースBRDFの数式を求めることができる。
+
+\subsection{拡散的マイクロファセットにおけるBRDFの構築(Construction of the BRDF with diffuse microfacets)}
+
+拡散的マイクロファセットのマイクロBRDFは定数である。
+
+\begin{equation}
+    \rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) = \frac{1}{\pi}
+    \label{eq:30}
+\end{equation}
+
+式\eqref{eq:26}について、$\rho_{\mathcal M}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m)$をを式\eqref{eq:30}で、$D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m)$を式\eqref{eq:16}で置き換えると、以下が求められる。
+
+\begin{equation}
+    \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) = \frac{1}{\pi} \frac{1}{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|} \int_{\Omega} \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \label{eq:31}
+\end{equation}
+
+この式は解析的な解(analytical solution)ではない。OrenとNayarは、$D$が --- 紛らわしいがBeckmann分布ではなく --- 球面ガウス関数(spherical Gaussian)であり、$G_2$がV型空洞(V-cavity)のmasking-shadowing関数である場合の、この関数の解析的フィッティングを提案している。
+
+\subsection{BRDFの正規化テスト(The BRDF Normalization Test)}
+
+\paragraph{White Furnaceテスト(The White Furnace Test)}
+
+双方向散乱分布関数(BSDF)$s$は、上半分の半球上に定義される双方向反射率分布関数(BRDF)$\rho$と、下半分の半球上に定義される双方向透過率分布関数(BTDF)$t$の和である。
+
+\begin{equation}
+    s(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) = \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) + t(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i)
+    \label{eq:32}
+\end{equation}
+
+入射する放射輝度が吸収されない表面である場合、レイの放射輝度は散乱中において完全に保存される。したがって、表面での吸収が$0$のときに散乱したレイの分布が完全に正規化されるかどうかは、マイクロファセットベースの散乱モデルで確認しておきたい重要な性質のひとつである。
+
+\begin{equation}
+    \int_{\Omega_i} s(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i| d\boldsymbol{\omegaup}_i = 1 \forall \boldsymbol{\omegaup}_o
+    \label{eq:33}
+\end{equation}
+
+フレネル項が常に$1$であるなら、レイは透過が一切起こらないため、BTDFは$t = 0$となり、散乱モデルは完全にBRDFによって定義される(つまり、$s = \rho$となる)。この場合、レイはエネルギーを失うことなくすべからく反射され、その分布は正規化される。これはWhite Furnaceテストの式として以下のようにモデル化される。
+
+\begin{equation}
+    \int_{\Omega_i} \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i| d\boldsymbol{\omegaup}_i = 1
+    \label{eq:34}
+\end{equation}
+
+直観として、これは、出射方向から放たれた(cast)レイが何度か散乱してから表面を離れる様を表現していると考えることができる。しかし、図\ref{fig:6}(c)や\ref{sec:3.2}が示す通り、複数回バウンスするレイはshadowing関数によりBRDFから取り除かれているため、一般的な解析的BRDFはマイクロサーフェス上での複数回の散乱をモデル化していない。"完璧な反射板(perfect reflector)"としてのマイクロサーフェスをパラメータ化したものであっても、一般的なBRDFモデルでは積分が$1$にならず、White Furnaceテスト式を満たさないのは、ここに理由がある。
+
+\paragraph{Weak White Furnaceテスト(The Weak White Furnace Test)}
+
+White Furnaceテストは、最初の散乱事象しか組み込まれていない、一般的なBRDFモデルを検証するのには使えない。しかしながら、一般的なBRDFモデルが満たすべき、制限を緩和したテストを設計することはできる。1回目のバウンスの直後に表面を離れる\textbf{前}であるレイの分布が正規化されていることを確かめればよいのだ(図\ref{fig:6}(b))。これは、masking-shadowing関数をmaskingのみに置き換える($G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_h) = G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_h)$)ことで達成できる。式\eqref{eq:29}からフレネル項とshadowing関数を除けば以下の式が求められる。
+
+\begin{equation}
+    \rho(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i) = \frac{G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_h) D(\boldsymbol{\omegaup}_h)}{4|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|}
+    \label{eq:35}
+\end{equation}
+
+この式でWhite Furnaceテストを置き換えれば、Weak White Furnaceテストの式が以下のように求められる。
+
+\begin{equation}
+    \boxed{
+    \int_{\Omega_i} \frac{G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_h) D(\boldsymbol{\omegaup}_h)}{4|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o|} d\boldsymbol{\omegaup}_i = 1
+    }
+    \label{eq:36}
+\end{equation}
+
+この条件は、式\eqref{eq:14}を満足する適切なmasking関数$G_1$によってのみ満たすことができる。
+
+式\eqref{eq:31}を$G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_h) = G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_h)$で置き換え、入射方向に対して積分することにより、拡散的マイクロファセットにおけるBRDFのための同様のテストを定義した。
+
+\begin{equation}
+    \begin{split}
+        & \int_{\Omega_i} \frac{1}{\pi} \frac{1}{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|} \int_{\Omega} \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i| d\boldsymbol{\omegaup}_i \\
+        &= \frac{1}{\pi} \frac{1}{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o|} \int_{\Omega_i} \int_{\Omega} \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m \rangle G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m d\boldsymbol{\omegaup}_i \\
+        &= 1
+    \end{split}
+    \label{eq:37}
+\end{equation}
 
 \begin{figure}
     \includegraphics[width=\textwidth]{Figure6_1.png}
@@ -365,6 +465,8 @@ TODO
     \label{fig:6}
 \end{figure}
 
-\subsection{(Summary)}
+\subsection{まとめ(Summary)}
+
+TODO
 
 \end{document}
