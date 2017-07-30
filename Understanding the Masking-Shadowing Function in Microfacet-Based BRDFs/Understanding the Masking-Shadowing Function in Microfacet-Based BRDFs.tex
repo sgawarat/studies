@@ -512,7 +512,61 @@ Smithのマイクロサーフェス・プロファイルは、マイクロサー
 
 そして、遠い所でのmasking関数$G_1^{\text{dist}}(\boldsymbol{\omegaup}_o)$は、localな向き$\boldsymbol{\omegaup}_m$に対して独立である、マイクロサーフェスの遠くの点による遮蔽確率を表す。
 
-\paragraph{(Derivation of the Masking Function)}
+\paragraph{masking関数の導出(Derivation of the Masking Function)}
+
+式\eqref{eq:38}で式\eqref{eq:14}のmasking関数を展開することで、以下の式が求められる。
+
+\begin{equation}
+    \begin{split}
+        \cos\theta_o
+        &= \int_{\Omega} G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m \\
+        &= \int_{\Omega} G_1^{\text{local}}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) G_1^{\text{dist}}(\boldsymbol{\omegaup}_o) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m \\
+        &= \int_{\Omega} \chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m) G_1^{\text{dist}}(\boldsymbol{\omegaup}_o) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m \\
+        &=  G_1^{\text{dist}}(\boldsymbol{\omegaup}_o) \int_{\Omega} \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \end{split}
+    \label{eq:40}
+\end{equation}
+
+ここで、$G_1^{\text{dist}}(\boldsymbol{\omegaup}_o)$は$\boldsymbol{\omegaup}_m$に依存しないため積分の外に出すことができる。また、$\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m < 0$のとき$0$になるクランプされた内積がすでにあるので、階段関数$\chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m)$は冗長になるため取り除かれる。よって、出射方向$\boldsymbol{\omegaup}_o$から見て背面でない法線のmasking関数は以下の式で表される。
+
+\begin{equation}
+    G_1^{\text{dist}}(\boldsymbol{\omegaup}_o) = \frac{\cos\theta_o}{\int_{\Omega} \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m}
+    \label{eq:41}
+\end{equation}
+
+したがって、完全なmasking関数は以下の式で表される。
+
+\begin{equation}
+    \boxed{
+    G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = \chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m) \frac{\cos\theta_o}{\int_{\Omega} \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m}
+    }
+    \label{eq:42}
+\end{equation}
+
+これはAshikhminらによる法線/masking独立における厳密な(exact)masking関数の積分形式である。彼らはこの積分式をmasking関数の前計算に用いた。その計算結果は実行時に効率的な評価を行うためのテーブルに格納していた。
+
+\paragraph{Smithのmasking関数(The Smith Masking Function)}
+
+この文献では、Smithのmasking関数は$\frac{1}{1 + \Lambda(\boldsymbol{\omegaup}_o)}$の形で表される。この関数はマイクロサーフェスの傾斜(slopes)における積分を表し、この形式はmasking確率をレイトレーシングによって定式化(formulation)することにより導かれる。この定式化の欠点(drawback)は結果の厳密さに重点が置かれていないことにある。このことで、Smithのmasking関数はたびたび近似として扱われている。
+
+Ashikhminらの導出が同じ結果につながり、厳密さに重点が置かれているという利点を持つことを示した。つまり、積分範囲を法線から傾斜空間に変更することで、--- 付録\ref{sec:A}で導き出されるように、 --- 式\eqref{eq:41}は以下の式で表すことができる。
+
+\begin{equation*}
+    G_1^{\text{dist}}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = \frac{1}{1 + \Lambda(\boldsymbol{\omegaup}_o)}
+\end{equation*}
+
+そして、式\eqref{eq:42}を以下の式に書き直すことができる。
+
+\begin{equation}
+    \boxed{
+    G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = \frac{\chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m)}{1 + \Lambda(\boldsymbol{\omegaup}_o)}
+    }
+    \label{eq:43}
+\end{equation}
+
+ここで、$\frac{1}{1 + \Lambda(\boldsymbol{\omegaup}_o)}$はSmithのmasking関数の一般的な形式であり、様々な確率論的表面に対する閉形式の解法(closed-form solutions)が利用できる。したがって、法線/masking独立の仮定の下では、Smithのmasking関数は厳密である。
+
+\paragraph{(Properties)}
 
 TODO
 
