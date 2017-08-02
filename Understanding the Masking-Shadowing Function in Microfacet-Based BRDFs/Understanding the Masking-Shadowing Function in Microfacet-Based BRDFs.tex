@@ -566,7 +566,15 @@ Ashikhminらの導出が同じ結果につながり、厳密さに重点が置�
 
 ここで、$\frac{1}{1 + \Lambda(\boldsymbol{\omegaup}_o)}$はSmithのmasking関数の一般的な形式であり、様々な確率論的表面に対する閉形式の解法(closed-form solutions)が利用できる。したがって、法線/masking独立の仮定の下では、Smithのmasking関数は厳密である。
 
-\paragraph{(Properties)}
+\paragraph{性質(Properties)}
+
+いまだに、解析的関数を計測データと比較するとしたら、モデルの予測は正確だが厳密ではないことが分かるだろう。もちろん、Smithは彼の定式を現実の測定値を比較し、それが良く適合しているが、それでもなお近似であることを発見している。しかし、彼の定式は彼のフレームワークの中でならば厳密であるため、その近似は彼の導出に起因してない。統計学的モデル(例えば、Gaussian statistics)で現実の表面を説明しようとすることや、法線/masking独立を仮定することに起因している。
+
+Smithのモデルにより仮定される相関のないマイクロサーフェスは、いくつかのメタリックなカーペイントに見られる、"金属フレーク(metal flakes)"想起させる(reminiscent)。しかし、現実での連続的な表面はより広い相関のある関数を持つ。BourlierらはSmithのmasking関数を、異なる自己相関関数(GaussianとLorentzian)を持つランダムな荒い面を数値的に計測したmasking関数を比較した。彼らの調査の結果は、ランダムな表面上の相関を無視する(neglect)ことで生まれる誤差(error)は、観測角が$\tan(\theta) / \alpha > 0.5$のときのみに顕著である(noticeable)、としている。ここで、$\sigma^2 = \frac{\alpha^2}{2}$は傾斜の分散である。Smithのmasking関数はこの場合に若干の過大な推定(overestimations)が発生する傾向がある。Smithのmasking関数が一般的に相関のある表面上でも正確であり、相関があるmasking関数に対する解析的な解が存在しないことを考えれば、コンピュータグラフィクスの文脈においてSmithのmasking関数を適用することは合理的(reasonable)であるように見える。しかしながら、Ashikhminらによって指摘されている通り、繰り返すパターンや構造的なパターン(例えば、織物(fabric))における非ランダムな表面上の相関の影響は、重要性が高くなる可能性があり、専用のモデルに組み込まれなければならない。
+
+\paragraph{Smithの平均化されたmasking関数(The Smith Averaged Masking Functions)}
+
+Smithは、高さや法線のような、マイクロサーフェスの異なる量を平均化したmasking関数導き出した。式\eqref{eq:43}で表されるmasking関数$G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)$はマイクロサーフェスの高さを平均化した形式であり、BRDFの中で使われなければならないものである。もちろん、高さはBRDFに関係する法線に対して独立であるため、単純にそれらの平均を取ることができる。しかし、背面の法線を考慮しなかったりして、法線がすべて同じ方法で処理されていない場合がある。このBRDFモデルでは、外部の観測者(viewer)に対して見えているもののみが重要である(matter)。つまり、この観測者が観測できる放射輝度のみが重要である。もし表面上に何かがあっても、それが見えていなければ、BRDFには反映されないだろう。Simthは...
 
 TODO
 
