@@ -158,6 +158,7 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 この性質は、図\ref{fig:3}(c)にて$g$がmasking関数$G_1$の場合として用いられている。
 
 \subsection{マイクロファセットの射影(Microfacet Projections)}
+\label{sec:2.3}
 
 \paragraph{(a) 幾何学的な法線$\boldsymbol{\omegaup}_g$の方向に射影したときのマイクロサーフェスの射影面積}
 
@@ -549,7 +550,7 @@ Smithのマイクロサーフェス・プロファイルは、マイクロサー
 
 この文献では、Smithのmasking関数は$\frac{1}{1 + \Lambda(\boldsymbol{\omegaup}_o)}$の形で表される。この関数はマイクロサーフェスの傾斜(slopes)における積分を表し、この形式はmasking確率をレイトレーシングによって定式化(formulation)することにより導かれる。この定式化の欠点(drawback)は結果の厳密さに重点が置かれていないことにある。このことで、Smithのmasking関数はたびたび近似として扱われている。
 
-Ashikhminらの導出が同じ結果につながり、厳密さに重点が置かれているという利点を持つことを示した。つまり、積分範囲を法線から傾斜空間に変更することで、--- 付録\ref{sec:A}で導き出されるように、 --- 式\eqref{eq:41}は以下の式で表すことができる。
+Ashikhminらの導出が同じ結果につながり、厳密さに重点が置かれているという利点を持つことを示した。つまり、積分範囲を法線から傾斜空間に変更することで、--- \ref{sec:A}で導き出されるように、 --- 式\eqref{eq:41}は以下の式で表すことができる。
 
 \begin{equation*}
     G_1^{\text{dist}}(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = \frac{1}{1 + \Lambda(\boldsymbol{\omegaup}_o)}
@@ -574,8 +575,99 @@ Smithのモデルにより仮定される相関のないマイクロサーフェ
 
 \paragraph{Smithの平均化されたmasking関数(The Smith Averaged Masking Functions)}
 
-Smithは、高さや法線のような、マイクロサーフェスの異なる量を平均化したmasking関数導き出した。式\eqref{eq:43}で表されるmasking関数$G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)$はマイクロサーフェスの高さを平均化した形式であり、BRDFの中で使われなければならないものである。もちろん、高さはBRDFに関係する法線に対して独立であるため、単純にそれらの平均を取ることができる。しかし、背面の法線を考慮しなかったりして、法線がすべて同じ方法で処理されていない場合がある。このBRDFモデルでは、外部の観測者(viewer)に対して見えているもののみが重要である(matter)。つまり、この観測者が観測できる放射輝度のみが重要である。もし表面上に何かがあっても、それが見えていなければ、BRDFには反映されないだろう。Simthは...
+Smithは、高さや法線のような、マイクロサーフェスの異なる量を平均化したmasking関数導き出した。式\eqref{eq:43}で表されるmasking関数$G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)$はマイクロサーフェスの高さを平均化した形式であり、BRDFの中で使われなければならないものである。もちろん、高さはBRDFに関係する法線に対して独立であるため、単純にそれらの平均を取ることができる。しかし、背面の法線を考慮しなかったりして、法線がすべて同じ方法で処理されていない場合がある。このBRDFモデルでは、外部の観測者(viewer)に対して見えているもののみが重要である(matter)。つまり、この観測者が観測できる放射輝度のみが重要である。もし表面上に何かがあっても、それが見えていなければ、BRDFには反映されないだろう。Simthは、これを直接扱っているわけではないが、彼のmasking関数の法線を平均化した形式を導き出した。彼は"法線のどれくらいが遮蔽されているか"という質問の答えを求めていた。これは、波動光学のモデルのような別の状況で、表面に固有の性質を調べるときに重要になる。この文書で注目している、幾何光学ベースのBRDFモデルでは重要ではない。
+
+幾何学的なマイクロファセットベースBRDFの問題において、実際には、"\textbf{背面を向いていない}法線のどれくらいが遮蔽されているか"、という若干異なる質問に関心がある。
+
+\subsection{V型空洞のマイクロサーフェス・プロファイル(The V-Cavity Microsurface Profile)}
+
+この節では、Smithのmasking関数のもっとも一般的な代替であるV型空洞(V-cavities)に基づくmaskingモデルについて議論する。図\ref{fig:8}はV型空洞のマイクロサーフェスによる散乱モデルを図で示したものである。法線分布による1つのマイクロサーフェス上での散乱をモデル化するのではなく、このモデルは、分割したマイクロサーフェス上での散乱を計算し、それらの寄与を平均化する。各マイクロサーフェスは2つの法線$\boldsymbol{\omegaup}_m = (x_m, y_m, z_m)$と$\boldsymbol{\omegaup}_m' = (-x_m, -y_m, z_m)$で構成され、各マイクロサーフェスの寄与は最後のBRDFにおいて$\langle \boldsymbol{\omegaup}_m, \boldsymbol{\omegaup}_g \rangle D(\boldsymbol{\omegaup}_m)$で重み付けされる。
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{Figure8.png}
+    \caption{}
+    \label{fig:8}
+\end{figure}
+
+V型空洞マイクロサーフェスのmasking関数を求めるには通常三角法による導出が示される。節\ref{sec:2.3}で議論された、可視マイクロサーフェスの射影面積が保存されるという性質から、シンプルに同様の結果を導き出すことができる。V型空洞マイクロサーフェスは2つの対称的な法線$\boldsymbol{\omegaup}_m$と$\boldsymbol{\omegaup}_m'$のみを持つ。したがって、このマイクロサーフェスの法線分布は以下のようになる。
+
+\begin{equation}
+    D(\boldsymbol{\omegaup}) = \frac{1}{2} \frac{\delta_{\boldsymbol{\omegaup}_m}(\boldsymbol{\omegaup})}{\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g} + \frac{1}{2} \frac{\delta_{\boldsymbol{\omegaup}_m'}(\boldsymbol{\omegaup})}{\boldsymbol{\omegaup}_m' \cdot \boldsymbol{\omegaup}_g}
+    \label{eq:44}
+\end{equation}
+
+そして、以下によりこれが正しく正規化されていることを確認できる。
+
+\begin{equation}
+    \begin{split}
+        \int_{\Omega} \langle \boldsymbol{\omegaup}, \boldsymbol{\omegaup}_g \rangle D(\boldsymbol{\omegaup}) d\boldsymbol{\omegaup}
+        &= \int_{\Omega} \langle \boldsymbol{\omegaup}, \boldsymbol{\omegaup}_g \rangle \left( \frac{1}{2} \frac{\delta_{\boldsymbol{\omegaup}_m}(\boldsymbol{\omegaup})}{\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g} + \frac{1}{2} \frac{\delta_{\boldsymbol{\omegaup}_m'}(\boldsymbol{\omegaup})}{\boldsymbol{\omegaup}_m' \cdot \boldsymbol{\omegaup}_g} \right) d\boldsymbol{\omegaup} \\
+        &= \frac{1}{2} \frac{\boldsymbol{\omegaup}_m' \cdot \boldsymbol{\omegaup}_g}{\boldsymbol{\omegaup}_m' \cdot \boldsymbol{\omegaup}_g} + \frac{1}{2} \frac{\boldsymbol{\omegaup}_m' \cdot \boldsymbol{\omegaup}_g}{\boldsymbol{\omegaup}_m' \cdot \boldsymbol{\omegaup}_g} \\
+        &= \frac{1}{2} + \frac{1}{2} = 1
+    \end{split}
+    \label{eq:45}
+\end{equation}
+
+masking項を導くため、式\eqref{eq:14}で表される可視射影面積の保存則を用いる。
+
+\begin{equation}
+    \begin{split}
+        \cos\theta_o
+        &= \int_{\Omega} G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup} \rangle D(\boldsymbol{\omegaup}) d\boldsymbol{\omegaup} \\
+        &= \frac{1}{2} G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) \frac{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle}{\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g} + \frac{1}{2} G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m') \frac{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m' \rangle}{\boldsymbol{\omegaup}_m' \cdot \boldsymbol{\omegaup}_g}
+    \end{split}
+    \label{eq:46}
+\end{equation}
+
+ここでは、図\ref{fig:9}に示す通り、2つの構成(configurations)を取り得る。一方の場合では、2つの法線が可視であり遮蔽されない($G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = 1$であり$G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m') = 1$)。他方の場合では、$\boldsymbol{\omegaup}_m'$が背面を向いている($G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m') = 0$)。このとき以下が成り立つ。
+
+\begin{equation}
+    \cos\theta_o = \frac{1}{2}G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) \frac{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle}{\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g}
+    \label{eq:47}
+\end{equation}
+
+これを解くと、
+
+\begin{equation}
+    \begin{split}
+        G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m)
+        &= 2 \frac{\cos\theta_o (\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g)}{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle} \\
+        &= 2 \frac{(\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) (\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_g)}{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle}
+    \end{split}
+    \label{eq:48}
+\end{equation}
+
+これら2つの構成の結果は以下の1つの定式で表すことができる。
+
+\begin{equation}
+    G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = \min \left( 1, 2 \frac{(\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) (\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_g)}{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle} \right)
+    \label{eq:49}
+\end{equation}
+
+これは、CookとTorranceによって用いられるV型空洞のmasking関数としてよく知られている。
+
+\paragraph{検証(Validation)}
+
+このモデルが式\eqref{eq:18}を満たすか、すなわち、可視法線分布が正規化されているかどうかを確かめようと思う。まず、式\eqref{eq:16}の$G_1$を置き換える。
+
+\begin{equation}
+    D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m) = \min \left( 1, 2 \frac{(\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) (\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_g)}{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle} \right) \frac{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle D(\boldsymbol{\omegaup}_m)}{\cos\theta_o}
+    \label{eq:50}
+\end{equation}
+
+この形式は、$min(1, -)$の項があるため、調べ辛い。しかし、V型空洞モデルとSmithのモデルの主な違いは、$\theta_o \approx \frac{\pi}{2}$となるgrazing角で発生する。つまり、grazing角では常に図\ref{fig:9}構成(a)であり、2つの法線のうち1つは背面を向いていると言える。この場合、...
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{Figure9.png}
+    \caption{}
+    \label{fig:9}
+\end{figure}
 
 TODO
+
+\appendix
+
+\section{(Derivation of the Masking Function)}
+\label{sec:A}
 
 \end{document}
