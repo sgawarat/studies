@@ -655,7 +655,7 @@ masking項を導くため、式\eqref{eq:14}で表される可視射影面積の
     \label{eq:50}
 \end{equation}
 
-この形式は、$min(1, -)$の項があるため、調べ辛い。しかし、V型空洞モデルとSmithのモデルの主な違いは、$\theta_o \approx \frac{\pi}{2}$となるgrazing角で発生する。つまり、grazing角では常に図\ref{fig:9}構成(a)であり、2つの法線のうち1つは背面を向いていると言える。この場合、...
+この形式は、$min(1, -)$の項があるため、調べ辛い。しかし、V型空洞モデルとSmithのモデルの主な違いは、$\theta_o \approx \frac{\pi}{2}$となるgrazing角で発生する。つまり、grazing角では常に図\ref{fig:9}構成(a)であり、2つの法線のうち1つは背面を向いていると言える。この場合、$min(1, -)$の部分は取り除くことができる。
 
 \begin{figure}
     \includegraphics[width=\textwidth]{Figure9.png}
@@ -663,7 +663,74 @@ masking項を導くため、式\eqref{eq:14}で表される可視射影面積の
     \label{fig:9}
 \end{figure}
 
+\begin{equation}
+    \begin{split}
+        D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m)
+        &= 2 \frac{(\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) (\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_g)}{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle} \frac{\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle D(\boldsymbol{\omegaup}_m)}{\cos\theta_o} \\
+        &= 2 \chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m) (\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \end{split}
+    \label{eq:51}
+\end{equation}
+
+ここで、クランプされた内積$\langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m \rangle$は打ち消されるが、背面の法線が分布から取り除かれていることを保証するため、ヘヴィサイド関数$\chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m)$は残してあることに注意したい。この結果を以下の式を計算することで、式\eqref{eq:18}、つまり、可視法線分布が正規化されていることを検証する。
+
+\begin{equation}
+    \int_{\Omega} D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m = 2 \int_{\Omega} \chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m) (\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+    \label{eq:52}
+\end{equation}
+
+grazing角では幾何学的な法線に対して出射方向がほぼ垂直になるため、ヘヴィサイド関数は分布のほぼ中央で積分を切り詰める。また、V型空洞の表面は法線分布が対称であること、つまり、$D(\boldsymbol{\omegaup}_m) = D(\boldsymbol{\omegaup}_m')$であることを暗に示している。これは、ヘヴィサイド関数が法線分布を等しい2つに切り分けることを意味する。
+
+\begin{equation}
+    \begin{split}
+        \int_{\Omega} \chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m) (\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+        &= \frac{1}{2} \int_{\Omega} (\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m \\
+        &= \frac{1}{2}
+    \end{split}
+    \label{eq:53}
+\end{equation}
+
+ここで、法線分布は正規化されているので$\int_{\Omega} (\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m = 1$である。そして、この結果と式\eqref{eq:52}により、以下が成り立つ。
+
+\begin{equation}
+    \begin{split}
+        \int_{\Omega} D_{\boldsymbol{\omegaup}_o}(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m
+        &= 2 \int_{\Omega} \chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m) (\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) D(\boldsymbol{\omegaup}_m) d\boldsymbol{\omegaup}_m \\
+        &= 2 \frac{1}{2} = 1
+    \end{split}
+    \label{eq:54}
+\end{equation}
+
+これは、入射角がgrazing角であるときに式\eqref{eq:51}の可視法線分布が正規化されていることを示している。さらなる技術的な導出を経ると、どの入射角でもこの分布が正規化されていることを示すことができる。
+
+このモデルを検証する異なる方法としては、Weak White Furnaceテストがある。これを行うには、式\eqref{eq:49}の$G_1$を用いて式\eqref{eq:36}を評価する。実際には、この評価は数値積分によって行われる。この積分は常に$1$になり、したがって、V型空洞によるモデルは数学的に良く設計されており、エネルギー保存則を満たしている。
+
+\paragraph{性質(Properties)}
+
+V型空洞の可視法線分布が数学的にwell definedでありながらも、物理的にもっともらしい(plausible)とは言えず、入射角がgrazingのときのサーフェス・プロファイルは非現実的なモデル化が行われている。
+
+この法線には2つの種類がある。1つは背面を向いており、ヘヴィサイド項により取り除かれる。もう1つは背面を向いておらず、$(\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g) D(\boldsymbol{\omegaup}_m)$で重み付けされる放射輝度の寄与を生み出す。ここで、$(\boldsymbol{\omegaup}_m \cdot \boldsymbol{\omegaup}_g)$は、図\ref{fig:3}(a)で示されるように、マイクロファセットによる幾何学的な表面への射影のヤコビアンである。したがって、マイクロファセットは、出射方向に射影される前に幾何学的表面に射影されるかの如く、正確に重み付けされる。結果として、幾何学的に平坦なマイクロサーフェスをシミュレートしている。マイクロファセットは光の反射をかき乱す(purturb)ことができるが、幾何学的にはそのようなものは存在しない。ゆえに、このマイクロサーフェスモデルは、図\ref{fig:10}に示すように、ディスプレースメントマップではなくノーマルマップに近い振る舞いをするため、現実感が無くなってしまう。
+
+V型空洞モデルは、1つのマイクロサーフェスをシミュレートするのではなく、法線のペアごとに1つのマイクロサーフェスをシミュレートしてその結果を平均化することから、この効果は予期されていた。1つのマイクロサーフェスならば、高確率な可視法線は低確率な可視法線より多くの射影面積を占める、すなわち、より高い寄与を生み出すと思われる。しかし、V型空洞では、異なる法線は別々にシミュレートされて法線分布によって重み付けされるため、この現象が発生しない。(背面を向いている法線が破棄されること以外は)重みに視点に対する依存性が存在しない。これが、V型空洞モデルは可視性の効果をほとんど(poorly)含まず、ノーマルマップのような何かをシミュレートするに留まっている理由である。
+
+入射角がマイクロサーフェスすれすれ(grazing the microsurface)になればなるほど、マイクロサーフェス・プロファイルはこのノーマルマップの振る舞いをさらに強く示す傾向にある。結果として、BRDFのピークが低くなりすぎてしまうという傾向が現れる。現実のマイクロサーフェスでは、出射方向を向いている法線は、その射影面積が大きくなればなるほど、BRDFに対してより高い寄与を持つ。このため、図\ref{fig:10}に示す通り、反射方向は出射方向に変化しやすい(tend to be shifted)。この効果は、マイクロファセットは幾何学的に存在しないため、ノーマルマップにおいては見られない。つまり、法線はすべて同じ射影面積を持っている。
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{Figure10.png}
+    \caption{}
+    \label{fig:10}
+\end{figure}
+
+図\ref{fig:11}は、V型空洞とSmithのmasking-shadowing関数による等方的なBeckmann分布によって生成されたBRDFと、一致するGaussian statisticsを持つ手続き的な確率論的マイクロサーフェスモデルの散乱に対する数値的なシミュレーションから計算された結果を示している。Smithのmasking関数では、...
+
 TODO
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{Figure11_1.png}
+    \includegraphics[width=\textwidth]{Figure11_2.png}
+    \caption{}
+    \label{fig:11}
+\end{figure}
 
 \appendix
 
