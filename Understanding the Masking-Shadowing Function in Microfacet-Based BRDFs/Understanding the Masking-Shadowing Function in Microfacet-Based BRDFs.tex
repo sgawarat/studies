@@ -486,6 +486,7 @@ shadowingが組み込まれていないWeak White Furnaceテストは、masking�
 \section{一般的な物理ベースmasking関数と非物理ベースmasking関数(Common Physically Based and Non-Physically Based Masking Functions)}
 
 \subsection{Smithのマイクロサーフェス・プロファイル(The Smith Microsurface Profile)}
+\label{sec:4.1}
 
 \paragraph{法線/masking独立(Normal/Masking Independence)}
 
@@ -721,9 +722,7 @@ V型空洞モデルは、1つのマイクロサーフェスをシミュレート
     \label{fig:10}
 \end{figure}
 
-図\ref{fig:11}は、V型空洞とSmithのmasking-shadowing関数による等方的なBeckmann分布によって生成されたBRDFと、一致するGaussian statisticsを持つ手続き的な確率論的マイクロサーフェスモデルの散乱に対する数値的なシミュレーションから計算された結果を示している。Smithのmasking関数では、...
-
-TODO
+図\ref{fig:11}は、V型空洞とSmithのmasking-shadowing関数による等方的なBeckmann分布によって生成されたBRDFと、一致するGaussian statisticsを持つ手続き的な確率論的マイクロサーフェスモデルの散乱に対する数値的なシミュレーションから計算された結果を示している。Smithのmasking関数では、その分布が、ラフネスの増加に伴い、出射方向に傾いてゆく(is shifted toward)のが確認できる。非常に高いラフネス値では、BRDFでさえ後方散乱(backscattering)が主に起こる。この効果は --- 計測データ中に存在しており --- 、出射方向を向いた法線が最も多く見えることから、予期されていたことである。一方で、V型空洞モデルからはこの効果は現れない。
 
 \begin{figure}
     \includegraphics[width=\textwidth]{Figure11_1.png}
@@ -731,6 +730,76 @@ TODO
     \caption{}
     \label{fig:11}
 \end{figure}
+
+\subsection{非物理ベースmasking関数(Non-Physically Based Masking Functions)}
+
+\paragraph{定義(Definition)}
+
+マイクロサーフェスモデルから導き出された、もしくは、物理的なマイクロサーフェスを計測したものであれば、そのmasking関数は"物理ベース"と分類していたことを思い出して欲しい。物理ベースなmasking関数は常に式\eqref{eq:14}、\eqref{eq:18}、\eqref{eq:36}、\eqref{eq:37}を満たす。逆に(reciprocally)、"非物理ベース"なmasking関数はこれらの式を満たさない。すなわち、これらを導き出す(または、計測する)ことができるマイクロサーフェスが存在しないことを意味する。
+
+\paragraph{暗黙的なmasking関数(Implicit Masking Function)}
+
+式\eqref{eq:29}で与えられた鏡面的なマイクロファセットベースBRDFの式を簡単化するために、多くのモデルは、masking-shadowing関数と分母の式$|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|$が互いを打ち消すと仮定して取り除かれる。つまり、masking-shadowingは暗に以下のように定義されると言える。
+
+\begin{equation}
+    G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) = G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) G_1(\boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m)
+    \label{eq:55}
+\end{equation}
+
+ここで、分割されたmasking関数とshadowing関数は以下のようになる。
+
+\begin{equation}
+    G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = \chi^+(\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_g \rangle
+    \label{eq:56}
+\end{equation}
+
+\begin{equation}
+    G_1(\boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_m) = \chi^+(\boldsymbol{\omegaup}_i \cdot \boldsymbol{\omegaup}_m) \langle \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_g \rangle
+    \label{eq:57}
+\end{equation}
+
+このmasking関数は、$\boldsymbol{\omegaup}_o = \boldsymbol{\omegaup}_g$のとき$G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = 1$であり、入射角が$\frac{\pi}{2}$に近づくに連れて$G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_m) = 0$になるよう減少するため、"もっともらしい"と言える。しかし、このmasking関数は物理ベースではない。もちろん、式\eqref{eq:14}による射影面積の保存則を満たさない。これは、このmasking関数から導き出せる物理的なマイクロサーフェスモデルが存在しないことを示している。
+
+\paragraph{Schlick-Smithのmasking関数(The Schlick-Smith Masking Function)}
+
+Schlickは、しばしば"Schlick-Smith"のmasking関数として参照される、Smithのmasking関数の近似を提案した。このmasking関数には3つの問題がある。
+
+1つ目は、その論文で使われているラフネスのパラメータ$m$に矛盾がある(inconsist)ことである。その論文の式(18)はマイクロサーフェスの二乗平均平方根(root mean square; RMS)の傾斜を指している。つまり$m$は、物理学の文献や、特にオリジナルのSmithの論文で時折使われているラフネスの記述子(descriptor)$m = \sigma$である。これは同じ式中の変数$h$の定義と一致している。しかしながら、その論文の式(20)の中だと、$m$はBeckmann分布のラフネスパラメータ$m = \alpha = \sqrt{2} \sigma$である。これは、RMSの傾斜を$\sqrt{2}$倍したものである。結果として、masking関数で使われているラフネスと法線分布で使われているラフネスに不整合が生じている。
+
+この矛盾は容易に解決できるが、さらなる重大な(critical)問題が、彼によるSmithのmasking関数の再定式化(その論文の式(18))に誤りがあることである。彼は、"いくつかの同値(equivalences)により、オリジナルの式$G$は以下のように..."と述べている(states)。その導出は書かれていない(not provided)が、SchlickはHeらの式(その論文の式(24)と(25))を再編成された(rearranged)ように思われる。これには、Smithの$\Lambda$関数から指数の項が欠落している、というtypoが含まれている。
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{Figure12.png}
+    \caption{}
+    \label{fig:12}
+\end{figure}
+
+さらに、節\ref{sec:4.1}の最後のパラグラフで、幾何光学的なBRDFモデルに使うためのSmithのmasking関数はマイクロサーフェスの高さに対して平均化したものであると説明した。しかし、Schlickは、Heらの高さと法線を平均化するSmithのmasking関数を引き続き使ってしまった。これは、波動光学モデルの文脈においてなら適切であった。
+
+2つの失敗(error)の結論としては、図\ref{fig:12}のプロットが示す通り、Schlickのオリジナルの定式もフィッティングした近似式もどちらもSmithのmasking関数に正しくマッチしない。これは"Schlick-Smith"のmasking関数が、式\ref{eq:14}から射影面積の保存則を保証できないため、物理ベースでないことを意味する。
+
+\paragraph{Kelemenのmasking関数(The Kelemen Masking Function)}
+
+Kelemenらは、以下の近似式を用いて、V型空洞モデルのmasking-shadowing関数と、式\eqref{eq:29}で与えられる鏡面的なマイクロファセットベースBRDFの分母を置き換える安価な方法を提案した。
+
+\begin{equation}
+    \frac{G_2(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_h)}{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o| |\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|} = \frac{1}{|\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_h| |\boldsymbol{\omegaup}_i \cdot \boldsymbol{\omegaup}_h|}
+    \label{eq:58}
+\end{equation}
+
+これは、masking関数とshadowing関数を以下の式で近似することと等価である。
+
+\begin{equation}
+    G_1(\boldsymbol{\omegaup}_o, \boldsymbol{\omegaup}_h) = \frac{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o|}{|\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_h|}
+    \label{eq:59}
+\end{equation}
+
+\begin{equation}
+    G_1(\boldsymbol{\omegaup}_i, \boldsymbol{\omegaup}_h) = \frac{|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_i|}{|\boldsymbol{\omegaup}_i \cdot \boldsymbol{\omegaup}_h|}
+    \label{eq:60}
+\end{equation}
+
+TODO
 
 \appendix
 
