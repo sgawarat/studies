@@ -799,6 +799,49 @@ Kelemenらは、以下の近似式を用いて、V型空洞モデルのmasking-s
     \label{eq:60}
 \end{equation}
 
+このmasking関数はV型空洞のmasking関数に近い。$|\boldsymbol{\omegaup}_g \cdot \boldsymbol{\omegaup}_o|$は幾何学的表面の射影面積であり、$|\boldsymbol{\omegaup}_o \cdot \boldsymbol{\omegaup}_h|$はマイクロファセットの射影面積である。つまりこの式により、マイクロファセットの射影面積が幾何学的表面の射影面積に置き換えられる。これは、ノーマルマップのように平坦なマイクロファセットのよるマイクロサーフェスをシミュレートする傾向がある。
+
+しかし、V型空洞のmasking関数と異なり、Kelemenのmasking関数は式\eqref{eq:14}から射影面積が保存されること保証しない。これはV型空洞のmasking関数に対する良い近似であり続けるが、Kelemenの式から導出される物理的モデルは存在しない。それはすなわち、物理ベースではない。
+
+\subsection{まとめ(Summary)}
+
+この章では、以下を示した。
+
+\begin{itemize}
+    \item Smithのmasking関数とV型空洞のmasking関数はともに物理ベースであるが、異なるマイクロサーフェス・プロファイルを仮定している。
+    \item ともに、\eqref{eq:14}から射影面積が保存することを保証する。
+    \item ともに、式\eqref{eq:18}の可視法線分布の正規化係数である。
+    \item ともに、式\eqref{eq:36}と\eqref{eq:37}で与えられるWeak White Furnaceテストを満足する。
+    \item 対して、暗黙的masking関数、Schlick-Smithのmasking関数、Kelemenのmasking関数は式\eqref{eq:14}、\eqref{eq:18}、\eqref{eq:36}、\eqref{eq:37}を満たさない。したがって、これらは物理ベースではない。つまり、これらの式から導き出せるマイクロサーフェス・プロファイルが存在しない。
+\end{itemize}
+
+\paragraph{Smithのmasking関数(The Smith Masking Function)}
+
+代表的な説(typical belief)のひとつに、"Smithのmasking関数は法線分布に依存しているため、良い近似である。"というものがある。我々は、この回答については正しいが、理由については間違っていることを、以下のアイデアを開発することで示した。
+
+\begin{itemize}
+    \item Smithのモデルを選択することは、可視法線の方向がmasking確率に依存しないマイクロサーフェスを仮定することを選択したと暗に示している。
+    \item この仮定の下、masking関数は完全に決定される。その完全形式(exact form)は、Smithのmasking関数の一般形式として導き出すことができる。
+\end{itemize}
+
+ここでのポイントは、Smithのmasking関数を選択する理由が法線分布によってパラメータ化された物理的にもっともらしい近似だからではない、ということである。これを選ぶ本当の理由は、Smithの式が選ばれたマイクロサーフェス・プロファイル(つまり、法線/masking独立)の仮定の下では厳密な(exact)masking関数であること、である。物理的にもっともらしく、法線分布によってパラメータ化されているということは、それを選ぶ直接的な理由ではないが、正しい物理ベースmasking関数を使うことで予期される副次的効果ではある。
+
+\paragraph{V型空洞のmasking関数(The V-Cavity Masking Function)}
+
+もうひとつの誤解として、"V型空洞のmasking関数は、法線分布に基づかないので、間違いである。"というものがある。この章では、我々は、この推論が誤りであり、V型空洞モデルによって生み出された近似には重要な制約があることを示した。すなわち以下を示した。
+
+\begin{itemize}
+    \item 法線毎のV型空洞のmasking関数は法線分布に依存しない。
+    \item しかし、V型空洞のmasking関数の平均は法線分布に依存している。これはSmithのモデルとは逆に、masking関数と法線が独立していると仮定していないためである。表面のラフネスが増加すれば、BRDFの平均遮蔽率(average masking)は増加する。
+    \item V型空洞のmasking関数はいかなる対称的な法線分布でも用いることができ、正しく正規化されることが保証されている。
+    \item しかし、V型空洞モデルによって仮定されるサーフェス・プロファイルは、入射角がgrazingのときに平坦なマイクロファセットを持つような、ノーマルマップのそれに近い応答を有している。
+    \item grazing角や高いラフネスでは、現実の材質から予測されると比較して、BRDFのlobeが小さくなりすぎてしまう、というのが結論である。
+\end{itemize}
+
+V型空洞とSmithのどちらを選ぶかという問いには、両方ともマイクロサーフェス・プロファイルに基づいており、数学的にwell definedであることから、決定的な答えは存在しない。V型空洞は計算コストがより低く、一般的である --- 数学的にいかなる法線分布でもイケる --- が、現実感の点で劣るところがある。対して、Smithベースのモデルはより正確であるが、特定の導出と時々高価な評価が必要である。したがって、この選択は現実感とパフォーマンスのトレードオフの問題である。
+
+\section{(Stretch Invariance of the Masking Function)}
+
 TODO
 
 \appendix
