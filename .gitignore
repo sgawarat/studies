@@ -5,4 +5,8 @@
 *.out
 *.pdf
 *.synctex.gz
-
+*.bbl
+*.bcf
+*.bib.bak
+*.blg
+*.xml

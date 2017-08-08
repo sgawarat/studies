@@ -4,10 +4,24 @@
 \usepackage{fontspec}
 \usepackage{amsmath}
 \usepackage[upgreek]{txgreeks}
+% \usepackage[xetex]{hyperref}
+\usepackage[
+    backend=biber,
+    style=alphabetic,
+    maxbibnames=6,
+    maxcitenames=2,
+    giveninits=true,
+    % hyperref=true
+]{biblatex}
+\DeclareNameAlias{author}{last-first}
+\addbibresource{Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs.bib}
+
 % \setpagelayout{left=20mm,top=15mm,right=20mm,bottom=15mm,nohead}
 %\usepackage{xltxtra}
 %\usepackage{zxjatype}
-\setmainfont{Noto Serif CJK JP}
+\setmainfont[
+    AutoFakeSlant=0.3 % Psedo Italic
+]{Noto Serif CJK JP}
 \setsansfont{Noto Sans CJK JP}
 \setmonofont{Noto Sans Mono CJK JP}
 \setCJKmainfont{Noto Serif CJK JP}
@@ -28,7 +42,7 @@
 
 \section{まえがき(Introduction)}
 
-マイクロファセット理論は元々、表面上の散乱を研究するために光物性(optical physics)の分野で開発された。グラフィクス界隈では物理ベースのBRDFを導入するために使われ、こんにちの3DCGには欠かせない技術となっている。2012年と2013年のSIGGRAPHにはマイクロファセット理論を扱うコースもあり、そこではアーティストによる調整のしやすさや計算の効率性などについても議論されている。マイクロファセットは、要素の組み合わせの数だけ可能性が存在するため、今なお盛んな分野である。しかし、要素の適切な選び方が明白でないことままあるため、混乱の主な原因になっている。
+マイクロファセット理論は元々、表面上の散乱を研究するために光物性(optical physics)の分野で開発された\cite{Beckmann1963}。グラフィクス界隈では物理ベースの双方向反射率分布関数(BRDF)を導入するために使われ\cite{Cook1982,Oren1994,Walter2007}、こんにちの3DCGには欠かせない技術となっている。2012年と2013年のSIGGRAPHにはマイクロファセット理論を扱うコースもあり\cite{McAuley2012,McAuley2013}、そこではアーティストによる調整のしやすさや計算の効率性などについても議論されている。マイクロファセットは、要素の組み合わせの数だけ可能性が存在するため、今なお盛んな分野である。しかし、要素の適切な選び方が明白でないことままあるため、混乱の主な原因になっている。
 
 \paragraph{この文書で取り上げること(What This Document Is About)}
 
@@ -55,11 +69,11 @@
 この文書で述べられるアイデアは以下の3つの先行研究に強く影響を受けている:
 
 \begin{itemize}
-\item Smithのmasking関数は、コンピュータグラフィクスの文献のなかで最も有名なものの一つである。しかし、この関数が、正しいmasking関数から期待される性質である、可視射影面積(visible projected area)を保持することを保証する性質を持つことを文書の最後に指摘していることはあまり知られていない。
+\item \citeauthor{Smith1967} \cite{Smith1967}のmasking関数は、コンピュータグラフィクスの文献のなかで最も有名なものの一つである。しかし、この関数が、正しいmasking関数から期待される性質である、可視射影面積(visible projected area)を保持することを保証する性質を持つことを文書の最後に指摘していることはあまり知られていない。
 
-\item Ashikhminらは可視射影面積(visible projected area)が幾何学的表面からマイクロサーフェスに至るまで保存されている量であることを見つけ出した。この知見は、正しく正規化されていることとエネルギーが保存されていることを保証する、正しいmasking項の一般式を導出するために使われた。この導出の最中には、自然とSmithのmasking関数を再発明していた。彼らのmasking項は積分形式で表されており、閉形式を導くことはできない。彼らは数値的に前計算を行い、ルックアップテーブルに格納する方法を取った。
+\item \citeauthor{Ashikmin2000} \cite{Ashikmin2000}は可視射影面積(visible projected area)が幾何学的表面からマイクロサーフェスに至るまで保存されている量であることを見つけ出した。この知見は、正しく正規化されていることとエネルギーが保存されていることを保証する、正しいmasking項の一般式を導出するために使われた。この導出の最中には、自然とSmithのmasking関数を再発明していた。彼らのmasking項は積分形式で表されており、閉形式を導くことはできない。彼らは数値的に前計算を行い、ルックアップテーブルに格納する方法を取った。
 
-\item Rossらは海面の反射率に関する研究を提案した。ガウス的な荒い表面(Beckmann分布)で海面をモデル化し、Smithのmasking-shadowing関数を組み込んだ正規化済みBRDFを計算した。彼らはガウス的表面ではBRDFの正規化係数とSmithのmasking関数が打ち消し合う?似通った式を持つことを発見した。この性質は計算機処理目的では便利だが、彼らはこれが発生する物理的理由を示さなかった。
+\item \citeauthor{Ross2005} \cite{Ross2005}は海面の反射率に関する研究を提案した。ガウス的な荒い表面(Beckmann分布)で海面をモデル化し、Smithのmasking-shadowing関数を組み込んだ正規化済みBRDFを計算した。彼らはガウス的表面ではBRDFの正規化係数とSmithのmasking関数が打ち消し合う?似通った式を持つことを発見した。この性質は計算機処理目的では便利だが、彼らはこれが発生する物理的理由を示さなかった。
 \end{itemize}
 
 この文書では、可視射影面積(visible projected area)の保存の観点からこれまでのすべての研究結果を直接導き出せる、統一されたマイクロファセットフレームワークを提案する。
@@ -77,10 +91,10 @@
     \label{fig:1}
 \end{figure}
 
-放射輝度(radiance)は立体角からある領域を通過するエネルギー密度で、単位は$\text{W}/\text{sr}/\text{m}^2$である。方向$\boldsymbol{\omega}_o$に出射する面$\mathcal M$の放射輝度$L(\boldsymbol{\omega}_o, \mathcal{M})$は、出射方向に観測される射影面積(projected area)により重み付けされた、表面上の各区間(patch)の中心点$p_m$と出射方向$\boldsymbol{\omega}_o$に対する放射輝度$L(\boldsymbol{\omega}_o, p_m)$を積分したものである。
+放射輝度(radiance)は立体角からある領域を通過するエネルギー密度で、単位は$\text{W}/\text{sr}/\text{m}^2$である。方向$\omega_o$に出射する面$\mathcal M$の放射輝度$L(\omega_o, \mathcal{M})$は、出射方向に観測される射影面積(projected area)により重み付けされた、表面上の各区間(patch)の中心点$p_m$と出射方向$\omega_o$に対する放射輝度$L(\omega_o, p_m)$を積分したものである。
 
 \begin{equation}
-    L(\boldsymbol{\omega}_o, \mathcal{M}) = \frac{\int_{\mathcal M} \text{projected area}(p_m) L(\boldsymbol{\omega}_o, p_m) dp_m}{\int_{\mathcal M} \text{projected area}(p_m) dp_m}
+    L(\omega_o, \mathcal{M}) = \frac{\int_{\mathcal M} \text{projected area}(p_m) L(\omega_o, p_m) dp_m}{\int_{\mathcal M} \text{projected area}(p_m) dp_m}
     \label{eq:1}
 \end{equation}
 
@@ -88,7 +102,7 @@
 
 \subsection{マイクロファセット統計学(Microfacet Statistics)}
 
-幾何学的表面$\mathcal G$と呼ばれる表面の平面領域を考える。その面積は慣例に従い、$\int_{\mathcal G}dp_g = 1 [\text{m}^2]$である。マイクロファセットモデルは、真の表面がマイクロサーフェス$\mathcal M$と呼ばれるマイクロファセットの集合の形に幾何学的表面からオフセットしたものであると仮定する。正確に言うならば、ジオメトリ$\mathcal G$の法線が$\boldsymbol{\omega}_g$であるとすると、$\mathcal M$は$\boldsymbol{\omega}_g$方向に$\mathcal G$上に投影されたマイクロファセットの点の集合である。マイクロサーフェス$\mathcal M$の各点$p_m$は法線$\boldsymbol{\omega}_m(p_m)$を持つ。すなわち、$\boldsymbol{\omega}_m : \mathcal{M} \rightarrow \Omega$は、マイクロサーフェス上の点からその点の面法線ベクトルへの写像である。このベクトルは$(x_m, y_m, z_m)$として表される。
+幾何学的表面$\mathcal G$と呼ばれる表面の平面領域を考える。その面積は慣例に従い、$\int_{\mathcal G}dp_g = 1 [\text{m}^2]$である。マイクロファセットモデルは、真の表面がマイクロサーフェス$\mathcal M$と呼ばれるマイクロファセットの集合の形に幾何学的表面からオフセットしたものであると仮定する。正確に言うならば、ジオメトリ$\mathcal G$の法線が$\omega_g$であるとすると、$\mathcal M$は$\omega_g$方向に$\mathcal G$上に投影されたマイクロファセットの点の集合である。マイクロサーフェス$\mathcal M$の各点$p_m$は法線$\omega_m(p_m)$を持つ。すなわち、$\omega_m : \mathcal{M} \rightarrow \Omega$は、マイクロサーフェス上の点からその点の面法線ベクトルへの写像である。このベクトルは$(x_m, y_m, z_m)$として表される。
 
 \begin{figure}
     \includegraphics[width=\textwidth]{Figure2.png}
@@ -103,38 +117,38 @@
 マイクロサーフェス上の積分を球上の積分に関係を持たせるため、すなわち、空間的な積分から統計学的な積分に変換するため、領域を切り替えるときの面積の変化を計測するツールとして、法線分布(the distribution of normals)を導入する。これは$\text{m}^2/\text{sr}$を単位とし、以下で定義される。
 
 \begin{equation}
-    D(\boldsymbol{\omega}) = \int_{\mathcal M}  \delta_{\boldsymbol{\omega}}(\boldsymbol{\omega}_m(p_m)) dp_m
+    D(\omega) = \int_{\mathcal M}  \delta_{\omega}(\omega_m(p_m)) dp_m
     \label{eq:2}
 \end{equation}
 
 ここで、Diracのデルタ分布は、その引数の逆数である、$1/\text{sr}$を単位とする。
-単位球$\Omega$のある領域$\Omega' \subset \Omega$と、すべての点を含むマイクロサーフェス$\mathcal M$の部分集合$\mathcal{M}' \subset \mathcal{M}$を考えたとき、$\boldsymbol{\omega}_m(p_m)$が$\Omega'$の要素であるとすると以下が成り立つ。
+単位球$\Omega$のある領域$\Omega' \subset \Omega$と、すべての点を含むマイクロサーフェス$\mathcal M$の部分集合$\mathcal{M}' \subset \mathcal{M}$を考えたとき、$\omega_m(p_m)$が$\Omega'$の要素であるとすると以下が成り立つ。
 
 \begin{equation}
-    p_m \in \mathcal{M}' \iff \boldsymbol{\omega}_m(p_m) \in \Omega'
+    p_m \in \mathcal{M}' \iff \omega_m(p_m) \in \Omega'
     \label{eq:3}
 \end{equation}
 
 つまり、単位球$\Omega$のいずれの領域$\Omega' \subset \Omega$上での法線分布の積分が、$\Omega'$に対応する法線を有するすべての点の集合$\mathcal M'$の面積として求められる、という性質を持つ。
 
 \begin{equation}
-    \int_{\mathcal M'} dp_m = \int_{\Omega'} D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+    \int_{\mathcal M'} dp_m = \int_{\Omega'} D(\omega_m)d\omega_m
     \label{eq:4}
 \end{equation}
 
 結果として、法線分布の積分はマイクロサーフェスの面積と同じになる。
 
 \begin{equation}
-    \text{microsurface area} = \int_{\mathcal M} dp_m = \int_{\Omega} D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+    \text{microsurface area} = \int_{\mathcal M} dp_m = \int_{\Omega} D(\omega_m)d\omega_m
     \label{eq:5}
 \end{equation}
 
 \paragraph{空間的な数式と統計学的な数式(Spatial and Statistical Equations)}
 
-$D$の定義の結果として、$f(\boldsymbol{\omega}_m)$がいかなるマイクロサーフェスの法線の関数であっても、$f$の空間的な積分は統計学的な積分に入れ替えることができる。
+$D$の定義の結果として、$f(\omega_m)$がいかなるマイクロサーフェスの法線の関数であっても、$f$の空間的な積分は統計学的な積分に入れ替えることができる。
 
 \begin{equation}
-    \int_{\mathcal M} f(\boldsymbol{\omega}_m(p_m))dp_m = \int_{\Omega}f(\boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+    \int_{\mathcal M} f(\omega_m(p_m))dp_m = \int_{\Omega}f(\omega_m) D(\omega_m)d\omega_m
     \label{eq:6}
 \end{equation}
 
@@ -142,17 +156,17 @@ $D$の定義の結果として、$f(\boldsymbol{\omega}_m)$がいかなるマイ
 
 \paragraph{確率学的関数(Statistical Functions)}
 
-$g(p_m)$がマイクロサーフェス上に定義された空間的な関数であるとすると、関連する統計的な関数$g(\boldsymbol{\omega}_m)$を定義することができる。
+$g(p_m)$がマイクロサーフェス上に定義された空間的な関数であるとすると、関連する統計的な関数$g(\omega_m)$を定義することができる。
 
 \begin{equation}
-    g(\boldsymbol{\omega}) = \frac{\int_{\mathcal M} \delta_{\boldsymbol{\omega}}(\boldsymbol{\omega}(p_m)) g(p_m) dp_m}{\int_{\mathcal M} \delta_{\boldsymbol{\omega}}(\boldsymbol{\omega}_m(p_m)) dp_m}
+    g(\omega) = \frac{\int_{\mathcal M} \delta_{\omega}(\omega(p_m)) g(p_m) dp_m}{\int_{\mathcal M} \delta_{\omega}(\omega_m(p_m)) dp_m}
     \label{eq:7}
 \end{equation}
 
 この統計学的な関数は、以下のような統計学的な積分で用いることができる。
 
 \begin{equation}
-    \int_{\mathcal M} g(p_m)dp_m = \int_{\Omega}g(\boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m)d\boldsymbol{\omega}_m
+    \int_{\mathcal M} g(p_m)dp_m = \int_{\Omega}g(\omega_m) D(\omega_m)d\omega_m
     \label{eq:8}
 \end{equation}
 
@@ -161,44 +175,44 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 \subsection{マイクロファセットの射影(Microfacet Projections)}
 \label{sec:2.3}
 
-\paragraph{(a) 幾何学的な法線$\boldsymbol{\omega}_g$の方向に射影したときのマイクロサーフェスの射影面積}
+\paragraph{(a) 幾何学的な法線$\omega_g$の方向に射影したときのマイクロサーフェスの射影面積}
 
 幾何学的な法線の方向に射影したマイクロサーフェスの面積は幾何学的表面の面積であり、その値は慣例的に$1 [\text{m}^2]$である(図\ref{fig:3}(a))。したがって、ジオメトリへの法線分布の射影は正規化される。
 
 \begin{equation}
-    \int_\Omega (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m = \int_\mathcal{M} (\boldsymbol{\omega}_m(p_m) \cdot \boldsymbol{\omega}_g) dp_m = \int_\mathcal{G} dp_g = 1 [\text{m}^2]
+    \int_\Omega (\omega_m \cdot \omega_g) D(\omega_m) d\omega_m = \int_\mathcal{M} (\omega_m(p_m) \cdot \omega_g) dp_m = \int_\mathcal{G} dp_g = 1 [\text{m}^2]
     \label{eq:9}
 \end{equation}
 
-\paragraph{(b) 出射方向$\boldsymbol{\omega}_o$に射影したときの幾何学的表面の射影面積}
+\paragraph{(b) 出射方向$\omega_o$に射影したときの幾何学的表面の射影面積}
 
-幾何学的表面は$1 [\text{m}^2]$であり、それが出射方向$\boldsymbol{\omega}_o$に射影したときの射影面積は、入射角$\theta_o$のコサインをかけた面積に等しい(図3(b))。
+幾何学的表面は$1 [\text{m}^2]$であり、それが出射方向$\omega_o$に射影したときの射影面積は、入射角$\theta_o$のコサインをかけた面積に等しい(図3(b))。
 
 \begin{equation}
-    \text{projected area} = (\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_g) \cdot \text{area} = \cos \theta_o
+    \text{projected area} = (\omega_o \cdot \omega_g) \cdot \text{area} = \cos \theta_o
     \label{eq:10}
 \end{equation}
 
-\paragraph{(c) 出射方向$\boldsymbol{\omega}_o$に射影したときの可視(visible)マイクロサーフェスの射影面積}
+\paragraph{(c) 出射方向$\omega_o$に射影したときの可視(visible)マイクロサーフェスの射影面積}
 
-出射方向に射影したときの幾何学的表面の面積は、射影された"見えている(visible)"マイクロサーフェスの面積である(図\ref{fig:3}(c))。これはそれぞれの可視マイクロサーフェスの射影面積を合計したものである。法線$\boldsymbol{\omega}_m$を持つマイクロファセットの射影面積はgeometric projection factor$\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle$として現れる。ここで、$\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle$は$[0, 1]$にクランプされる内積であり、背面を向いたマイクロファセットは見えないことを表す。マイクロサーフェスに遮蔽されているマイクロファセットは射影面積にその影響を与えず、合計からは除外されなければならない。これは、点$p_m$が遮蔽されていれば$0$を、見えていれば$1$を返す空間的なmasking関数$G_1(\boldsymbol{\omega}_o, p_m)$をかけることにより達成される。この射影面積は以下で求められる。
+出射方向に射影したときの幾何学的表面の面積は、射影された"見えている(visible)"マイクロサーフェスの面積である(図\ref{fig:3}(c))。これはそれぞれの可視マイクロサーフェスの射影面積を合計したものである。法線$\omega_m$を持つマイクロファセットの射影面積はgeometric projection factor$\langle \omega_o, \omega_m \rangle$として現れる。ここで、$\langle \omega_o, \omega_m \rangle$は$[0, 1]$にクランプされる内積であり、背面を向いたマイクロファセットは見えないことを表す。マイクロサーフェスに遮蔽されているマイクロファセットは射影面積にその影響を与えず、合計からは除外されなければならない。これは、点$p_m$が遮蔽されていれば$0$を、見えていれば$1$を返す空間的なmasking関数$G_1(\omega_o, p_m)$をかけることにより達成される。この射影面積は以下で求められる。
 
 \begin{equation}
-    \text{projected area} = \int_\mathcal{M} G_1(\boldsymbol{\omega}_o, p_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m(p_m) \rangle dp_m
+    \text{projected area} = \int_\mathcal{M} G_1(\omega_o, p_m) \langle \omega_o, \omega_m(p_m) \rangle dp_m
     \label{eq:11}
 \end{equation}
 
-統計学的なmasking関数$G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$は範囲$[0, 1]$を持ち、以下の出射方向$\boldsymbol{\omega}_o$に対して可視である法線$\boldsymbol{\omega}_m$を持つマイクロファセットの分数式により求められる。
+統計学的なmasking関数$G_1(\omega_o, \omega_m)$は範囲$[0, 1]$を持ち、以下の出射方向$\omega_o$に対して可視である法線$\omega_m$を持つマイクロファセットの分数式により求められる。
 
 \begin{equation}
-    G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}) = \frac{\int_\mathcal{M}\delta_{\boldsymbol{\omega}}(\boldsymbol{\omega}_m(p_m))G_1(\boldsymbol{\omega}_o, p_m)dp_m}{\int_\mathcal{M}\delta_{\boldsymbol{\omega}}(\boldsymbol{\omega}_m(p_m))dp_m}
+    G_1(\omega_o, \omega) = \frac{\int_\mathcal{M}\delta_{\omega}(\omega_m(p_m))G_1(\omega_o, p_m)dp_m}{\int_\mathcal{M}\delta_{\omega}(\omega_m(p_m))dp_m}
     \label{eq:12}
 \end{equation}
 
 統計学的な数式は以下として求められる。
 
 \begin{equation}
-    \text{projected area} = \int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+    \text{projected area} = \int_\Omega G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m
     \label{eq:13}
 \end{equation}
 
@@ -214,12 +228,12 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 
 \begin{equation}
     \boxed{
-    \cos \theta_o = \int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+    \cos \theta_o = \int_\Omega G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m
     }
     \label{eq:14}
 \end{equation}
 
-物理ベースのmasking関数$G_1$はこの制約を常に満たさなければならない。しかし、この制約は$G_1$を完全に決定するものではない。なぜなら、masking関数$G_1$は$\boldsymbol{\omega}_o$と $\boldsymbol{\omega}_m)$の2つを取る関数であり、出射方向$\boldsymbol{\omega}_o$を定めても、この制約を満たす$G_1$は無限に存在するためである。そこで、解をひとつに定めるため、第２の制約としてマイクロサーフェス・プロファイル(microsurface profile)を導入する。
+物理ベースのmasking関数$G_1$はこの制約を常に満たさなければならない。しかし、この制約は$G_1$を完全に決定するものではない。なぜなら、masking関数$G_1$は$\omega_o$と $\omega_m)$の2つを取る関数であり、出射方向$\omega_o$を定めても、この制約を満たす$G_1$は無限に存在するためである。そこで、解をひとつに定めるため、第２の制約としてマイクロサーフェス・プロファイル(microsurface profile)を導入する。
 
 これを直感的に理解する方法は、法線分布はマイクロサーフェス上の各法線の割合のみを示すヒストグラムのようなものだと考えることである。そうすると、法線分布からは法線がどのように組織しているかという情報が得られないことが分かる。そのため、マイクロサーフェスの断面図(profile)が必要になる。さらに、図\ref{fig:4}に示す通り、プロファイルの選択は、出来上がるBRDFの形状に重大な影響力を持ち得る。マイクロサーフェス・プロファイルが決まれば、masking関数は完全に決定され、その完全形式(exact form)を導き出すことができる。
 
@@ -253,21 +267,21 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 式\eqref{eq:1}をマイクロファセットのパラダイムで定式化すると以下のようになる。
 
 \begin{equation}
-    L(\boldsymbol{\omega}_o, \mathcal{M}) = \frac{1}{\cos\theta_o} \int_\Omega L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+    L(\omega_o, \mathcal{M}) = \frac{1}{\cos\theta_o} \int_\Omega L(\omega_o, \omega_m) G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m
     \label{eq:15}
 \end{equation}
 
-ここで、$L(\boldsymbol{\omega}_o, \mathcal{M})$はマイクロサーフェスから出射する放射輝度を、$L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$は法線$\boldsymbol{\omega}_m$を持つマイクロファセットから出射する放射輝度を、$\frac{1}{\cos\theta_o}$はここでは幾何学的表面の射影面積による積分を正規化する因子を表す。つまり、図\ref{fig:5}で示すように、マイクロサーフェスから出射する放射輝度は、可視法線分布(the distribution of visible normals)で重み付けされた、各マイクロファセットから出射する放射輝度の合計であると理解することができる。この可視法線分布は、各法線の射影面積とmasking関数で重み付けされた法線分布として表される。
+ここで、$L(\omega_o, \mathcal{M})$はマイクロサーフェスから出射する放射輝度を、$L(\omega_o, \omega_m)$は法線$\omega_m$を持つマイクロファセットから出射する放射輝度を、$\frac{1}{\cos\theta_o}$はここでは幾何学的表面の射影面積による積分を正規化する因子を表す。つまり、図\ref{fig:5}で示すように、マイクロサーフェスから出射する放射輝度は、可視法線分布(the distribution of visible normals)で重み付けされた、各マイクロファセットから出射する放射輝度の合計であると理解することができる。この可視法線分布は、各法線の射影面積とmasking関数で重み付けされた法線分布として表される。
 
 \begin{equation}
-    D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) = \frac{G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)}{cos\theta_o}
+    D_{\omega_o}(\omega_m) = \frac{G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m)}{cos\theta_o}
     \label{eq:16}
 \end{equation}
 
-この可視法線分布$D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)$は正規化されているということが重要で、この性質を利用すれば、放射輝度の平均を取るための重み関数として用いることができる。
+この可視法線分布$D_{\omega_o}(\omega_m)$は正規化されているということが重要で、この性質を利用すれば、放射輝度の平均を取るための重み関数として用いることができる。
 
 \begin{equation}
-    L(\boldsymbol{\omega}_o, \mathcal{M}) = \int_\Omega L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+    L(\omega_o, \mathcal{M}) = \int_\Omega L(\omega_o, \omega_m) D_{\omega_o}(\omega_m) d\omega_m
     \label{eq:17}
 \end{equation}
 
@@ -275,9 +289,9 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 
 \begin{equation}
     \begin{split}
-        \int_\Omega D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
-        &= \int_\Omega \frac{G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)}{\cos\theta_o} d\boldsymbol{\omega}_m \\
-        &= \frac{\int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m}{\int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)d \boldsymbol{\omega}_m} \\
+        \int_\Omega D_{\omega_o}(\omega_m) d\omega_m
+        &= \int_\Omega \frac{G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m)}{\cos\theta_o} d\omega_m \\
+        &= \frac{\int_\Omega G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m}{\int_\Omega G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m)d \omega_m} \\
         &= 1
     \end{split}
     \label{eq:18}
@@ -286,43 +300,43 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 同様にして、式\eqref{eq:15}と式\eqref{eq:17}から平均出射照射輝度(average outgoing radiance)が正しく正規化されていることを強調する式\eqref{eq:1}と同じ形式で表現できる。
 
 \begin{equation}
-    L(\boldsymbol{\omega}_o, \mathcal{M}) = \frac{\int_\Omega L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d \boldsymbol{\omega}_m}{\int_\Omega G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)d \boldsymbol{\omega}_m}
+    L(\omega_o, \mathcal{M}) = \frac{\int_\Omega L(\omega_o, \omega_m) G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m) d \omega_m}{\int_\Omega G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m)d \omega_m}
     \label{eq:19}
 \end{equation}
 
 \subsection{BRDFの構築(Construction of the BRDF)}
 \label{sec:3.2}
 
-可視法線分布をもとにBRDFを作成することを考える。各マイクロファセットの放射輝度$L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$は、各マクロファセットと関連したマイクロBRDF(micro-BRDF)の項$\rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m)$を入射する放射輝度$L(\boldsymbol{\omega}_i)$とともに入射方向の領域$\Omega_i$上で積分したものとして表される。
+可視法線分布をもとにBRDFを作成することを考える。各マイクロファセットの放射輝度$L(\omega_o, \omega_m)$は、各マクロファセットと関連したマイクロBRDF(micro-BRDF)の項$\rho_{\mathcal M}(\omega_o, \omega_i, \omega_m)$を入射する放射輝度$L(\omega_i)$とともに入射方向の領域$\Omega_i$上で積分したものとして表される。
 
 \begin{equation}
-    L(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = \int_{\Omega_i} \frac{dL(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)}{d\boldsymbol{\omega}_i} d\boldsymbol{\omega}_i = \int_{\Omega_i} \rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle L(\boldsymbol{\omega}_i) d\boldsymbol{\omega}_i
+    L(\omega_o, \omega_m) = \int_{\Omega_i} \frac{dL(\omega_o, \omega_m)}{d\omega_i} d\omega_i = \int_{\Omega_i} \rho_{\mathcal M}(\omega_o, \omega_i, \omega_m) \langle \omega_i, \omega_m \rangle L(\omega_i) d\omega_i
     \label{eq:20}
 \end{equation}
 
-ここで、マイクロBRDF$\rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m)$は出射する放射輝度の微分$dL(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$と入射する放射照度の微分$\langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle L(\boldsymbol{\omega}_i) d\boldsymbol{\omega}_i$の割合を表す。
+ここで、マイクロBRDF$\rho_{\mathcal M}(\omega_o, \omega_i, \omega_m)$は出射する放射輝度の微分$dL(\omega_o, \omega_m)$と入射する放射照度の微分$\langle \omega_i, \omega_m \rangle L(\omega_i) d\omega_i$の割合を表す。
 
 \begin{equation}
-    \rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) = \frac{dL(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)}{\langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle L(\boldsymbol{\omega}_i) d\boldsymbol{\omega}_i}
+    \rho_{\mathcal M}(\omega_o, \omega_i, \omega_m) = \frac{dL(\omega_o, \omega_m)}{\langle \omega_i, \omega_m \rangle L(\omega_i) d\omega_i}
     \label{eq:21}
 \end{equation}
 
-次に、式\eqref{eq:17}を入射する放射照度に関して微分し、式\eqref{eq:21}により$dL(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$を置き換える。
+次に、式\eqref{eq:17}を入射する放射照度に関して微分し、式\eqref{eq:21}により$dL(\omega_o, \omega_m)$を置き換える。
 
 \begin{equation}
     \begin{split}
-        dL(\boldsymbol{\omega}_o, \mathcal{M})
-        &= \int_{\Omega} dL(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m \\
-        &= L(\boldsymbol{\omega}_i) d\boldsymbol{\omega}_i \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+        dL(\omega_o, \mathcal{M})
+        &= \int_{\Omega} dL(\omega_o, \omega_m) D_{\omega_o}(\omega_m) d\omega_m \\
+        &= L(\omega_i) d\omega_i \int_{\Omega} \rho_{\mathcal M}(\omega_o, \omega_i, \omega_m) \langle \omega_i, \omega_m \rangle D_{\omega_o}(\omega_m) d\omega_m
     \end{split}
     \label{eq:22}
 \end{equation}
 
-ここで、$L(\boldsymbol{\omega}_i)d\boldsymbol{\omega}_i$は$\boldsymbol{\omega}_m$に依存していないので積分の外に出すことができる。
+ここで、$L(\omega_i)d\omega_i$は$\omega_m$に依存していないので積分の外に出すことができる。
 マクロBRDF(macro-BRDF)は以下の式で定義されるため、
 
 \begin{equation}
-    dL(\boldsymbol{\omega}_o, \mathcal{M}) = \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) \cos\theta_i L(\boldsymbol{\omega}_i) d\boldsymbol{\omega}_i
+    dL(\omega_o, \mathcal{M}) = \rho(\omega_o, \omega_i) \cos\theta_i L(\omega_i) d\omega_i
     \label{eq:23}
 \end{equation}
 
@@ -330,20 +344,20 @@ $g(p_m)$がマイクロサーフェス上に定義された空間的な関数で
 
 \begin{equation}
     \begin{split}
-        \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i)
-        &= \frac{dL(\boldsymbol{\omega}_o, \mathcal M)}{\cos\theta_i L(\boldsymbol{\omega}_i) d\boldsymbol{\omega}_i} \\
-        &= \frac{1}{\cos\theta_i} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+        \rho(\omega_o, \omega_i)
+        &= \frac{dL(\omega_o, \mathcal M)}{\cos\theta_i L(\omega_i) d\omega_i} \\
+        &= \frac{1}{\cos\theta_i} \int_{\Omega} \rho_{\mathcal M}(\omega_o, \omega_i, \omega_m) \langle \omega_i, \omega_m \rangle D_{\omega_o}(\omega_m) d\omega_m
     \end{split}
     \label{eq:24}
 \end{equation}
 
-$D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)$を式\eqref{eq:16}で置き換えれば、以下が成り立つ。
+$D_{\omega_o}(\omega_m)$を式\eqref{eq:16}で置き換えれば、以下が成り立つ。
 
 \begin{equation}
     \begin{split}
-        \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i)
-        &= \frac{1}{\cos\theta_o \cos\theta_i} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m \\
-        &= \frac{1}{|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o| |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+        \rho(\omega_o, \omega_i)
+        &= \frac{1}{\cos\theta_o \cos\theta_i} \int_{\Omega} \rho_{\mathcal M}(\omega_o, \omega_i, \omega_m) \langle \omega_o, \omega_m \rangle \langle \omega_i, \omega_m \rangle G_1(\omega_o, \omega_m) D(\omega_m) d\omega_m \\
+        &= \frac{1}{|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|} \int_{\Omega} \rho_{\mathcal M}(\omega_o, \omega_i, \omega_m) \langle \omega_o, \omega_m \rangle \langle \omega_i, \omega_m \rangle G_1(\omega_o, \omega_m) D(\omega_m) d\omega_m
     \end{split}
     \label{eq:25}
 \end{equation}
@@ -351,7 +365,7 @@ $D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)$を式\eqref{eq:16}で置き�
 この式は1回目のバウンス(bounce)の後、表面付近(vicinity of the surface)を離れる\textbf{前}に、どれだけのレイ(ray)が反射されたかについてモデル化するだけである(図\ref{fig:6}(b))、という理解が重要である。一方で、BRDFモデルは、すべてのmicroscattering(微正面での散乱)を経て、表面を離れた\textbf{後}にレイがどのように分布しているかを説明しなければならない。反射したレイが表面付近を離れる前に再びマイクロサーフェスに当たって別の方向に反射することもあり得るため、表面付近を離れるのが前か後かによってこの分布は異なってくる(図\ref{fig:6}(d))。ここで導出されるBRDFモデルは、表面での1回目のバウンスのみを説明し、複数回のバウンスに関与するレイ(図\ref{fig:6}(c)の黒矢印)はモデルからは排除される。これは、shadowing関数を導入することで達成される。実際には、masking関数$G_1$をmasking-shadowing関数$G_2$に置き換える。
 
 \begin{equation}
-    \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) = \frac{1}{|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o| |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|} \int_{\Omega} \rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle G_2(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+    \rho(\omega_o, \omega_i) = \frac{1}{|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|} \int_{\Omega} \rho_{\mathcal M}(\omega_o, \omega_i, \omega_m) \langle \omega_o, \omega_m \rangle \langle \omega_i, \omega_m \rangle G_2(\omega_o, \omega_i, \omega_m) D(\omega_m) d\omega_m
     \label{eq:26}
 \end{equation}
 
@@ -361,46 +375,46 @@ $D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)$を式\eqref{eq:16}で置き�
 
 \begin{equation}
     \begin{split}
-        \rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m)
-        &= \left\lVert \frac{\partial \boldsymbol{\omega}_h}{\partial \boldsymbol{\omega}_i} \right\rVert \frac{F(\boldsymbol{\omega}_o, \boldsymbol{\omega}_h) \delta_{\boldsymbol{\omega}_h}(\boldsymbol{\omega}_m)}{| \boldsymbol{\omega}_i \cdot \boldsymbol{\omega}_h |} \\
-        &= \frac{F(\boldsymbol{\omega}_o, \boldsymbol{\omega}_h) \delta_{\boldsymbol{\omega}_h}(\boldsymbol{\omega}_m)}{4 | \boldsymbol{\omega}_i \cdot \boldsymbol{\omega}_h |^2}
+        \rho_{\mathcal M}(\omega_o, \omega_i, \omega_m)
+        &= \left\lVert \frac{\partial \omega_h}{\partial \omega_i} \right\rVert \frac{F(\omega_o, \omega_h) \delta_{\omega_h}(\omega_m)}{| \omega_i \cdot \omega_h |} \\
+        &= \frac{F(\omega_o, \omega_h) \delta_{\omega_h}(\omega_m)}{4 | \omega_i \cdot \omega_h |^2}
     \end{split}
     \label{eq:27}
 \end{equation}
 
-ここで、$\left\lVert \frac{\partial \boldsymbol{\omega}_h}{\partial \boldsymbol{\omega}_i} \right\rVert = \frac{1}{4|\boldsymbol{\omega}_i \cdot \boldsymbol{\omega}_h|}$は鏡映変換(reflection transformation)のヤコビアン(Jacobian)を、$F$はフレネル項を表す。式\eqref{eq:26}について、$\rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m)$をを式\eqref{eq:27}で、$D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)$を式\eqref{eq:16}で置き換えると、以下が求められる。
+ここで、$\left\lVert \frac{\partial \omega_h}{\partial \omega_i} \right\rVert = \frac{1}{4|\omega_i \cdot \omega_h|}$は鏡映変換(reflection transformation)のヤコビアン(Jacobian)\cite{Walter2007}を、$F$はフレネル項を表す。式\eqref{eq:26}について、$\rho_{\mathcal M}(\omega_o, \omega_i, \omega_m)$をを式\eqref{eq:27}で、$D_{\omega_o}(\omega_m)$を式\eqref{eq:16}で置き換えると、以下が求められる。
 
 \begin{equation}
-    \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) = \frac{1}{|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o| |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|} \int_{\Omega} \frac{F(\boldsymbol{\omega}_o, \boldsymbol{\omega}_h)\delta_{\boldsymbol{\omega}_h}(\boldsymbol{\omega}_m)}{4|\boldsymbol{\omega}_i \cdot \boldsymbol{\omega}_h|^2} \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle G_2(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+    \rho(\omega_o, \omega_i) = \frac{1}{|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|} \int_{\Omega} \frac{F(\omega_o, \omega_h)\delta_{\omega_h}(\omega_m)}{4|\omega_i \cdot \omega_h|^2} \langle \omega_o, \omega_m \rangle \langle \omega_i, \omega_m \rangle G_2(\omega_o, \omega_i, \omega_m) D(\omega_m) d\omega_m
     \label{eq:28}
 \end{equation}
 
-デルタ関数$\delta_{\boldsymbol{\omega}_h}(\boldsymbol{\omega}_m)$の積分は$\boldsymbol{\omega}_m = \boldsymbol{\omega}_h$とした被積分関数に置き換えることができ、$\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_h = \boldsymbol{\omega}_i \cdot \boldsymbol{\omega}_h$が成り立つため、式を以下にまで簡略化できる。
+デルタ関数$\delta_{\omega_h}(\omega_m)$の積分は$\omega_m = \omega_h$とした被積分関数に置き換えることができ、$\omega_o \cdot \omega_h = \omega_i \cdot \omega_h$が成り立つため、式を以下にまで簡略化できる。
 
 \begin{equation}
-    \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) = \frac{F(\boldsymbol{\omega}_o, \boldsymbol{\omega}_h) G_2(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_h) D(\boldsymbol{\omega}_h)}{4|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o| |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|}
+    \rho(\omega_o, \omega_i) = \frac{F(\omega_o, \omega_h) G_2(\omega_o, \omega_i, \omega_h) D(\omega_h)}{4|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|}
     \label{eq:29}
 \end{equation}
 
-これにより、よく知られた、鏡面的マイクロファセットベースBRDFの数式を求めることができる。
+これにより、よく知られた、鏡面的マイクロファセットベースBRDFの数式を求めることができる\cite{Walter2007}。
 
 \subsection{拡散的マイクロファセットにおけるBRDFの構築(Construction of the BRDF with diffuse microfacets)}
 
 拡散的マイクロファセットのマイクロBRDFは定数である。
 
 \begin{equation}
-    \rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) = \frac{1}{\pi}
+    \rho_{\mathcal M}(\omega_o, \omega_i, \omega_m) = \frac{1}{\pi}
     \label{eq:30}
 \end{equation}
 
-式\eqref{eq:26}について、$\rho_{\mathcal M}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m)$をを式\eqref{eq:30}で、$D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)$を式\eqref{eq:16}で置き換えると、以下が求められる。
+式\eqref{eq:26}について、$\rho_{\mathcal M}(\omega_o, \omega_i, \omega_m)$をを式\eqref{eq:30}で、$D_{\omega_o}(\omega_m)$を式\eqref{eq:16}で置き換えると、以下が求められる。
 
 \begin{equation}
-    \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) = \frac{1}{\pi} \frac{1}{|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o| |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|} \int_{\Omega} \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle G_2(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+    \rho(\omega_o, \omega_i) = \frac{1}{\pi} \frac{1}{|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|} \int_{\Omega} \langle \omega_o, \omega_m \rangle \langle \omega_i, \omega_m \rangle G_2(\omega_o, \omega_i, \omega_m) D(\omega_m) d\omega_m
     \label{eq:31}
 \end{equation}
 
-この式は解析的な解(analytical solution)ではない。OrenとNayarは、$D$が --- 紛らわしいがBeckmann分布ではなく --- 球面ガウス関数(spherical Gaussian)であり、$G_2$がV型空洞(V-cavity)のmasking-shadowing関数である場合の、この関数の解析的フィッティングを提案している。
+この式は解析的な解(analytical solution)ではない。\citeauthor{Oren1994} \cite{Oren1994}は、$D$が --- 紛らわしいがBeckmann分布ではなく --- 球面ガウス関数(spherical Gaussian)であり、$G_2$がV型空洞(V-cavity)のmasking-shadowing関数である場合の、この関数の解析的フィッティングを提案している。
 
 \subsection{BRDFの正規化テスト(The BRDF Normalization Test)}
 
@@ -409,21 +423,21 @@ $D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)$を式\eqref{eq:16}で置き�
 双方向散乱分布関数(BSDF)$s$は、上半分の半球上に定義される双方向反射率分布関数(BRDF)$\rho$と、下半分の半球上に定義される双方向透過率分布関数(BTDF)$t$の和である。
 
 \begin{equation}
-    s(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) = \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) + t(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i)
+    s(\omega_o, \omega_i) = \rho(\omega_o, \omega_i) + t(\omega_o, \omega_i)
     \label{eq:32}
 \end{equation}
 
 入射する放射輝度が吸収されない表面である場合、レイの放射輝度は散乱中において完全に保存される。したがって、表面での吸収が$0$のときに散乱したレイの分布が完全に正規化されるかどうかは、マイクロファセットベースの散乱モデルで確認しておきたい重要な性質のひとつである。
 
 \begin{equation}
-    \int_{\Omega_i} s(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i| d\boldsymbol{\omega}_i = 1 \forall \boldsymbol{\omega}_o
+    \int_{\Omega_i} s(\omega_o, \omega_i) |\omega_g \cdot \omega_i| d\omega_i = 1 \forall \omega_o
     \label{eq:33}
 \end{equation}
 
 フレネル項が常に$1$であるなら、レイは透過が一切起こらないため、BTDFは$t = 0$となり、散乱モデルは完全にBRDFによって定義される(つまり、$s = \rho$となる)。この場合、レイはエネルギーを失うことなくすべからく反射され、その分布は正規化される。これはWhite Furnaceテストの式として以下のようにモデル化される。
 
 \begin{equation}
-    \int_{\Omega_i} \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i| d\boldsymbol{\omega}_i = 1
+    \int_{\Omega_i} \rho(\omega_o, \omega_i) |\omega_g \cdot \omega_i| d\omega_i = 1
     \label{eq:34}
 \end{equation}
 
@@ -431,10 +445,10 @@ $D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)$を式\eqref{eq:16}で置き�
 
 \paragraph{Weak White Furnaceテスト(The Weak White Furnace Test)}
 
-White Furnaceテストは、最初の散乱事象しか組み込まれていない、一般的なBRDFモデルを検証するのには使えない。しかしながら、一般的なBRDFモデルが満たすべき、制限を緩和したテストを設計することはできる。1回目のバウンスの直後に表面を離れる\textbf{前}であるレイの分布が正規化されていることを確かめればよいのだ(図\ref{fig:6}(b))。これは、masking-shadowing関数をmaskingのみに置き換える($G_2(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_h) = G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_h)$)ことで達成できる。式\eqref{eq:29}からフレネル項とshadowing関数を除けば以下の式が求められる。
+White Furnaceテストは、最初の散乱事象しか組み込まれていない、一般的なBRDFモデルを検証するのには使えない。しかしながら、一般的なBRDFモデルが満たすべき、制限を緩和したテストを設計することはできる。1回目のバウンスの直後に表面を離れる\textbf{前}であるレイの分布が正規化されていることを確かめればよいのだ(図\ref{fig:6}(b))。これは、masking-shadowing関数をmaskingのみに置き換える($G_2(\omega_o, \omega_i, \omega_h) = G_1(\omega_o, \omega_h)$)ことで達成できる。式\eqref{eq:29}からフレネル項とshadowing関数を除けば以下の式が求められる。
 
 \begin{equation}
-    \rho(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i) = \frac{G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_h) D(\boldsymbol{\omega}_h)}{4|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o| |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|}
+    \rho(\omega_o, \omega_i) = \frac{G_1(\omega_o, \omega_h) D(\omega_h)}{4|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|}
     \label{eq:35}
 \end{equation}
 
@@ -442,27 +456,27 @@ White Furnaceテストは、最初の散乱事象しか組み込まれていな�
 
 \begin{equation}
     \boxed{
-    \int_{\Omega_i} \frac{G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_h) D(\boldsymbol{\omega}_h)}{4|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o|} d\boldsymbol{\omega}_i = 1
+    \int_{\Omega_i} \frac{G_1(\omega_o, \omega_h) D(\omega_h)}{4|\omega_g \cdot \omega_o|} d\omega_i = 1
     }
     \label{eq:36}
 \end{equation}
 
 この条件は、式\eqref{eq:14}を満足する適切なmasking関数$G_1$によってのみ満たすことができる。
 
-式\eqref{eq:31}を$G_2(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_h) = G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_h)$で置き換え、入射方向に対して積分することにより、拡散的マイクロファセットにおけるBRDFのための同様のテストを定義した。
+式\eqref{eq:31}を$G_2(\omega_o, \omega_i, \omega_h) = G_1(\omega_o, \omega_h)$で置き換え、入射方向に対して積分することにより、拡散的マイクロファセットにおけるBRDFのための同様のテストを定義した。
 
 \begin{equation}
     \begin{split}
-        & \int_{\Omega_i} \frac{1}{\pi} \frac{1}{|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o| |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|} \int_{\Omega} \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i| d\boldsymbol{\omega}_i \\
-        &= \frac{1}{\pi} \frac{1}{|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o|} \int_{\Omega_i} \int_{\Omega} \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_m \rangle G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m d\boldsymbol{\omega}_i \\
+        & \int_{\Omega_i} \frac{1}{\pi} \frac{1}{|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|} \int_{\Omega} \langle \omega_o, \omega_m \rangle \langle \omega_i, \omega_m \rangle G_1(\omega_o, \omega_m) D(\omega_m) d\omega_m |\omega_g \cdot \omega_i| d\omega_i \\
+        &= \frac{1}{\pi} \frac{1}{|\omega_g \cdot \omega_o|} \int_{\Omega_i} \int_{\Omega} \langle \omega_o, \omega_m \rangle \langle \omega_i, \omega_m \rangle G_1(\omega_o, \omega_m) D(\omega_m) d\omega_m d\omega_i \\
         &= 1
     \end{split}
     \label{eq:37}
 \end{equation}
 
 \begin{figure}
-    \includegraphics[width=\textwidth]{Figure6_1.png}
-    \includegraphics[width=\textwidth]{Figure6_2.png}
+    \includegraphics[width=10pt]{Figure6_1.png}
+    \includegraphics[width=10pt]{Figure6_2.png}
     \caption{}
     \label{fig:6}
 \end{figure}
@@ -499,21 +513,21 @@ Smithのマイクロサーフェス・プロファイルは、マイクロサー
     \label{fig:7}
 \end{figure}
 
-このモデルから、masking関数によって与えられる確率$G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$は、背面を向いていない($\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m > 0$)法線について、法線の向き$\boldsymbol{\omega}_m$に対して独立である、ということを導き出せる。法線$\boldsymbol{\omega}_m$はマイクロファセットの\textbf{近い(local)}所での性質である一方、maskingの原因となる潜在的な遮蔽(potential occlusion responsible for masking)はマイクロサーフェス上の他の場所で起こる、すなわち、マイクロファセットの\textbf{遠い(distant)}所での性質であることが、直観として理解できる。ただし、依然としてミクロスケールでの話である。マイクロサーフェスが自己相関しないため、近い所での性質は遠い所での性質に対して独立であり、masking関数は以下の分割された形式で表現できる。
+このモデルから、masking関数によって与えられる確率$G_1(\omega_o, \omega_m)$は、背面を向いていない($\omega_o \cdot \omega_m > 0$)法線について、法線の向き$\omega_m$に対して独立である、ということを導き出せる。法線$\omega_m$はマイクロファセットの\textbf{近い(local)}所での性質である一方、maskingの原因となる潜在的な遮蔽(potential occlusion responsible for masking)はマイクロサーフェス上の他の場所で起こる、すなわち、マイクロファセットの\textbf{遠い(distant)}所での性質であることが、直観として理解できる。ただし、依然としてミクロスケールでの話である。マイクロサーフェスが自己相関しないため、近い所での性質は遠い所での性質に対して独立であり、masking関数は以下の分割された形式で表現できる。
 
 \begin{equation}
-    G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = G_1^{\text{local}}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) G_1^{\text{dist}}(\boldsymbol{\omega}_o)
+    G_1(\omega_o, \omega_m) = G_1^{\text{local}}(\omega_o, \omega_m) G_1^{\text{dist}}(\omega_o)
     \label{eq:38}
 \end{equation}
 
 ここで、近い所でのmasking関数は、背面のマイクロファセットを破棄するかどうかを二値化したものである。
 
 \begin{equation}
-    G_1^{\text{local}}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = \chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m)
+    G_1^{\text{local}}(\omega_o, \omega_m) = \chi^+(\omega_o \cdot \omega_m)
     \label{eq:39}
 \end{equation}
 
-そして、遠い所でのmasking関数$G_1^{\text{dist}}(\boldsymbol{\omega}_o)$は、localな向き$\boldsymbol{\omega}_m$に対して独立である、マイクロサーフェスの遠くの点による遮蔽確率を表す。
+そして、遠い所でのmasking関数$G_1^{\text{dist}}(\omega_o)$は、localな向き$\omega_m$に対して独立である、マイクロサーフェスの遠くの点による遮蔽確率を表す。
 
 \paragraph{masking関数の導出(Derivation of the Masking Function)}
 
@@ -522,18 +536,18 @@ Smithのマイクロサーフェス・プロファイルは、マイクロサー
 \begin{equation}
     \begin{split}
         \cos\theta_o
-        &= \int_{\Omega} G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m \\
-        &= \int_{\Omega} G_1^{\text{local}}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) G_1^{\text{dist}}(\boldsymbol{\omega}_o) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m \\
-        &= \int_{\Omega} \chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m) G_1^{\text{dist}}(\boldsymbol{\omega}_o) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m \\
-        &=  G_1^{\text{dist}}(\boldsymbol{\omega}_o) \int_{\Omega} \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+        &= \int_{\Omega} G_1(\omega_o, \omega_m) \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m \\
+        &= \int_{\Omega} G_1^{\text{local}}(\omega_o, \omega_m) G_1^{\text{dist}}(\omega_o) \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m \\
+        &= \int_{\Omega} \chi^+(\omega_o \cdot \omega_m) G_1^{\text{dist}}(\omega_o) \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m \\
+        &=  G_1^{\text{dist}}(\omega_o) \int_{\Omega} \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m
     \end{split}
     \label{eq:40}
 \end{equation}
 
-ここで、$G_1^{\text{dist}}(\boldsymbol{\omega}_o)$は$\boldsymbol{\omega}_m$に依存しないため積分の外に出すことができる。また、$\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m < 0$のとき$0$になるクランプされた内積がすでにあるので、階段関数$\chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m)$は冗長になるため取り除かれる。よって、出射方向$\boldsymbol{\omega}_o$から見て背面でない法線のmasking関数は以下の式で表される。
+ここで、$G_1^{\text{dist}}(\omega_o)$は$\omega_m$に依存しないため積分の外に出すことができる。また、$\omega_o \cdot \omega_m < 0$のとき$0$になるクランプされた内積がすでにあるので、階段関数$\chi^+(\omega_o \cdot \omega_m)$は冗長になるため取り除かれる。よって、出射方向$\omega_o$から見て背面でない法線のmasking関数は以下の式で表される。
 
 \begin{equation}
-    G_1^{\text{dist}}(\boldsymbol{\omega}_o) = \frac{\cos\theta_o}{\int_{\Omega} \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m}
+    G_1^{\text{dist}}(\omega_o) = \frac{\cos\theta_o}{\int_{\Omega} \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m}
     \label{eq:41}
 \end{equation}
 
@@ -541,49 +555,49 @@ Smithのマイクロサーフェス・プロファイルは、マイクロサー
 
 \begin{equation}
     \boxed{
-    G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = \chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m) \frac{\cos\theta_o}{\int_{\Omega} \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m}
+    G_1(\omega_o, \omega_m) = \chi^+(\omega_o \cdot \omega_m) \frac{\cos\theta_o}{\int_{\Omega} \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m}
     }
     \label{eq:42}
 \end{equation}
 
-これはAshikhminらによる法線/masking独立における厳密な(exact)masking関数の積分形式である。彼らはこの積分式をmasking関数の前計算に用いた。その計算結果は実行時に効率的な評価を行うためのテーブルに格納していた。
+これは\citeauthor{Ashikmin2000} \cite{Ashikmin2000}による法線/masking独立における厳密な(exact)masking関数の積分形式である。彼らはこの積分式をmasking関数の前計算に用いた。その計算結果は実行時に効率的な評価を行うためのテーブルに格納していた。
 
 \paragraph{Smithのmasking関数(The Smith Masking Function)}
 
-この文献では、Smithのmasking関数は$\frac{1}{1 + \Lambda(\boldsymbol{\omega}_o)}$の形で表される。この関数はマイクロサーフェスの傾斜(slopes)における積分を表し、この形式はmasking確率をレイトレーシングによって定式化(formulation)することにより導かれる。この定式化の欠点(drawback)は結果の厳密さに重点が置かれていないことにある。このことで、Smithのmasking関数はたびたび近似として扱われている。
+この文献では、Smithのmasking関数は$\frac{1}{1 + \Lambda(\omega_o)}$の形で表される。この関数はマイクロサーフェスの傾斜(slopes)における積分を表し、この形式はmasking確率をレイトレーシングによって定式化(formulation)することにより導かれる\cite{Walter2007}。この定式化の欠点(drawback)は結果の厳密さに重点が置かれていないことにある。このことで、Smithのmasking関数はたびたび近似として扱われている。
 
 Ashikhminらの導出が同じ結果につながり、厳密さに重点が置かれているという利点を持つことを示した。つまり、積分範囲を法線から傾斜空間に変更することで、--- \ref{sec:A}で導き出されるように、 --- 式\eqref{eq:41}は以下の式で表すことができる。
 
 \begin{equation*}
-    G_1^{\text{dist}}(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = \frac{1}{1 + \Lambda(\boldsymbol{\omega}_o)}
+    G_1^{\text{dist}}(\omega_o, \omega_m) = \frac{1}{1 + \Lambda(\omega_o)}
 \end{equation*}
 
 そして、式\eqref{eq:42}を以下の式に書き直すことができる。
 
 \begin{equation}
     \boxed{
-    G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = \frac{\chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m)}{1 + \Lambda(\boldsymbol{\omega}_o)}
+    G_1(\omega_o, \omega_m) = \frac{\chi^+(\omega_o \cdot \omega_m)}{1 + \Lambda(\omega_o)}
     }
     \label{eq:43}
 \end{equation}
 
-ここで、$\frac{1}{1 + \Lambda(\boldsymbol{\omega}_o)}$はSmithのmasking関数の一般的な形式であり、様々な確率論的表面に対する閉形式の解法(closed-form solutions)が利用できる。したがって、法線/masking独立の仮定の下では、Smithのmasking関数は厳密である。
+ここで、$\frac{1}{1 + \Lambda(\omega_o)}$はSmithのmasking関数の一般的な形式であり\cite{Brown1980,Walter2007}、様々な確率論的表面に対する閉形式の解法(closed-form solutions)が利用できる。したがって、法線/masking独立の仮定の下では、Smithのmasking関数は厳密である。
 
 \paragraph{性質(Properties)}
 
 いまだに、解析的関数を計測データと比較するとしたら、モデルの予測は正確だが厳密ではないことが分かるだろう。もちろん、Smithは彼の定式を現実の測定値を比較し、それが良く適合しているが、それでもなお近似であることを発見している。しかし、彼の定式は彼のフレームワークの中でならば厳密であるため、その近似は彼の導出に起因してない。統計学的モデル(例えば、Gaussian statistics)で現実の表面を説明しようとすることや、法線/masking独立を仮定することに起因している。
 
-Smithのモデルにより仮定される相関のないマイクロサーフェスは、いくつかのメタリックなカーペイントに見られる、"金属フレーク(metal flakes)"想起させる(reminiscent)。しかし、現実での連続的な表面はより広い相関のある関数を持つ。BourlierらはSmithのmasking関数を、異なる自己相関関数(GaussianとLorentzian)を持つランダムな荒い面を数値的に計測したmasking関数を比較した。彼らの調査の結果は、ランダムな表面上の相関を無視する(neglect)ことで生まれる誤差(error)は、観測角が$\tan(\theta) / \alpha > 0.5$のときのみに顕著である(noticeable)、としている。ここで、$\sigma^2 = \frac{\alpha^2}{2}$は傾斜の分散である。Smithのmasking関数はこの場合に若干の過大な推定(overestimations)が発生する傾向がある。Smithのmasking関数が一般的に相関のある表面上でも正確であり、相関があるmasking関数に対する解析的な解が存在しないことを考えれば、コンピュータグラフィクスの文脈においてSmithのmasking関数を適用することは合理的(reasonable)であるように見える。しかしながら、Ashikhminらによって指摘されている通り、繰り返すパターンや構造的なパターン(例えば、織物(fabric))における非ランダムな表面上の相関の影響は、重要性が高くなる可能性があり、専用のモデルに組み込まれなければならない。
+Smithのモデルにより仮定される相関のないマイクロサーフェスは、いくつかのメタリックなカーペイントに見られる、"金属フレーク(metal flakes)"想起させる(reminiscent)\cite{Rump2008}。しかし、現実での連続的な表面はより広い相関のある関数を持つ。\citeauthor{Bourlier2000} \cite{Bourlier2000}はSmithのmasking関数を、異なる自己相関関数(GaussianとLorentzian)を持つランダムな荒い面を数値的に計測したmasking関数を比較した。彼らの調査の結果は、ランダムな表面上の相関を無視する(neglect)ことで生まれる誤差(error)は、観測角が$\tan(\theta) / \alpha > 0.5$のときのみに顕著である(noticeable)、としている。ここで、$\sigma^2 = \frac{\alpha^2}{2}$は傾斜の分散である。Smithのmasking関数はこの場合に若干の過大な推定(overestimations)が発生する傾向がある。Smithのmasking関数が一般的に相関のある表面上でも正確であり、相関があるmasking関数に対する解析的な解が存在しないことを考えれば、コンピュータグラフィクスの文脈においてSmithのmasking関数を適用することは合理的(reasonable)であるように見える。しかしながら、\citeauthor{Ashikmin2000} \cite{Ashikmin2000}によって指摘されている通り、繰り返すパターンや構造的なパターン(例えば、織物(fabric))における非ランダムな表面上の相関の影響は、重要性が高くなる可能性があり、専用のモデルに組み込まれなければならない。
 
 \paragraph{Smithの平均化されたmasking関数(The Smith Averaged Masking Functions)}
 
-Smithは、高さや法線のような、マイクロサーフェスの異なる量を平均化したmasking関数導き出した。式\eqref{eq:43}で表されるmasking関数$G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)$はマイクロサーフェスの高さを平均化した形式であり、BRDFの中で使われなければならないものである。もちろん、高さはBRDFに関係する法線に対して独立であるため、単純にそれらの平均を取ることができる。しかし、背面の法線を考慮しなかったりして、法線がすべて同じ方法で処理されていない場合がある。このBRDFモデルでは、外部の観測者(viewer)に対して見えているもののみが重要である(matter)。つまり、この観測者が観測できる放射輝度のみが重要である。もし表面上に何かがあっても、それが見えていなければ、BRDFには反映されないだろう。Simthは、これを直接扱っているわけではないが、彼のmasking関数の法線を平均化した形式を導き出した。彼は"法線のどれくらいが遮蔽されているか"という質問の答えを求めていた。これは、波動光学のモデルのような別の状況で、表面に固有の性質を調べるときに重要になる。この文書で注目している、幾何光学ベースのBRDFモデルでは重要ではない。
+Smithは、高さや法線のような、マイクロサーフェスの異なる量を平均化したmasking関数導き出した\cite{Smith1967}。式\eqref{eq:43}で表されるmasking関数$G_1(\omega_o, \omega_m)$はマイクロサーフェスの高さを平均化した形式であり、BRDFの中で使われなければならないものである。もちろん、高さはBRDFに関係する法線に対して独立であるため、単純にそれらの平均を取ることができる。しかし、背面の法線を考慮しなかったりして、法線がすべて同じ方法で処理されていない場合がある。このBRDFモデルでは、外部の観測者(viewer)に対して見えているもののみが重要である(matter)。つまり、この観測者が観測できる放射輝度のみが重要である。もし表面上に何かがあっても、それが見えていなければ、BRDFには反映されないだろう。Simthは、これを直接扱っているわけではないが、彼のmasking関数の法線を平均化した形式を導き出した。彼は"法線のどれくらいが遮蔽されているか"という質問の答えを求めていた。これは、波動光学のモデルのような別の状況で、表面に固有の性質を調べるときに重要になる。この文書で注目している、幾何光学ベースのBRDFモデルでは重要ではない。
 
 幾何学的なマイクロファセットベースBRDFの問題において、実際には、"\textbf{背面を向いていない}法線のどれくらいが遮蔽されているか"、という若干異なる質問に関心がある。
 
 \subsection{V型空洞のマイクロサーフェス・プロファイル(The V-Cavity Microsurface Profile)}
 
-この節では、Smithのmasking関数のもっとも一般的な代替であるV型空洞(V-cavities)に基づくmaskingモデルについて議論する。図\ref{fig:8}はV型空洞のマイクロサーフェスによる散乱モデルを図で示したものである。法線分布による1つのマイクロサーフェス上での散乱をモデル化するのではなく、このモデルは、分割したマイクロサーフェス上での散乱を計算し、それらの寄与を平均化する。各マイクロサーフェスは2つの法線$\boldsymbol{\omega}_m = (x_m, y_m, z_m)$と$\boldsymbol{\omega}_m' = (-x_m, -y_m, z_m)$で構成され、各マイクロサーフェスの寄与は最後のBRDFにおいて$\langle \boldsymbol{\omega}_m, \boldsymbol{\omega}_g \rangle D(\boldsymbol{\omega}_m)$で重み付けされる。
+この節では、Smithのmasking関数のもっとも一般的な代替であるV型空洞(V-cavities)\cite{Cook1982,Oren1994}に基づくmaskingモデルについて議論する。図\ref{fig:8}はV型空洞のマイクロサーフェスによる散乱モデルを図で示したものである。法線分布による1つのマイクロサーフェス上での散乱をモデル化するのではなく、このモデルは、分割したマイクロサーフェス上での散乱を計算し、それらの寄与を平均化する。各マイクロサーフェスは2つの法線$\omega_m = (x_m, y_m, z_m)$と$\omega_m' = (-x_m, -y_m, z_m)$で構成され、各マイクロサーフェスの寄与は最後のBRDFにおいて$\langle \omega_m, \omega_g \rangle D(\omega_m)$で重み付けされる。
 
 \begin{figure}
     \includegraphics[width=\textwidth]{Figure8.png}
@@ -591,10 +605,10 @@ Smithは、高さや法線のような、マイクロサーフェスの異なる
     \label{fig:8}
 \end{figure}
 
-V型空洞マイクロサーフェスのmasking関数を求めるには通常三角法による導出が示される。節\ref{sec:2.3}で議論された、可視マイクロサーフェスの射影面積が保存されるという性質から、シンプルに同様の結果を導き出すことができる。V型空洞マイクロサーフェスは2つの対称的な法線$\boldsymbol{\omega}_m$と$\boldsymbol{\omega}_m'$のみを持つ。したがって、このマイクロサーフェスの法線分布は以下のようになる。
+V型空洞マイクロサーフェスのmasking関数を求めるには通常三角法による導出が示される。節\ref{sec:2.3}で議論された、可視マイクロサーフェスの射影面積が保存されるという性質から、シンプルに同様の結果を導き出すことができる。V型空洞マイクロサーフェスは2つの対称的な法線$\omega_m$と$\omega_m'$のみを持つ。したがって、このマイクロサーフェスの法線分布は以下のようになる。
 
 \begin{equation}
-    D(\boldsymbol{\omega}) = \frac{1}{2} \frac{\delta_{\boldsymbol{\omega}_m}(\boldsymbol{\omega})}{\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g} + \frac{1}{2} \frac{\delta_{\boldsymbol{\omega}_m'}(\boldsymbol{\omega})}{\boldsymbol{\omega}_m' \cdot \boldsymbol{\omega}_g}
+    D(\omega) = \frac{1}{2} \frac{\delta_{\omega_m}(\omega)}{\omega_m \cdot \omega_g} + \frac{1}{2} \frac{\delta_{\omega_m'}(\omega)}{\omega_m' \cdot \omega_g}
     \label{eq:44}
 \end{equation}
 
@@ -602,9 +616,9 @@ V型空洞マイクロサーフェスのmasking関数を求めるには通常三
 
 \begin{equation}
     \begin{split}
-        \int_{\Omega} \langle \boldsymbol{\omega}, \boldsymbol{\omega}_g \rangle D(\boldsymbol{\omega}) d\boldsymbol{\omega}
-        &= \int_{\Omega} \langle \boldsymbol{\omega}, \boldsymbol{\omega}_g \rangle \left( \frac{1}{2} \frac{\delta_{\boldsymbol{\omega}_m}(\boldsymbol{\omega})}{\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g} + \frac{1}{2} \frac{\delta_{\boldsymbol{\omega}_m'}(\boldsymbol{\omega})}{\boldsymbol{\omega}_m' \cdot \boldsymbol{\omega}_g} \right) d\boldsymbol{\omega} \\
-        &= \frac{1}{2} \frac{\boldsymbol{\omega}_m' \cdot \boldsymbol{\omega}_g}{\boldsymbol{\omega}_m' \cdot \boldsymbol{\omega}_g} + \frac{1}{2} \frac{\boldsymbol{\omega}_m' \cdot \boldsymbol{\omega}_g}{\boldsymbol{\omega}_m' \cdot \boldsymbol{\omega}_g} \\
+        \int_{\Omega} \langle \omega, \omega_g \rangle D(\omega) d\omega
+        &= \int_{\Omega} \langle \omega, \omega_g \rangle \left( \frac{1}{2} \frac{\delta_{\omega_m}(\omega)}{\omega_m \cdot \omega_g} + \frac{1}{2} \frac{\delta_{\omega_m'}(\omega)}{\omega_m' \cdot \omega_g} \right) d\omega \\
+        &= \frac{1}{2} \frac{\omega_m' \cdot \omega_g}{\omega_m' \cdot \omega_g} + \frac{1}{2} \frac{\omega_m' \cdot \omega_g}{\omega_m' \cdot \omega_g} \\
         &= \frac{1}{2} + \frac{1}{2} = 1
     \end{split}
     \label{eq:45}
@@ -615,16 +629,16 @@ masking項を導くため、式\eqref{eq:14}で表される可視射影面積の
 \begin{equation}
     \begin{split}
         \cos\theta_o
-        &= \int_{\Omega} G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega} \rangle D(\boldsymbol{\omega}) d\boldsymbol{\omega} \\
-        &= \frac{1}{2} G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \frac{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle}{\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g} + \frac{1}{2} G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m') \frac{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m' \rangle}{\boldsymbol{\omega}_m' \cdot \boldsymbol{\omega}_g}
+        &= \int_{\Omega} G_1(\omega_o, \omega) \langle \omega_o, \omega \rangle D(\omega) d\omega \\
+        &= \frac{1}{2} G_1(\omega_o, \omega_m) \frac{\langle \omega_o, \omega_m \rangle}{\omega_m \cdot \omega_g} + \frac{1}{2} G_1(\omega_o, \omega_m') \frac{\langle \omega_o, \omega_m' \rangle}{\omega_m' \cdot \omega_g}
     \end{split}
     \label{eq:46}
 \end{equation}
 
-ここでは、図\ref{fig:9}に示す通り、2つの構成(configurations)を取り得る。一方の場合では、2つの法線が可視であり遮蔽されない($G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = 1$であり$G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m') = 1$)。他方の場合では、$\boldsymbol{\omega}_m'$が背面を向いている($G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m') = 0$)。このとき以下が成り立つ。
+ここでは、図\ref{fig:9}に示す通り、2つの構成(configurations)を取り得る。一方の場合では、2つの法線が可視であり遮蔽されない($G_1(\omega_o, \omega_m) = 1$であり$G_1(\omega_o, \omega_m') = 1$)。他方の場合では、$\omega_m'$が背面を向いている($G_1(\omega_o, \omega_m') = 0$)。このとき以下が成り立つ。
 
 \begin{equation}
-    \cos\theta_o = \frac{1}{2}G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) \frac{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle}{\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g}
+    \cos\theta_o = \frac{1}{2}G_1(\omega_o, \omega_m) \frac{\langle \omega_o, \omega_m \rangle}{\omega_m \cdot \omega_g}
     \label{eq:47}
 \end{equation}
 
@@ -632,9 +646,9 @@ masking項を導くため、式\eqref{eq:14}で表される可視射影面積の
 
 \begin{equation}
     \begin{split}
-        G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m)
-        &= 2 \frac{\cos\theta_o (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g)}{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle} \\
-        &= 2 \frac{(\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) (\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_g)}{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle}
+        G_1(\omega_o, \omega_m)
+        &= 2 \frac{\cos\theta_o (\omega_m \cdot \omega_g)}{\langle \omega_o, \omega_m \rangle} \\
+        &= 2 \frac{(\omega_m \cdot \omega_g) (\omega_o \cdot \omega_g)}{\langle \omega_o, \omega_m \rangle}
     \end{split}
     \label{eq:48}
 \end{equation}
@@ -642,18 +656,18 @@ masking項を導くため、式\eqref{eq:14}で表される可視射影面積の
 これら2つの構成の結果は以下の1つの定式で表すことができる。
 
 \begin{equation}
-    G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = \min \left( 1, 2 \frac{(\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) (\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_g)}{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle} \right)
+    G_1(\omega_o, \omega_m) = \min \left( 1, 2 \frac{(\omega_m \cdot \omega_g) (\omega_o \cdot \omega_g)}{\langle \omega_o, \omega_m \rangle} \right)
     \label{eq:49}
 \end{equation}
 
-これは、CookとTorranceによって用いられるV型空洞のmasking関数としてよく知られている。
+これは、\citeauthor{Cook1982} \cite{Cook1982}によって用いられるV型空洞のmasking関数としてよく知られている。
 
 \paragraph{検証(Validation)}
 
 このモデルが式\eqref{eq:18}を満たすか、すなわち、可視法線分布が正規化されているかどうかを確かめようと思う。まず、式\eqref{eq:16}の$G_1$を置き換える。
 
 \begin{equation}
-    D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) = \min \left( 1, 2 \frac{(\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) (\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_g)}{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle} \right) \frac{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)}{\cos\theta_o}
+    D_{\omega_o}(\omega_m) = \min \left( 1, 2 \frac{(\omega_m \cdot \omega_g) (\omega_o \cdot \omega_g)}{\langle \omega_o, \omega_m \rangle} \right) \frac{\langle \omega_o, \omega_m \rangle D(\omega_m)}{\cos\theta_o}
     \label{eq:50}
 \end{equation}
 
@@ -667,37 +681,37 @@ masking項を導くため、式\eqref{eq:14}で表される可視射影面積の
 
 \begin{equation}
     \begin{split}
-        D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m)
-        &= 2 \frac{(\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) (\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_g)}{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle} \frac{\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle D(\boldsymbol{\omega}_m)}{\cos\theta_o} \\
-        &= 2 \chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m) (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+        D_{\omega_o}(\omega_m)
+        &= 2 \frac{(\omega_m \cdot \omega_g) (\omega_o \cdot \omega_g)}{\langle \omega_o, \omega_m \rangle} \frac{\langle \omega_o, \omega_m \rangle D(\omega_m)}{\cos\theta_o} \\
+        &= 2 \chi^+(\omega_o \cdot \omega_m) (\omega_m \cdot \omega_g) D(\omega_m) d\omega_m
     \end{split}
     \label{eq:51}
 \end{equation}
 
-ここで、クランプされた内積$\langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_m \rangle$は打ち消されるが、背面の法線が分布から取り除かれていることを保証するため、ヘヴィサイド関数$\chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m)$は残してあることに注意したい。この結果を以下の式を計算することで、式\eqref{eq:18}、つまり、可視法線分布が正規化されていることを検証する。
+ここで、クランプされた内積$\langle \omega_o, \omega_m \rangle$は打ち消されるが、背面の法線が分布から取り除かれていることを保証するため、ヘヴィサイド関数$\chi^+(\omega_o \cdot \omega_m)$は残してあることに注意したい。この結果を以下の式を計算することで、式\eqref{eq:18}、つまり、可視法線分布が正規化されていることを検証する。
 
 \begin{equation}
-    \int_{\Omega} D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m = 2 \int_{\Omega} \chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m) (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
+    \int_{\Omega} D_{\omega_o}(\omega_m) d\omega_m = 2 \int_{\Omega} \chi^+(\omega_o \cdot \omega_m) (\omega_m \cdot \omega_g) D(\omega_m) d\omega_m
     \label{eq:52}
 \end{equation}
 
-grazing角では幾何学的な法線に対して出射方向がほぼ垂直になるため、ヘヴィサイド関数は分布のほぼ中央で積分を切り詰める。また、V型空洞の表面は法線分布が対称であること、つまり、$D(\boldsymbol{\omega}_m) = D(\boldsymbol{\omega}_m')$であることを暗に示している。これは、ヘヴィサイド関数が法線分布を等しい2つに切り分けることを意味する。
+grazing角では幾何学的な法線に対して出射方向がほぼ垂直になるため、ヘヴィサイド関数は分布のほぼ中央で積分を切り詰める。また、V型空洞の表面は法線分布が対称であること、つまり、$D(\omega_m) = D(\omega_m')$であることを暗に示している。これは、ヘヴィサイド関数が法線分布を等しい2つに切り分けることを意味する。
 
 \begin{equation}
     \begin{split}
-        \int_{\Omega} \chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m) (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
-        &= \frac{1}{2} \int_{\Omega} (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m \\
+        \int_{\Omega} \chi^+(\omega_o \cdot \omega_m) (\omega_m \cdot \omega_g) D(\omega_m) d\omega_m
+        &= \frac{1}{2} \int_{\Omega} (\omega_m \cdot \omega_g) D(\omega_m) d\omega_m \\
         &= \frac{1}{2}
     \end{split}
     \label{eq:53}
 \end{equation}
 
-ここで、法線分布は正規化されているので$\int_{\Omega} (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m = 1$である。そして、この結果と式\eqref{eq:52}により、以下が成り立つ。
+ここで、法線分布は正規化されているので$\int_{\Omega} (\omega_m \cdot \omega_g) D(\omega_m) d\omega_m = 1$である。そして、この結果と式\eqref{eq:52}により、以下が成り立つ。
 
 \begin{equation}
     \begin{split}
-        \int_{\Omega} D_{\boldsymbol{\omega}_o}(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m
-        &= 2 \int_{\Omega} \chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m) (\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m) d\boldsymbol{\omega}_m \\
+        \int_{\Omega} D_{\omega_o}(\omega_m) d\omega_m
+        &= 2 \int_{\Omega} \chi^+(\omega_o \cdot \omega_m) (\omega_m \cdot \omega_g) D(\omega_m) d\omega_m \\
         &= 2 \frac{1}{2} = 1
     \end{split}
     \label{eq:54}
@@ -711,7 +725,7 @@ grazing角では幾何学的な法線に対して出射方向がほぼ垂直に�
 
 V型空洞の可視法線分布が数学的にwell definedでありながらも、物理的にもっともらしい(plausible)とは言えず、入射角がgrazingのときのサーフェス・プロファイルは非現実的なモデル化が行われている。
 
-この法線には2つの種類がある。1つは背面を向いており、ヘヴィサイド項により取り除かれる。もう1つは背面を向いておらず、$(\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g) D(\boldsymbol{\omega}_m)$で重み付けされる放射輝度の寄与を生み出す。ここで、$(\boldsymbol{\omega}_m \cdot \boldsymbol{\omega}_g)$は、図\ref{fig:3}(a)で示されるように、マイクロファセットによる幾何学的な表面への射影のヤコビアンである。したがって、マイクロファセットは、出射方向に射影される前に幾何学的表面に射影されるかの如く、正確に重み付けされる。結果として、幾何学的に平坦なマイクロサーフェスをシミュレートしている。マイクロファセットは光の反射をかき乱す(purturb)ことができるが、幾何学的にはそのようなものは存在しない。ゆえに、このマイクロサーフェスモデルは、図\ref{fig:10}に示すように、ディスプレースメントマップではなくノーマルマップに近い振る舞いをするため、現実感が無くなってしまう。
+この法線には2つの種類がある。1つは背面を向いており、ヘヴィサイド項により取り除かれる。もう1つは背面を向いておらず、$(\omega_m \cdot \omega_g) D(\omega_m)$で重み付けされる放射輝度の寄与を生み出す。ここで、$(\omega_m \cdot \omega_g)$は、図\ref{fig:3}(a)で示されるように、マイクロファセットによる幾何学的な表面への射影のヤコビアンである。したがって、マイクロファセットは、出射方向に射影される前に幾何学的表面に射影されるかの如く、正確に重み付けされる。結果として、幾何学的に平坦なマイクロサーフェスをシミュレートしている。マイクロファセットは光の反射をかき乱す(purturb)ことができるが、幾何学的にはそのようなものは存在しない。ゆえに、このマイクロサーフェスモデルは、図\ref{fig:10}に示すように、ディスプレースメントマップではなくノーマルマップに近い振る舞いをするため、現実感が無くなってしまう。
 
 V型空洞モデルは、1つのマイクロサーフェスをシミュレートするのではなく、法線のペアごとに1つのマイクロサーフェスをシミュレートしてその結果を平均化することから、この効果は予期されていた。1つのマイクロサーフェスならば、高確率な可視法線は低確率な可視法線より多くの射影面積を占める、すなわち、より高い寄与を生み出すと思われる。しかし、V型空洞では、異なる法線は別々にシミュレートされて法線分布によって重み付けされるため、この現象が発生しない。(背面を向いている法線が破棄されること以外は)重みに視点に対する依存性が存在しない。これが、V型空洞モデルは可視性の効果をほとんど(poorly)含まず、ノーマルマップのような何かをシミュレートするに留まっている理由である。
 
@@ -740,32 +754,32 @@ V型空洞モデルは、1つのマイクロサーフェスをシミュレート
 
 \paragraph{暗黙的なmasking関数(Implicit Masking Function)}
 
-式\eqref{eq:29}で与えられた鏡面的なマイクロファセットベースBRDFの式を簡単化するために、多くのモデルは、masking-shadowing関数と分母の式$|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o| |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|$が互いを打ち消すと仮定して取り除かれる。つまり、masking-shadowingは暗に以下のように定義されると言える。
+式\eqref{eq:29}で与えられた鏡面的なマイクロファセットベースBRDFの式を簡単化するために、多くのモデルは、masking-shadowing関数と分母の式$|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|$が互いを打ち消すと仮定して取り除かれる\cite{McAuley2013}。つまり、masking-shadowingは暗に以下のように定義されると言える。
 
 \begin{equation}
-    G_2(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_m) = G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) G_1(\boldsymbol{\omega}_i, \boldsymbol{\omega}_m)
+    G_2(\omega_o, \omega_i, \omega_m) = G_1(\omega_o, \omega_m) G_1(\omega_i, \omega_m)
     \label{eq:55}
 \end{equation}
 
 ここで、分割されたmasking関数とshadowing関数は以下のようになる。
 
 \begin{equation}
-    G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = \chi^+(\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_o, \boldsymbol{\omega}_g \rangle
+    G_1(\omega_o, \omega_m) = \chi^+(\omega_o \cdot \omega_m) \langle \omega_o, \omega_g \rangle
     \label{eq:56}
 \end{equation}
 
 \begin{equation}
-    G_1(\boldsymbol{\omega}_i, \boldsymbol{\omega}_m) = \chi^+(\boldsymbol{\omega}_i \cdot \boldsymbol{\omega}_m) \langle \boldsymbol{\omega}_i, \boldsymbol{\omega}_g \rangle
+    G_1(\omega_i, \omega_m) = \chi^+(\omega_i \cdot \omega_m) \langle \omega_i, \omega_g \rangle
     \label{eq:57}
 \end{equation}
 
-このmasking関数は、$\boldsymbol{\omega}_o = \boldsymbol{\omega}_g$のとき$G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = 1$であり、入射角が$\frac{\pi}{2}$に近づくに連れて$G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_m) = 0$になるよう減少するため、"もっともらしい"と言える。しかし、このmasking関数は物理ベースではない。もちろん、式\eqref{eq:14}による射影面積の保存則を満たさない。これは、このmasking関数から導き出せる物理的なマイクロサーフェスモデルが存在しないことを示している。
+このmasking関数は、$\omega_o = \omega_g$のとき$G_1(\omega_o, \omega_m) = 1$であり、入射角が$\frac{\pi}{2}$に近づくに連れて$G_1(\omega_o, \omega_m) = 0$になるよう減少するため、"もっともらしい"と言える。しかし、このmasking関数は物理ベースではない。もちろん、式\eqref{eq:14}による射影面積の保存則を満たさない。これは、このmasking関数から導き出せる物理的なマイクロサーフェスモデルが存在しないことを示している。
 
 \paragraph{Schlick-Smithのmasking関数(The Schlick-Smith Masking Function)}
 
-Schlickは、しばしば"Schlick-Smith"のmasking関数として参照される、Smithのmasking関数の近似を提案した。このmasking関数には3つの問題がある。
+\citeauthor{Schlick1994} \cite{Schlick1994}は、しばしば"Schlick-Smith"のmasking関数として参照される、Smithのmasking関数の近似を提案した。このmasking関数には3つの問題がある。
 
-1つ目は、その論文で使われているラフネスのパラメータ$m$に矛盾がある(inconsist)ことである。その論文の式(18)はマイクロサーフェスの二乗平均平方根(root mean square; RMS)の傾斜を指している。つまり$m$は、物理学の文献や、特にオリジナルのSmithの論文で時折使われているラフネスの記述子(descriptor)$m = \sigma$である。これは同じ式中の変数$h$の定義と一致している。しかしながら、その論文の式(20)の中だと、$m$はBeckmann分布のラフネスパラメータ$m = \alpha = \sqrt{2} \sigma$である。これは、RMSの傾斜を$\sqrt{2}$倍したものである。結果として、masking関数で使われているラフネスと法線分布で使われているラフネスに不整合が生じている。
+1つ目は、その論文で使われているラフネスのパラメータ$m$に矛盾がある(inconsist)ことである。その論文の式(18)はマイクロサーフェスの二乗平均平方根(root mean square; RMS)の傾斜を指している。つまり$m$は、物理学の文献や、特にオリジナルのSmithの論文\cite{Smith1967}で時折使われているラフネスの記述子(descriptor)$m = \sigma$である。これは同じ式中の変数$h$の定義と一致している。しかしながら、その論文の式(20)の中だと、$m$はBeckmann分布のラフネスパラメータ$m = \alpha = \sqrt{2} \sigma$である。これは、RMSの傾斜を$\sqrt{2}$倍したものである。結果として、masking関数で使われているラフネスと法線分布で使われているラフネスに不整合が生じている。
 
 この矛盾は容易に解決できるが、さらなる重大な(critical)問題が、彼によるSmithのmasking関数の再定式化(その論文の式(18))に誤りがあることである。彼は、"いくつかの同値(equivalences)により、オリジナルの式$G$は以下のように..."と述べている(states)。その導出は書かれていない(not provided)が、SchlickはHeらの式(その論文の式(24)と(25))を再編成された(rearranged)ように思われる。これには、Smithの$\Lambda$関数から指数の項が欠落している、というtypoが含まれている。
 
@@ -775,32 +789,32 @@ Schlickは、しばしば"Schlick-Smith"のmasking関数として参照される
     \label{fig:12}
 \end{figure}
 
-さらに、節\ref{sec:4.1}の最後のパラグラフで、幾何光学的なBRDFモデルに使うためのSmithのmasking関数はマイクロサーフェスの高さに対して平均化したものであると説明した。しかし、Schlickは、Heらの高さと法線を平均化するSmithのmasking関数を引き続き使ってしまった。これは、波動光学モデルの文脈においてなら適切であった。
+さらに、節\ref{sec:4.1}の最後のパラグラフで、幾何光学的なBRDFモデルに使うためのSmithのmasking関数はマイクロサーフェスの高さに対して平均化したものであると説明した。しかし、Schlickは、\citeauthor{He1991} \cite{He1991}の高さと法線を平均化するSmithのmasking関数を引き続き使ってしまった。これは、波動光学モデルの文脈においてなら適切であった。
 
 2つの失敗(error)の結論としては、図\ref{fig:12}のプロットが示す通り、Schlickのオリジナルの定式もフィッティングした近似式もどちらもSmithのmasking関数に正しくマッチしない。これは"Schlick-Smith"のmasking関数が、式\ref{eq:14}から射影面積の保存則を保証できないため、物理ベースでないことを意味する。
 
 \paragraph{Kelemenのmasking関数(The Kelemen Masking Function)}
 
-Kelemenらは、以下の近似式を用いて、V型空洞モデルのmasking-shadowing関数と、式\eqref{eq:29}で与えられる鏡面的なマイクロファセットベースBRDFの分母を置き換える安価な方法を提案した。
+\citeauthor{Kelemen2001} \cite{Kelemen2001}は、以下の近似式を用いて、V型空洞モデルのmasking-shadowing関数と、式\eqref{eq:29}で与えられる鏡面的なマイクロファセットベースBRDFの分母を置き換える安価な方法を提案した。
 
 \begin{equation}
-    \frac{G_2(\boldsymbol{\omega}_o, \boldsymbol{\omega}_i, \boldsymbol{\omega}_h)}{|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o| |\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|} = \frac{1}{|\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_h| |\boldsymbol{\omega}_i \cdot \boldsymbol{\omega}_h|}
+    \frac{G_2(\omega_o, \omega_i, \omega_h)}{|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|} = \frac{1}{|\omega_o \cdot \omega_h| |\omega_i \cdot \omega_h|}
     \label{eq:58}
 \end{equation}
 
 これは、masking関数とshadowing関数を以下の式で近似することと等価である。
 
 \begin{equation}
-    G_1(\boldsymbol{\omega}_o, \boldsymbol{\omega}_h) = \frac{|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o|}{|\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_h|}
+    G_1(\omega_o, \omega_h) = \frac{|\omega_g \cdot \omega_o|}{|\omega_o \cdot \omega_h|}
     \label{eq:59}
 \end{equation}
 
 \begin{equation}
-    G_1(\boldsymbol{\omega}_i, \boldsymbol{\omega}_h) = \frac{|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_i|}{|\boldsymbol{\omega}_i \cdot \boldsymbol{\omega}_h|}
+    G_1(\omega_i, \omega_h) = \frac{|\omega_g \cdot \omega_i|}{|\omega_i \cdot \omega_h|}
     \label{eq:60}
 \end{equation}
 
-このmasking関数はV型空洞のmasking関数に近い。$|\boldsymbol{\omega}_g \cdot \boldsymbol{\omega}_o|$は幾何学的表面の射影面積であり、$|\boldsymbol{\omega}_o \cdot \boldsymbol{\omega}_h|$はマイクロファセットの射影面積である。つまりこの式により、マイクロファセットの射影面積が幾何学的表面の射影面積に置き換えられる。これは、ノーマルマップのように平坦なマイクロファセットのよるマイクロサーフェスをシミュレートする傾向がある。
+このmasking関数はV型空洞のmasking関数に近い。$|\omega_g \cdot \omega_o|$は幾何学的表面の射影面積であり、$|\omega_o \cdot \omega_h|$はマイクロファセットの射影面積である。つまりこの式により、マイクロファセットの射影面積が幾何学的表面の射影面積に置き換えられる。これは、ノーマルマップのように平坦なマイクロファセットのよるマイクロサーフェスをシミュレートする傾向がある。
 
 しかし、V型空洞のmasking関数と異なり、Kelemenのmasking関数は式\eqref{eq:14}から射影面積が保存されること保証しない。これはV型空洞のmasking関数に対する良い近似であり続けるが、Kelemenの式から導出される物理的モデルは存在しない。それはすなわち、物理ベースではない。
 
@@ -855,7 +869,7 @@ V型空洞とSmithのどちらを選ぶかという問いには、両方とも�
 
 \subsection{傾斜分布(The Distribution of Slopes)}
 
-マイクロサーフェスが高さフィールド(hightfield)であるならば、マイクロサーフェスの高さの分布はよく$P^1(h)$で示される。このときのマイクロサーフェスの傾斜は高さの勾配$(x_{\tilde{m}}, y_{\tilde{m}}) = \nabla h$で示される。つまり、マイクロサーフェスの高さが空間的にどれだけ変化しているかを計測することを表している。マイクロサーフェスの傾斜分布は$P^{22}(x_{\tilde{m}}, y_{\tilde{m}})$で示される。ここで、$\tilde{m} = (x_{\tilde{m}}, y_{\tilde{m}})$は法線$\boldsymbol{\omega}_m = (x_m, y_m, z_m)$に関連する傾斜であり、以下で表される。
+マイクロサーフェスが高さフィールド(hightfield)であるならば、マイクロサーフェスの高さの分布はよく$P^1(h)$で示される。このときのマイクロサーフェスの傾斜は高さの勾配$(x_{\tilde{m}}, y_{\tilde{m}}) = \nabla h$で示される。つまり、マイクロサーフェスの高さが空間的にどれだけ変化しているかを計測することを表している。マイクロサーフェスの傾斜分布は$P^{22}(x_{\tilde{m}}, y_{\tilde{m}})$で示される。ここで、$\tilde{m} = (x_{\tilde{m}}, y_{\tilde{m}})$は法線$\omega_m = (x_m, y_m, z_m)$に関連する傾斜であり、以下で表される。
 
 \begin{equation}
     \tilde{m} = (x_{\tilde{m}}, y_{\tilde{m}}) = (-\frac{x_m}{z_m}, -\frac{y_m}{z_m}) = -\tan\theta_m(\cos\phi_m, \sin\phi_m)
@@ -903,9 +917,175 @@ V型空洞とSmithのどちらを選ぶかという問いには、両方とも�
     \label{eq:66}
 \end{equation}
 
-図\ref{fig:13}で示した通り、等方的な形状不変の傾斜分布において、その形状(configuration)を伸長することは、ラフネスパラメータ$\alpha$と出射ベクトルの傾斜を同じファクタでスケールさせることと等価である。これはmasking関数が変数$a = \frac{1}{\alpha\tan\theta_o}$にのみ依存することを暗に示している。ここで、$\frac{1}{\tan\theta_o}$は出射方向の傾斜を表す。...
+図\ref{fig:13}で示した通り、等方的な形状不変の傾斜分布において、その形状(configuration)を伸長することは、ラフネスパラメータ$\alpha$と出射ベクトルの傾斜を同じファクタでスケールさせることと等価である。これはmasking関数が変数$a = \frac{1}{\alpha\tan\theta_o}$にのみ依存することを暗に示している。ここで、$\frac{1}{\tan\theta_o}$は出射方向の傾斜を表す。Beckmann分布とGGX分布は、関数$\Lambda$は$a$にのみ依存するため、形状不変である。$\Lambda$は式\eqref{eq:43}で与えられるSmithのmasking関数に現れる。
+
+\paragraph{Beckmann分布(Beckmann Distribution)}
+
+\begin{equation}
+    P^{22}(x_{\tilde{m}}, y_{\tilde{m}}) = \frac{1}{\pi\alpha^2} \exp\left( -\frac{x_{\tilde{m}}^2 + y_{\tilde{m}}^2}{\alpha^2} \right)
+    \label{eq:67}
+\end{equation}
+
+\begin{equation}
+    D(\omega_m) = \frac{\chi^+(\omega_m \cdot \omega_g)}{\pi \alpha^2 \cos^4 \theta_m} \exp\left( -\frac{\tan^2 \theta_m}{\alpha^2} \right)
+    \label{eq:68}
+\end{equation}
+
+\begin{equation}
+    \Lambda(\omega_o) = \frac{\text{erf}(a) - 1}{2} + \frac{1}{2a \sqrt{\pi}} \exp(-a^2)
+    \label{eq:69}
+\end{equation}
+
+ここで、$a = \frac{1}{\alpha\tan\theta_o}$である。\citeauthor{Walter2007} \cite{Walter2007}は、$G_1(\omega_o) = \frac{1}{1 + \Lambda(\omega_o)}$の正確な近似式を提案している。これにより、$\Lambda(\omega_o)$を以下の式で近似することができる。
+
+\begin{equation*}
+    \Lambda(\omega_o) \approx
+    \begin{cases}
+        \frac{1 - 1.259a + 0.396a^2}{3.535a + 2.181a^2} & \text{if } a < 1.6 \\
+        0 & \text{otherwise}
+    \end{cases}
+\end{equation*}
+
+\paragraph{GGX分布(GGX Distribution)}
+
+\begin{equation}
+    P^{22}(x_{\tilde{m}}, y_{\tilde{m}}) = \frac{1}{\pi\alpha^2 \left(1 +  \frac{x_{\tilde{m}}^2 + y_{\tilde{m}}^2}{\alpha^2} \right)^2}
+    \label{eq:70}
+\end{equation}
+
+\begin{equation}
+    D(\omega_m) = \frac{\chi^+(\omega_m \cdot \omega_g)}{\pi \alpha^2 \cos^4 \theta_m \left( 1 + \frac{\tan^2 \theta_m}{\alpha^2} \right)^2}
+    \label{eq:71}
+\end{equation}
+
+\begin{equation}
+    \Lambda(\omega_o) = \frac{-1 + \sqrt{1 + \frac{1}{a^2}}}{2}
+    \label{eq:72}
+\end{equation}
+
+ここで、$a = \frac{1}{\alpha \tan \theta_o}$である。
+
+\paragraph{形状不変ではない分布(Shape-variant distributions)}
+
+すべての分布が形状不変なわけではないことは気をつけておくべきである。例えば、Phong分布は、式\eqref{eq:65}の形式で説明できないので、形状不変ではない。言い換えれば、ラフネスが変化すると、Phong分布の形は変化する。
+
+\subsection{異方的な形状不変の傾斜分布(Anisotropic Shape-Invariant Distributions of Slopes)}
+
+\paragraph{形状不変性(Shape Invariance)}
+
+同じ形状不変な分布は、方位(azimuth)依存のファクタによって形が伸長すると、異方性を持つことがある。傾斜のそれぞれが各方向に対して重み付けされることで、式\eqref{eq:65}は以下の形に置き換えられる。
+
+\begin{equation}
+    P^{22}(x_{\tilde{m}}, y_{\tilde{m}}, \alpha_x, \alpha_y) = \frac{1}{\alpha_x \alpha_y} f \left( \sqrt{\frac{x_{\tilde{m}}^2}{\alpha_x^2} + \frac{y_{\tilde{m}}^2}{\alpha_y^2}} \right) = \frac{1}{\alpha_x \alpha_y} f \left( \tan \theta_m \sqrt{\frac{\cos^2 \phi_m}{\alpha_x^2} + \frac{\sin^2 \phi_m}{\alpha_y^2}} \right)
+    \label{eq:73}
+\end{equation}
+
+ここで、$(-\tan\theta_m \cos\phi_m, -\tan\theta_m \sin\phi_m) = (x_{\tilde{m}}, y_{\tilde{m}})$はその傾斜を、$\alpha_x$と$\alpha_y$はX軸、Y軸それぞれに対する分布の伸長を示す係数を表す。このとき、形状不変性を示す性質は以下のように記述される。
+
+\begin{equation}
+    P^{22}(x_{\tilde{m}}, y_{\tilde{m}}, \alpha_x, \alpha_y) = \frac{1}{\lambda_x \lambda_y} P^{22}(\frac{x_{\tilde{m}}}{\lambda_x}, \frac{y_{\tilde{m}}}{\lambda_y}, \frac{\alpha_x}{\lambda_x}, \frac{\alpha_y}{\lambda_y}) \text{, for any } \lambda_x, \lambda_y > 0
+    \label{eq:74}
+\end{equation}
+
+\paragraph{masking関数の導出(Derivation of the Masking Function)}
+
+図\ref{fig:14}は、どのようにしたら等方的な形状不変の分布が表面の伸長によって異方的な分布に変換できるかを示している。逆に、異方的な分布を持ついかなる形状も等方的な分布をもつ形状に変換できる。
+
+我々はこの性質を異方的な分布のmasking関数を導き出すために用いる。まず、$\alpha_x$と$\alpha_y$と出射方向$\omega_o = (x_o, y_o, z_o)$からなる、形状不変な異方的分布を持つ形状を考える。X軸方向に$\frac{\alpha_x}{\alpha_y}$で伸長すると、表面のラフネスは以下のようになる。
+
+\begin{equation}
+    \alpha_{x}' = \alpha_x \frac{\alpha_y}{\alpha_x} = \alpha_y
+    \label{eq:75}
+\end{equation}
+
+\begin{equation}
+    \alpha_{y}' = \alpha_y
+    \label{eq:76}
+\end{equation}
+
+この伸長した表面はラフネス$\alpha_y$で等方性を持ち、伸長後の出射ベクトルとその傾斜は以下のようになる。
+
+\begin{equation}
+    \omega_{o}' = \left( \frac{\alpha_x}{\alpha_y} x_o, y_o, z_o \right) = \left( \frac{\alpha_x}{\alpha_y} \cos\phi_o \sin\theta_o, \sin\theta_o, \cos\theta_o \right)
+    \label{eq:77}
+\end{equation}
+
+\begin{equation}
+    \frac{1}{\tan\theta_{o}'} = \frac{z_o}{\sqrt{\frac{\alpha_x^2}{\alpha_y^2} x_o^2 + y_o^2}} = \frac{1}{\sqrt{\frac{\alpha_x^2}{\alpha_y^2} \cos^2 \phi_o + \sin^2 \phi_o}\tan\theta_o}
+    \label{eq:78}
+\end{equation}
+
+等方的な分布のmasking関数は$a = \frac{1}{\alpha\tan\theta_o}$にのみ依存するので、
+$\alpha = \alpha_y$としたとき、この伸長した表面での$a$を求めると、以下のようになる。
+
+\begin{equation}
+    \begin{split}
+        a' = \frac{1}{\alpha_y \tan\theta_{o}'}
+        &= \frac{1}{\alpha_y \sqrt{\cos^2 \phi_o \frac{\alpha_x^2}{\alpha_y^2} + \sin^2 \phi_o} \tan\theta_o} \\
+        &= \frac{1}{\sqrt{\cos^2 \phi_o \alpha_x^2 + \sin^2 \phi_o \alpha_y^2} \tan\theta_o} \\
+        &= \frac{1}{\alpha\tan\theta_o}
+    \end{split}
+    \label{eq:79}
+\end{equation}
+
+ここで、
+
+\begin{equation}
+    \alpha = \sqrt{\cos^2 \phi_o \alpha_x^2 + \sin^2 \phi_o \alpha_y^2}
+    \label{eq:80}
+\end{equation}
+
+は\textbf{出射方向に射影されるラフネス(roughness projected onto the outgoing direction)}を表す。これにより、ある異方的な形状不変の傾斜分布に関連するmasking関数は本質的にその等方的なバージョンと同じであることが示される。唯一異なる点として、出射方向に射影された異方的な表面のラフネスによってパラメータ化されていることが挙げられる。我々は異方的なGGX分布とBeckmann分布のmasking関数を導くためにこの性質を利用する。
+
+\paragraph{異方的なBeckmann分布(Anisotropic Beckmann Distribution)}
+
+\begin{equation}
+    P^{22}(x_{\tilde{m}}, y_{\tilde{m}}) = \frac{1}{\pi \alpha_x \alpha_y} \exp\left( -\frac{x_{\tilde{m}}^2}{\alpha^2_x} + \frac{y_{\tilde{m}}^2}{\alpha^2_y} \right)
+    \label{eq:81}
+\end{equation}
+
+\begin{equation}
+    D(\omega_m) = \frac{\chi^+(\omega_m \cdot \omega_g)}{\pi \alpha_x \alpha_y \cos^4 \theta_m} \exp\left( -\tan^2 \theta_m \left( \frac{\cos^2 \phi_m}{\alpha^2_x} + \frac{\sin^2 \phi_m}{\alpha^2_y} \right) \right)
+    \label{eq:82}
+\end{equation}
+
+\begin{equation}
+    \Lambda(\omega_o) = \frac{\text{erf}(a) - 1}{2} + \frac{1}{2a \sqrt{\pi}} \exp(-a^2)
+    \label{eq:83}
+\end{equation}
+
+ここで、$a = \frac{1}{\alpha_o \tan\theta_o}$であり、$\alpha_o$は式\eqref{eq:80}で定義される。等方的なBeckmann分布の$\Lambda$の近似式は異方的な場合でも同じように使うことができる。
+
+\paragraph{GGX分布(GGX Distribution)}
+
+\begin{equation}
+    P^{22}(x_{\tilde{m}}, y_{\tilde{m}}) = \frac{1}{\pi\alpha_x \alpha_y \left(1 +  \frac{x_{\tilde{m}}^2}{\alpha^2_x} + \frac{y_{\tilde{m}}^2}{\alpha^2_y} \right)^2}
+    \label{eq:84}
+\end{equation}
+
+\begin{equation}
+    D(\omega_m) = \frac{\chi^+(\omega_m \cdot \omega_g)}{\pi \alpha_x \alpha_y \cos^4 \theta_m \left( 1 + \tan^2 \theta_m \left( \frac{\cos^2 \phi_m}{\alpha^2_x} + \frac{\sin^2 \phi_m}{\alpha^2_y} \right) \right)^2}
+    \label{eq:85}
+\end{equation}
+
+\begin{equation}
+    \Lambda(\omega_o) = \frac{-1 + \sqrt{1 + \frac{1}{a^2}}}{2}
+    \label{eq:86}
+\end{equation}
+
+ここで、$a = \frac{1}{\alpha_o \tan\theta_o}$であり、$\alpha_o$は式\eqref{eq:80}で定義される。
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{Figure14.png}
+    \caption{}
+    \label{fig:14}
+\end{figure}
+
+\subsection{(More Generalization)}
 
 TODO
+
+\printbibliography[title=参考文献]
 
 \appendix
 
