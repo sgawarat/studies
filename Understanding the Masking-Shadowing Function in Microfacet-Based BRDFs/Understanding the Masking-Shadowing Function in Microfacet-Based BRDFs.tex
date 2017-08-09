@@ -1081,9 +1081,106 @@ $\alpha = \alpha_y$としたとき、この伸長した表面での$a$を求め�
     \label{fig:14}
 \end{figure}
 
-\subsection{(More Generalization)}
+\subsection{さらなる一般化(More Generalization)}
+
+\paragraph{任意の形状不変な分布(Arbitrary Shape-Invariant Distributions)}
+
+形状不変な分布の大事な性質として、masking関数に必要なすべての情報が、いかなるラフネスでも異方的であっても、同じ一次元の関数$\Lambda$に含まれていること、が挙げられる。したがって、$\Lambda$が利用可能であるなら、さまざまな(varying)ラフネスや異方性によるパラメトリックな分布の部類(class)全体を用いることができる。任意の一次元の関数$f$を選択することで、以下の式から、形状不変の異方的な法線分布を簡単に設計できる。
+
+\begin{equation}
+    D(\omega_m) = \frac{c}{\alpha_x \alpha_y \cos^4 \theta_m} f \left( \tan^2 \theta_m \left( \frac{\cos^2 \phi_m}{\alpha^2_x} + \frac{\sin^2 \phi_m}{\alpha^2_y} \right) \right)
+    \label{eq:87}
+\end{equation}
+
+ここで、$c$は分布の正規化係数を表す定数となる。$\Lambda(\frac{1}{\alpha_o \tan\theta_o})$は数値的に事前計算して、表にまとめたり、Walter等がBeckmann分布に行ったように、分数の多項式にフィッティングしたりすることができる。
+
+\paragraph{軸に平行でない伸長(Non Axis-Aligned Stretching)}
+
+伸長処理は軸に平行(axis-aligned)である必要はない。傾斜空間における一般的な伸長は二次曲面(quadric)で再定義することができる。対称な正定値(positive-definite)である行列$Q$を以下とする。
+
+\begin{equation}
+    Q^{-1} =
+    \begin{bmatrix}
+        \alpha^2_x & r_{xy} \alpha_x \alpha_y \\
+        r_{xy} \alpha_x \alpha_y & \alpha^2_y
+    \end{bmatrix}
+    \label{eq:88}
+\end{equation}
+
+そして、$r_{xy}$はX軸とY軸における伸長の相関係数である。二次曲面$Q$は、2Dユークリッド空間における、傾斜の内積(scalar product)とノルムを定義する。
+
+\begin{equation}
+    \begin{split}
+        \|\tilde{m}\| & = \sqrt{\langle \tilde{m}, \tilde{m} \rangle} \\
+                      & = \sqrt{\tilde{m}^T Q \tilde{m}}
+    \end{split}
+    \label{eq:89}
+\end{equation}
+
+再掲すると、式\eqref{eq:61}で定義される2Dベクトル$\tilde{m} = -\tan\theta_m(\cos\phi_m, \sin\phi_m)$は法線$\omega_m$に関連する傾斜である。傾斜のノルム$\|\tilde{m}\|$は傾斜空間で起こる伸長を表しており、分布の形を示す$f$の引数(argument)である。相関のない($r_{xy} = 0$)より単純な場合を考えると、ノルムの式と出射方向に射影されるラフネスは以下のようになる。
+
+\begin{equation}
+    \begin{split}
+        \|\tilde{m}\|^2 & = \tan\theta_m(\cos\phi_m, \sin\phi_m)^T Q \tan\theta_m(\sin\phi_m, \cos\phi_m) \\
+                        & = \tan^2 \theta_m \left( \frac{\cos^2 \phi_m}{\alpha^2_x} + \frac{\sin^2 \phi_m}{\alpha^2_y} \right)
+    \end{split}
+    \label{eq:90}
+\end{equation}
+
+\begin{equation}
+    \alpha^2_o = \cos^2 \phi_o \alpha^2_x + \sin^2 \phi_o \alpha^2_y
+    \label{eq:91}
+\end{equation}
+
+一般的な場合($r_{xy} \neq 0$)は、代わりに以下のようになる。
+
+\begin{equation}
+    \begin{split}
+        \|\tilde{m}\|^2 & = \tan\theta_m(\cos\phi_m, \sin\phi_m)^T Q \tan\theta_m(\sin\phi_m, \cos\phi_m) \\
+                        & = \tan^2 \theta_m \left( \frac{\cos^2 \phi_m \alpha^2_y + \sin^2 \phi_m \alpha^2_x - 2\cos\phi_m \sin\phi_m r_{xy} \alpha_x \alpha_y}{\alpha^2_x \alpha^2_y - r^2_{xy} \alpha^2_x \alpha^2_y} \right)
+    \end{split}
+    \label{eq:92}
+\end{equation}
+
+\begin{equation}
+    \alpha^2_o = \cos^2 \phi_o \alpha^2_x + \sin^2 \phi_o \alpha^2_y + 2 \cos\phi_o \sin\phi_o r_{xy} \alpha_x \alpha_y
+    \label{eq:93}
+\end{equation}
+
+例えば、LEADRマッピングでは、相関のあるBeckmann分布を用いる\cite{Dupuy2013}。ここでは、相関係数$r_{xy} \in [-1, 1]$を0以外の値に設定すると、$D$の正規化定数に影響を与えることができる。
+
+\paragraph{垂直なせん断と中央揃えでない分布(Vertical Shearing and Non-Centered Distributions)}
+
+図\ref{fig:15}は、垂直なせん断(vertical shearing)が行われてもmasking関数が不変であることを示している。形状に垂直なせん断を適用することは、定数値で形状のすべての傾斜をオフセットすることと等価である。前回と同様に、これはマイクロサーフェスの傾斜を含み、その傾斜は出射方向に関連している。我々は、マイクロサーフェスの平均傾斜$\bar{\tilde{m}} = (\bar{x}_{\tilde{m}}, \bar{y}_{\tilde{m}})$を示すための用語として\textbf{メゾサーフェス(mesosurface)}を用いる。
+
+\begin{equation}
+    \begin{split}
+        \|\tilde{m}\|^2 & = (\tan\theta_m(\cos\phi_m, \sin\phi_m) + (\bar{x}_{\tilde{m}}, \bar{y}_{\tilde{m}}))^T Q (\tan\theta_m(\cos\phi_m, \sin\phi_m) + (\bar{x}_{\tilde{m}}, \bar{y}_{\tilde{m}})) \\
+                        & = \frac{(\tan\theta_m \cos\phi_m + \bar{x}_{\tilde{m}})^2 \alpha^2_y}{\alpha^2_x \alpha^2_y - r^2_{xy} \alpha^2_x \alpha^2_y} + \frac{(\tan\theta_m \sin\phi_m + \bar{y}_{\tilde{m}})^2 \alpha^2_x}{\alpha^2_x \alpha^2_y - r^2_{xy} \alpha^2_x \alpha^2_y} \\
+                        & \text{  } - 2\frac{(\tan\theta_m \cos\phi_m + \bar{x}_{\tilde{m}})(\tan\theta_m \sin\phi_m + \bar{y}_{\tilde{m}}) r_{xy} \alpha_x \alpha_y}{\alpha^2_x \alpha^2_y - r^2_{xy} \alpha^2_x \alpha^2_y}
+    \end{split}
+    \label{eq:95}
+\end{equation}
+
+\begin{equation}
+    a = \frac{\frac{1}{\tan\theta_o} - (\cos\phi_o \bar{x}_{\tilde{m}} + \sin\phi_o \bar{y}_{\tilde{m}})}{\alpha_o}
+    \label{eq:96}
+\end{equation}
+
+\begin{equation}
+    \alpha^2_o = \cos^2 \phi_o \alpha^2_x + \sin^2 \phi_o \alpha^2_y + 2 \cos\phi_o \sin\phi_o r_{xy} \alpha_x \alpha_y
+    \label{eq:97}
+\end{equation}
+
+垂直なせん断は射影ラフネス$\alpha_o$や分布の正規化ファクタに影響を与えないことに注意する。これは、伸長が分布の形を変化させる一方で、せん断はその形を変化させずに分布をオフセットするので、理にかなっている。ラフネスと正規化ファクタはせん断において不変であるため、--- すべての傾斜を変更する(alter)、ということは、その法線ベクトルでも --- これらは法線の回転に対しても不変であるかもしれない、と考えたくなってしまう。が、法線ベクトルからファセットの傾斜へのマッピングはベクトルの回転を傾斜値の置き換え(translation)に変換しないので、それは間違いである。
 
 TODO
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{Figure15.png}
+    \caption{}
+    \label{fig:15}
+\end{figure}
 
 \printbibliography[title=参考文献]
 
