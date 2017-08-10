@@ -1174,7 +1174,9 @@ $\alpha = \alpha_y$としたとき、この伸長した表面での$a$を求め�
 
 垂直なせん断は射影ラフネス$\alpha_o$や分布の正規化ファクタに影響を与えないことに注意する。これは、伸長が分布の形を変化させる一方で、せん断はその形を変化させずに分布をオフセットするので、理にかなっている。ラフネスと正規化ファクタはせん断において不変であるため、--- すべての傾斜を変更する(alter)、ということは、その法線ベクトルでも --- これらは法線の回転に対しても不変であるかもしれない、と考えたくなってしまう。が、法線ベクトルからファセットの傾斜へのマッピングはベクトルの回転を傾斜値の置き換え(translation)に変換しないので、それは間違いである。
 
-TODO
+一般的に(typically)、傾斜分布は$0$を中心としている。これは、メゾサーフェスが幾何学的表面と繋がっている(is aligned with)ことを意味する。しかし、この前提(assumption)は、マクロジオメトリ(macrogeometry)が異なる高周波表現により増幅されているとき、誤りとなる。バンプマップ、ノーマルマップ、ディスプレースメントマップの目的はまさにそれで、マクロノーマル(macronormal)を摂動すること(perturbating)でメゾノーマル(mesonormal)を作り出すことにある。例えば、\citeauthor{Olano2010}のLEANマッピング\cite{Olano2010}では、マルチスケールの中央揃えでない傾斜のガウス分布(multi-scale non-centered Gaussian distribution of slopes)を用いている。この場合、傾斜分布は$0$を中心とすることはほぼない。レンダリングが物理ベースであるなら、すべてがいまでもwell definedであることを保証するため、中央揃えでない分布に拡張されたmasking関数を用いなければならない。幸いなことに、垂直なせん断の不変性は、中央揃えでないマイクロサーフェスのmasking関数がオフセットされた傾斜を持つ中央揃えであるマイクロサーフェスのmasking関数と同じであることを示している。この性質はLEADRマッピングで用いられており\cite{Dupuy2013}、マイクロファセット理論は中央揃えでない分布に拡張される。
+
+他に挙げられる、中央揃えでない分布に対する重要な考察として、可視射影面積がメゾノーマルから計算されなければならないという点である。BRDFにある$\cos\theta_o$はメゾノーマルの射影面積に置き換えられなければならない。すなわち、$\frac{\omega_{\bar{m}} \cdot \omega_o}{\omega_{\bar{m}} \cdot \omega_g}$であり、$\omega_{\bar{m}}$はメゾサーフェスの法線を表す。メゾサーフェスが幾何学的表面である場合、$\omega_{\bar{m}} = \omega_g$となり、$\frac{\omega_{\bar{m}} \cdot \omega_o}{\omega_{\bar{m}} \cdot \omega_g} = \cos\theta_o$となるため、これには整合性がある(consistent)。さらなる詳細はLEADRマッピングの論文を参照のこと。
 
 \begin{figure}
     \includegraphics[width=\textwidth]{Figure15.png}
@@ -1182,11 +1184,47 @@ TODO
     \label{fig:15}
 \end{figure}
 
+\section{Smithの結合masking-shadowing関数(The Smith Joint Masking-Shadowing Function)}
+
+\paragraph{分離できるmaskingとshadowing}
+
+最も単純で最も広く使われているmasking-shadowing関数の種類(variant)は、\citeauthor{Walter2007} \cite{Walter2007}によって広まった分離可能な形式である。この例では、maskingとshadowingは独立であることが想定され、以下のように分けて計算したものをかけ合わせて求めることができる。
+
+\begin{equation}
+    \begin{split}
+        G_2(\omega_o, \omega_i, \omega_m) & = G_1(\omega_o, \omega_m) G_1(\omega_i, \omega_m) \\
+                                          & = \frac{\chi+(\omega_o \cdot \omega_m)}{1 + \Lambda(\omega_o)} \frac{\chi+(\omega_i \cdot \omega_m)}{1 + \Lambda(\omega_i)}
+    \end{split}
+    \label{eq:98}
+\end{equation}
+
+この形式はmaskingとshadowingとの間の相関をモデル化しておらず、ゆえに、いくつかの相関は常に存在しているため、いつもshadowingを過剰推定する(overestimate)。
+
+\paragraph{高さ相関のmaskingとshadowing(Height-Correlated Masking and Shadowing)}
+
+masking-shadowing関数のより正確な形式は、マイクロサーフェスの高さのためにmaskingとshadowingとの間の相関をモデル化する\cite{Ross2005}。マイクロファセットがマイクロサーフェスの内部で持ち上げられる(is elevated)[?]たびに、出射方向に対して可視となる(マスクされていない(unmasked))確率と入射方向に対して可視となる(影になっていない(unshadowed))確率が同時に上昇する、ということが直観として理解できる。したがって、maskingとshadowingはマイクロファセットの持ち上げを通して相関を持つ。この相関は、以下の結合masking-shadowing関数(the joint masking-shadowing function)の形式で説明される。
+
+\begin{equation}
+    G_2(\omega_o, \omega_i, \omega_m) S= \frac{\chi+(\omega_o \cdot \omega_m) \chi+(\omega_i \cdot \omega_m)}{1 + \Lambda(\omega_o) + \Lambda(\omega_i)}
+    \label{eq:99}
+\end{equation}
+
+この形式は、出射方向と入射方向が互いから遠く離れているとき、正確であるが、近いときにはshadowingを過剰推定する。我々は、計算的な複雑さが同程度なわりに式\eqref{eq:98}より正確であるため、実践において(in practice)は、式\eqref{eq:99}を使うことを提案している。この形式の導出は\ref{sec:B}に掲載する。
+
+\paragraph{方向相関のmaskingとshadowing(Direction-Correlated Masking and Shadowing)}
+
+maskingとshadowingは出射方向と入射方向が近い場合でも強い相関がある。一般的には、$\omega_o = \omega_i$のとき、maskingとshadowingは、方向$\omega_o$から見えるマイクロファセットは方向$\omega_i$からも見えるため、完全な相関を持つ。この場合、shadowingは、影になっているマイクロファセットは方向$\omega_i$から見えず、ゆえに、方向$\omega_o$からも見えないので、BRDFから取り除かれるべきである。これは、...
+
+TODO
+
 \printbibliography[title=参考文献]
 
 \appendix
 
 \section{(Derivation of the Masking Function)}
 \label{sec:A}
+
+\section{(Derivation of the Height-Correlated Masking and Shadowing Function)}
+\label{sec:B}
 
 \end{document}
