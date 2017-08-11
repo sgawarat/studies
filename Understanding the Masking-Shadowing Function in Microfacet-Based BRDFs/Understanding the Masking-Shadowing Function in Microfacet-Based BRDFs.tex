@@ -855,7 +855,8 @@ V型空洞モデルは、1つのマイクロサーフェスをシミュレート
 
 V型空洞とSmithのどちらを選ぶかという問いには、両方ともマイクロサーフェス・プロファイルに基づいており、数学的にwell definedであることから、決定的な答えは存在しない。V型空洞は計算コストがより低く、一般的である --- 数学的にいかなる法線分布でもイケる --- が、現実感の点で劣るところがある。対して、Smithベースのモデルはより正確であるが、特定の導出と時々高価な評価が必要である。したがって、この選択は現実感とパフォーマンスのトレードオフの問題である。
 
-\section{masking関数の伸縮不変性(Stretch Invariance of the Masking Function)}
+\section{masking関数の伸長不変性(Stretch Invariance of the Masking Function)}
+\label{sec:5}
 
 \subsection{masking確率の不変性(Masking Probability Invariance)}
 
@@ -1154,6 +1155,11 @@ $\alpha = \alpha_y$としたとき、この伸長した表面での$a$を求め�
 図\ref{fig:15}は、垂直なせん断(vertical shearing)が行われてもmasking関数が不変であることを示している。形状に垂直なせん断を適用することは、定数値で形状のすべての傾斜をオフセットすることと等価である。前回と同様に、これはマイクロサーフェスの傾斜を含み、その傾斜は出射方向に関連している。我々は、マイクロサーフェスの平均傾斜$\bar{\tilde{m}} = (\bar{x}_{\tilde{m}}, \bar{y}_{\tilde{m}})$を示すための用語として\textbf{メゾサーフェス(mesosurface)}を用いる。
 
 \begin{equation}
+    (\bar{x}_{\tilde{m}}, \bar{y}_{\tilde{m}}) = \int_{-\infty}^{+\infty} \int_{-\infty}^{+\infty} (x_{\tilde{m}}, y_{\tilde{m}}) P^{22}(x_{\tilde{m}}, y_{\tilde{m}}) dx_{\tilde{m}}, dy_{\tilde{m}}
+    \label{eq:94}
+\end{equation}
+
+\begin{equation}
     \begin{split}
         \|\tilde{m}\|^2 & = (\tan\theta_m(\cos\phi_m, \sin\phi_m) + (\bar{x}_{\tilde{m}}, \bar{y}_{\tilde{m}}))^T Q (\tan\theta_m(\cos\phi_m, \sin\phi_m) + (\bar{x}_{\tilde{m}}, \bar{y}_{\tilde{m}})) \\
                         & = \frac{(\tan\theta_m \cos\phi_m + \bar{x}_{\tilde{m}})^2 \alpha^2_y}{\alpha^2_x \alpha^2_y - r^2_{xy} \alpha^2_x \alpha^2_y} + \frac{(\tan\theta_m \sin\phi_m + \bar{y}_{\tilde{m}})^2 \alpha^2_x}{\alpha^2_x \alpha^2_y - r^2_{xy} \alpha^2_x \alpha^2_y} \\
@@ -1205,7 +1211,7 @@ $\alpha = \alpha_y$としたとき、この伸長した表面での$a$を求め�
 masking-shadowing関数のより正確な形式は、マイクロサーフェスの高さのためにmaskingとshadowingとの間の相関をモデル化する\cite{Ross2005}。マイクロファセットがマイクロサーフェスの内部で持ち上げられる(is elevated)[?]たびに、出射方向に対して可視となる(マスクされていない(unmasked))確率と入射方向に対して可視となる(影になっていない(unshadowed))確率が同時に上昇する、ということが直観として理解できる。したがって、maskingとshadowingはマイクロファセットの持ち上げを通して相関を持つ。この相関は、以下の結合masking-shadowing関数(the joint masking-shadowing function)の形式で説明される。
 
 \begin{equation}
-    G_2(\omega_o, \omega_i, \omega_m) S= \frac{\chi+(\omega_o \cdot \omega_m) \chi+(\omega_i \cdot \omega_m)}{1 + \Lambda(\omega_o) + \Lambda(\omega_i)}
+    G_2(\omega_o, \omega_i, \omega_m) S= \frac{\chi^+(\omega_o \cdot \omega_m) \chi^+(\omega_i \cdot \omega_m)}{1 + \Lambda(\omega_o) + \Lambda(\omega_i)}
     \label{eq:99}
 \end{equation}
 
@@ -1213,7 +1219,31 @@ masking-shadowing関数のより正確な形式は、マイクロサーフェス
 
 \paragraph{方向相関のmaskingとshadowing(Direction-Correlated Masking and Shadowing)}
 
-maskingとshadowingは出射方向と入射方向が近い場合でも強い相関がある。一般的には、$\omega_o = \omega_i$のとき、maskingとshadowingは、方向$\omega_o$から見えるマイクロファセットは方向$\omega_i$からも見えるため、完全な相関を持つ。この場合、shadowingは、影になっているマイクロファセットは方向$\omega_i$から見えず、ゆえに、方向$\omega_o$からも見えないので、BRDFから取り除かれるべきである。これは、...
+maskingとshadowingは出射方向と入射方向が近い場合でも強い相関がある。一般的には、$\omega_o = \omega_i$のとき、maskingとshadowingは、方向$\omega_o$から見えるマイクロファセットは方向$\omega_i$からも見えるため、完全な相関を持つ。この場合、shadowingは、影になっているマイクロファセットは方向$\omega_i$から見えず、ゆえに、方向$\omega_o$からも見えないので、BRDFから取り除かれるべきである。これは、視線の向きと光の向きが平行であるときに影が見えなくなる、"ホットスポット効果(hotspot effect)"として知られている。BRDFは出射方向に沿って計測された放射輝度をモデル化しているため、shadowingが表面上に存在するのにそれが見えていないのならば、BRDFの一部とするべきではない。
+
+$\omega_o$と$\omega_i$が同じ方位角(azimuthal angle)を持つとき、完全な(full)相関を達成する。この場合、masking-shadowing関数はmaskingとshadowingの最小値で置き換えることができる。\citeauthor{Ashikmin2000} \cite{Ashikmin2000}は互いの方向が完全に相関している場合における式\eqref{eq:98}の式をブレンドすることで方向に対する相関を説明する。
+
+\begin{equation}
+    G_2(\omega_o, \omega_i, \omega_m) = \lambda(\phi)G_1(\omega_i, \omega_m) + (1 - \lambda(\phi)) \min(G_1(\omega_o, \omega_m), G_1(\omega_i, \omega_m))
+    \label{eq:100}
+\end{equation}
+
+ここで、$\lambda(\phi)$は\citeauthor{Ginneken1998}のものと同じような、経験的な(empirical)ファクタである。この著者らは関数$\Lambda$によるSmithの解析的表現を持たないため、maskingとshadowingを分けて計算しなければならなかった。これが、分割できる形式と完全無相関な(fully uncorrelated)形式をブレンドしなければならない理由であり、高さ相関を自身のモデルに組み込むことができない理由である。
+
+\paragraph{高さ・方向相関のmaskingとshadowing(Height-Direction-Correlated Masking and Shadowing)}
+
+maskingとshadowingとの間にある、方向に対する相関は、方向に対する相関のファクタ$\lambda$を高さ相関の形式に組み込むことでモデル化できる。
+
+\begin{equation}
+    G_2(\omega_o, \omega_i, \omega_m) = \frac{\chi^+(\omega_o \cdot \omega_m) \chi^+(\omega_i \cdot \omega_m)}{1 + \max(\Lambda(\omega_o), \Lambda(\omega_i)) + \lambda(\omega_o, \omega_i) \min(\Lambda(\omega_o), \Lambda(\omega_i))}
+    \label{eq:101}
+\end{equation}
+
+ここでは、maskingとshadowingは、出射方向と入射方向が平行で、かつ$\lambda = 0$であるとき、完全な相関を持つ。入出射方向のなす角が増加すると、相関は減少し、$\lambda$は$1$に近づく。この場合、maskingとshadowingは方向に対して相関は無く、その数式は高さ相関の形式に戻る。
+
+\citeauthor{Ginneken1998} \cite{Ginneken1998}は経験的ファクタ$\lambda = \frac{4.41\phi}{4.41\phi + 1}$を提案しており --- これは$\omega_o$と$\omega_i$の方位角の差$\phi$に依存する ---、表面のラフネスに対して独立である。\citeauthor{Heitz2013}は近年、この問題や、$D$をBeckmann分布とするときの表面のラフネスを組み込んだ$\lambda(\omega_o, \omega_i)$の解析的な近似についてのより詳細な(in-depth)研究を公開した(presented)\cite{Heitz2013}。その結果は等方的なBeckmann分布での場合のみだったが、節\ref{sec:5}で表した伸長不変性が、この結果を異方的なBeckmann分布へと容易に一般化するために用いることができる。この形式は、maskingとshadowingの相関を完璧にモデル化しており、式\eqref{eq:98}、\eqref{eq:99}、\eqref{eq:100}で表される形式より正確である。$\lambda$に対する実用的な形式の導出と非ガウス分布の一般化は、open problemsである。
+
+\section{(Discussion and Future Work)}
 
 TODO
 
