@@ -81,6 +81,7 @@
 <<各章の概要>>
 
 \section{Masking関数の導出(Derivation of the Masking Function)}
+\label{sec:2}
 
 \subsection{表面上での放射輝度の計測(Measuring Radiance on a Surface)}
 \label{sec:2.1}
@@ -418,7 +419,7 @@ $D_{\omega_o}(\omega_m)$を式\eqref{eq:16}で置き換えれば、以下が成�
 
 \subsection{BRDFの正規化テスト(The BRDF Normalization Test)}
 
-\paragraph{White Furnaceテスト(The White Furnace Test)}
+\paragraph{White Furnace Test(The White Furnace Test)}
 
 双方向散乱分布関数(BSDF)$s$は、上半分の半球上に定義される双方向反射率分布関数(BRDF)$\rho$と、下半分の半球上に定義される双方向透過率分布関数(BTDF)$t$の和である。
 
@@ -434,25 +435,25 @@ $D_{\omega_o}(\omega_m)$を式\eqref{eq:16}で置き換えれば、以下が成�
     \label{eq:33}
 \end{equation}
 
-フレネル項が常に$1$であるなら、レイは透過が一切起こらないため、BTDFは$t = 0$となり、散乱モデルは完全にBRDFによって定義される(つまり、$s = \rho$となる)。この場合、レイはエネルギーを失うことなくすべからく反射され、その分布は正規化される。これはWhite Furnaceテストの式として以下のようにモデル化される。
+フレネル項が常に$1$であるなら、レイは透過が一切起こらないため、BTDFは$t = 0$となり、散乱モデルは完全にBRDFによって定義される(つまり、$s = \rho$となる)。この場合、レイはエネルギーを失うことなくすべからく反射され、その分布は正規化される。これはWhite Furnace Testの式として以下のようにモデル化される。
 
 \begin{equation}
     \int_{\Omega_i} \rho(\omega_o, \omega_i) |\omega_g \cdot \omega_i| d\omega_i = 1
     \label{eq:34}
 \end{equation}
 
-直観として、これは、出射方向から放たれた(cast)レイが何度か散乱してから表面を離れる様を表現していると考えることができる。しかし、図\ref{fig:6}(c)や\ref{sec:3.2}が示す通り、複数回バウンスするレイはshadowing関数によりBRDFから取り除かれているため、一般的な解析的BRDFはマイクロサーフェス上での複数回の散乱をモデル化していない。"完璧な反射板(perfect reflector)"としてのマイクロサーフェスをパラメータ化したものであっても、一般的なBRDFモデルでは積分が$1$にならず、White Furnaceテスト式を満たさないのは、ここに理由がある。
+直観として、これは、出射方向から放たれた(cast)レイが何度か散乱してから表面を離れる様を表現していると考えることができる。しかし、図\ref{fig:6}(c)や\ref{sec:3.2}が示す通り、複数回バウンスするレイはshadowing関数によりBRDFから取り除かれているため、一般的な解析的BRDFはマイクロサーフェス上での複数回の散乱をモデル化していない。"完璧な反射板(perfect reflector)"としてのマイクロサーフェスをパラメータ化したものであっても、一般的なBRDFモデルでは積分が$1$にならず、White Furnace Testの式を満たさないのは、ここに理由がある。
 
-\paragraph{Weak White Furnaceテスト(The Weak White Furnace Test)}
+\paragraph{Weak White Furnace Test(The Weak White Furnace Test)}
 
-White Furnaceテストは、最初の散乱事象しか組み込まれていない、一般的なBRDFモデルを検証するのには使えない。しかしながら、一般的なBRDFモデルが満たすべき、制限を緩和したテストを設計することはできる。1回目のバウンスの直後に表面を離れる\textbf{前}であるレイの分布が正規化されていることを確かめればよいのだ(図\ref{fig:6}(b))。これは、masking-shadowing関数をmaskingのみに置き換える($G_2(\omega_o, \omega_i, \omega_h) = G_1(\omega_o, \omega_h)$)ことで達成できる。式\eqref{eq:29}からフレネル項とshadowing関数を除けば以下の式が求められる。
+White Furnace Testは、最初の散乱事象しか組み込まれていない、一般的なBRDFモデルを検証するのには使えない。しかしながら、一般的なBRDFモデルが満たすべき、制限を緩和したテストを設計することはできる。1回目のバウンスの直後に表面を離れる\textbf{前}であるレイの分布が正規化されていることを確かめればよいのだ(図\ref{fig:6}(b))。これは、masking-shadowing関数をmaskingのみに置き換える($G_2(\omega_o, \omega_i, \omega_h) = G_1(\omega_o, \omega_h)$)ことで達成できる。式\eqref{eq:29}からフレネル項とshadowing関数を除けば以下の式が求められる。
 
 \begin{equation}
     \rho(\omega_o, \omega_i) = \frac{G_1(\omega_o, \omega_h) D(\omega_h)}{4|\omega_g \cdot \omega_o| |\omega_g \cdot \omega_i|}
     \label{eq:35}
 \end{equation}
 
-この式でWhite Furnaceテストを置き換えれば、Weak White Furnaceテストの式が以下のように求められる。
+この式でWhite Furnace Testを置き換えれば、Weak White Furnace Testの式が以下のように求められる。
 
 \begin{equation}
     \boxed{
@@ -493,10 +494,10 @@ BRDFの正規化に関するよくある質問として、"マイクロファセ
 \item 可視法線分布の正規化係数はmasking関数である。
 \item マイクロファセットベースBRDFは正規化されるべきである。すなわち、吸収せず、透過しない材質ではピッタリ1に積分される。
 \item マイクロファセットベースBRDFのshadowing関数はマイクロサーフェスにおける複数回の散乱事象から最初の散乱事象を切り離すために用いる。shadowingは2回以上の散乱事象を破棄(0に設定)し、複数回の散乱事象をモデル化する項が存在しない場合にはBRDFを人為的に非正規化されたままにする。
-\item マイクロファセットベースBRDFの標準形は、フレネルとshadowingを取り除いて、masking関数によって正規化される。物理ベースmasking関数は常に式\eqref{eq:36}と\eqref{eq:37}を満たす。これは我々が"Weak White Furnaceテスト"と呼ぶものである。
+\item マイクロファセットベースBRDFの標準形は、フレネルとshadowingを取り除いて、masking関数によって正規化される。物理ベースmasking関数は常に式\eqref{eq:36}と\eqref{eq:37}を満たす。これは我々が"Weak White Furnace Test"と呼ぶものである。
 \end{itemize}
 
-shadowingが組み込まれていないWeak White Furnaceテストは、masking関数が物理的に正しいことを確認する簡単な方法である。これは、一般的なBRDFモデルがshadowingを取り除いて用いられるべきであるという意味ではないことに特に気をつけたい。shadowingとは、一般的なBRDFモデルには組み込まれていない複数回のバウンスの後に反射するエネルギーから最初のバウンスの後に反射するエネルギーを分離することである。
+shadowingが組み込まれていないWeak White Furnace Testは、masking関数が物理的に正しいことを確認する簡単な方法である。これは、一般的なBRDFモデルがshadowingを取り除いて用いられるべきであるという意味ではないことに特に気をつけたい。shadowingとは、一般的なBRDFモデルには組み込まれていない複数回のバウンスの後に反射するエネルギーから最初のバウンスの後に反射するエネルギーを分離することである。
 
 \section{一般的な物理ベースmasking関数と非物理ベースmasking関数(Common Physically Based and Non-Physically Based Masking Functions)}
 
@@ -719,7 +720,7 @@ grazing角では幾何学的な法線に対して出射方向がほぼ垂直に�
 
 これは、入射角がgrazing角であるときに式\eqref{eq:51}の可視法線分布が正規化されていることを示している。さらなる技術的な導出を経ると、どの入射角でもこの分布が正規化されていることを示すことができる。
 
-このモデルを検証する異なる方法としては、Weak White Furnaceテストがある。これを行うには、式\eqref{eq:49}の$G_1$を用いて式\eqref{eq:36}を評価する。実際には、この評価は数値積分によって行われる。この積分は常に$1$になり、したがって、V型空洞によるモデルは数学的に良く設計されており、エネルギー保存則を満たしている。
+このモデルを検証する異なる方法としては、Weak White Furnace Testがある。これを行うには、式\eqref{eq:49}の$G_1$を用いて式\eqref{eq:36}を評価する。実際には、この評価は数値積分によって行われる。この積分は常に$1$になり、したがって、V型空洞によるモデルは数学的に良く設計されており、エネルギー保存則を満たしている。
 
 \paragraph{性質(Properties)}
 
@@ -826,7 +827,7 @@ V型空洞モデルは、1つのマイクロサーフェスをシミュレート
     \item Smithのmasking関数とV型空洞のmasking関数はともに物理ベースであるが、異なるマイクロサーフェス・プロファイルを仮定している。
     \item ともに、\eqref{eq:14}から射影面積が保存することを保証する。
     \item ともに、式\eqref{eq:18}の可視法線分布の正規化係数である。
-    \item ともに、式\eqref{eq:36}と\eqref{eq:37}で与えられるWeak White Furnaceテストを満足する。
+    \item ともに、式\eqref{eq:36}と\eqref{eq:37}で与えられるWeak White Furnace Testを満足する。
     \item 対して、暗黙的masking関数、Schlick-Smithのmasking関数、Kelemenのmasking関数は式\eqref{eq:14}、\eqref{eq:18}、\eqref{eq:36}、\eqref{eq:37}を満たさない。したがって、これらは物理ベースではない。つまり、これらの式から導き出せるマイクロサーフェス・プロファイルが存在しない。
 \end{itemize}
 
@@ -1191,6 +1192,7 @@ $\alpha = \alpha_y$としたとき、この伸長した表面での$a$を求め�
 \end{figure}
 
 \section{Smithの結合masking-shadowing関数(The Smith Joint Masking-Shadowing Function)}
+\label{sec:6}
 
 \paragraph{分離できるmaskingとshadowing}
 
@@ -1243,7 +1245,47 @@ maskingとshadowingとの間にある、方向に対する相関は、方向に�
 
 \citeauthor{Ginneken1998} \cite{Ginneken1998}は経験的ファクタ$\lambda = \frac{4.41\phi}{4.41\phi + 1}$を提案しており --- これは$\omega_o$と$\omega_i$の方位角の差$\phi$に依存する ---、表面のラフネスに対して独立である。\citeauthor{Heitz2013}は近年、この問題や、$D$をBeckmann分布とするときの表面のラフネスを組み込んだ$\lambda(\omega_o, \omega_i)$の解析的な近似についてのより詳細な(in-depth)研究を公開した(presented)\cite{Heitz2013}。その結果は等方的なBeckmann分布での場合のみだったが、節\ref{sec:5}で表した伸長不変性が、この結果を異方的なBeckmann分布へと容易に一般化するために用いることができる。この形式は、maskingとshadowingの相関を完璧にモデル化しており、式\eqref{eq:98}、\eqref{eq:99}、\eqref{eq:100}で表される形式より正確である。$\lambda$に対する実用的な形式の導出と非ガウス分布の一般化は、open problemsである。
 
-\section{(Discussion and Future Work)}
+\section{議論と今後の課題(Discussion and Future Work)}
+
+\paragraph{その他の一般的に使われるモデルに対するSmithのmasking関数の導出(Deriving the Smith Masking Function for Other Commonly Used Models)}
+
+節\ref{sec:2}では、Beckmann分布とGGX分布について、Smithのmasking関数の解析的な閉形式が導き出せることを確認した。しかし、masking関数は常に、一般的に用いられる法線分布に対して解析的に積分しているわけではない。
+
+例として重要なのが、Phong分布である\cite{Walter2007}。\citeauthor{Walter2007}は、低いラフネス値において近しい見た目を持つため、Beckmann分布に対してSmithのmasking関数を用いることを提案した。しかし、ラフネスが増加すれば、誤差はより顕著になる(significant)。Phong分布専用の関数$\Lambda$の解析的近似を導出するのは興味深いと思われた。\cite{Walter2007}は、それが解析的な解法より安いという理由から、そのようなBeckmannの近似を提案した。\ref{sec:5}で論じたように、Beckmannは形状不変であるため、分布に含まれる情報は一次元でしか無いので、Beckmannに対するそれは簡単に行うことができる。もちろん、形状不変な分布とそれに付随するmasking関数は、傾斜の大きさとラフネスとの割合$a = \frac{\|\tilde{m}\|}{\alpha}$にのみ依存する。これにより、maskingで用いられる関数$\Lambda$は、変数$a$を持つ一次元の関数にエンコードすることができる。これは、Beckmann分布では分数の多項式として効率的に表される。Phong分布で同じことを行おうとすると、形状不変ではないため、$a$の一次元関数として表すことができないため、こう簡単にはいかない(is less straight-forward)。しかし、$\theta$と$\alpha$を、Phongの$\Lambda$関数が一次元の関数となるもうひとつの中間量にマージする、または、代わりに正確な2Dフィティングを見つけることは、確かに可能である。
+
+そのほかの例としては、GTRと呼ばれるGGX分布の一般化式\cite{Burley2012}がある。このmasking関数はまだ発見されていない。
+
+\paragraph{masking-shadowingの相関(Correlation of Masking-Shadowing)}
+
+節\ref{sec:6}で見てきたように、maskingとshadowingをかけ合わせることは、それらの効果が相関を持っているため、かなり大雑把な近似である。任意の法線分布に対する相関のあるmasking-shadowing関数の正確で実践的な形式を導出することは、open problemである。
+
+\paragraph{複数回の散乱(Multiple Scattering)}
+
+複数回の散乱をモデル化することは、一般的なBRDFモデルによって不完全に表現されている効果を導入するための可能な方法のひとつである。例えば、BeckmannやPhong、GGXであっても、計測された材質と比べて過度に(overly)短い"テール(tails)"を持つことが知られている\cite{Burley2012}。CGコミュニティの最初の反応(reflex)は、標準のBRDF式を保ちつつ、法線分布を調整する(tweak)ことであった。例えば、\citeauthor{Bagher2012} \cite{Bagher2012}は計測した材質にフィットするようにシフトしたガンマ分布を用いる。この分布は計算や積分を行うには複雑であり、さらには、モデルを計測データにフィットさせるためフレネル項を調整しなければならなかった。最終的には、彼らのモデルはフィッティングツールとしてうまく働くが、物理的な意味がなくなってしまっている(it no longer makes physical sense)。同様にして、\citeauthor{Burley2012} \cite{Burley2012}は、計測した材質をより正確に表すため、GGXをより長いテールを作り出すGTRに一般化する。しかし、masking関数はGTRでは利用できない。そこで彼は、代わりに、法線分布との根本的な関連(link)を侵す(violate)、調整したmasking関数を用いた。我々はこのモデルの実現可能性の限界にほぼ達してしまったと思われる。依然として、物理的正確性における競争では、ときにはモデルの物理的原則(basis)さえ侵してまで、さらに引き延ばそうとするが、それは、逆効果(counterproductive)である。
+
+モデルをパラメータ化するより複雑な方法を発明し続けるよりかは、計測データ現れているとある効果が単にモデルから欠落しているかどうかを自身に問いかけるべきであり、故に、代わりにその拡充を期待(look to extend)すべきである。複数回の散乱をモデル化することはここでは良い候補のように思える。そして、実際に物理学の文献ではすでに調査されている\cite{Bourlier2004}。しかし、これらのモデルは、、物理学コミュニティが実装のしやすさより正確性を是としている(aim for)ので、極めて複雑である。コンピュータグラフィクスアプリケーションにおいて簡単かつ実践的な方法でモデル化する初めての試みでは、エネルギー保存則と経験的観察の知識を組み合わせることになるだろう。節\ref{sec:3.2}では、これらが最初の散乱事象をモデル化するのみであるため、shadowingが一般的なマイクロファセットBRDFに導入されることを示した。今後の研究が複数回の散乱を含んだBRDFモデルを導入するとしたら、以下のようになるだろう。
+
+\begin{equation}
+    \rho(\omega_o, \omega_i) = \rho_1(\omega_o, \omega_i) + \rho_{2+}(\omega_o, \omega_i)
+    \label{eq:102}
+\end{equation}
+
+ここで、$\rho_1(\omega_o, \omega_i)$は、shadowingを含めた最初の散乱をモデル化した通常のBRDFを、$\phi_{2+}(\omega_o, \omega_i)$は新しい複数回散乱の関数になるだろう。我々は、複数回散乱のBRDFモデルがWhite Furnace Testを合格することを知っている。フレネルを$1$としたときは以下のようになる。
+
+\begin{equation}
+    \begin{split}
+        \int_{\Omega_i} \rho(\omega_o, \omega_i) |\omega_g \cdot \omega_i| d\omega_i & = \int_{\Omega_i} \rho_1(\omega_o, \omega_i) |\omega_g \cdot \omega_i| d\omega_i + \int_{\Omega_i} \rho_{2+}(\omega_o, \omega_i) |\omega_g \cdot \omega_i| d\omega_i \\
+        & = 1
+    \end{split}
+    \label{eq:103}
+\end{equation}
+
+加えて、複数回散乱の項で保存されるエネルギーは、以下のように、最初の散乱の項でのshadowingで発生するエネルギー損失によって完全に決定されることを知っている。
+
+\begin{equation}
+    E_{2+} = \int_{\Omega_i} \rho_{2+}(\omega_o, \omega_i) |\omega_g \cdot \omega_i| d\omega_i = 1 - \int_{\Omega_i} \rho_1(\omega_o, \omega_i) |\omega_g \cdot \omega_i| d\omega_i
+    \label{eq:104}
+\end{equation}
 
 TODO
 
