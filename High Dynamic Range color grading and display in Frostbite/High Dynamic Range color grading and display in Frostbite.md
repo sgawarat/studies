@@ -1,16 +1,15 @@
 ---
-bibliography: 'Color Grading.bib'
-citation-style: 'authoryear.csl'
-reference-section-title: '参考文献'
+bibliography: 'bibliography.bib'
+link-citations: true
 ---
-## High Dynamic Range color grading and display in Frostbite {ignore=true}
+# High Dynamic Range color grading and display in Frostbite. [@Fry2017] {ignore=true}
 
 [TOC]
 
-### 昔話 [@Fry2017]
+## 昔話
 
 - フィルム密度(film density)によって光に対する応答が異なっていた。
-    - [Fundamentals of Film Exposure -- Olympus Microscopy Resource Center](http://www.olympusmicro.com/primer/photomicrography/filmexposure.html)を参考。
+    - 参考:[Olympus Microscopy Resource Center](http://www.olympusmicro.com/primer/photomicrography/filmexposure.html)
 - フィルムの特性が描くカーブは3つのセクションに分けられる。
     - 中間部(Mid section): ほぼ線形
     - Toe(つま先): 反応がにぶる
@@ -19,10 +18,10 @@ reference-section-title: '参考文献'
     - ToeとShoulderの範囲を縮小する。
     - 中間部に合わせてシーンを露出する。
 
-#### 昔のテレビと標準規格 [@Fry2017]
+### 昔のテレビと標準規格
 
 - 昔のテレビやCRTモニタは0.1nitsから100nitsまで。
-    - $[\text{nits}] = [\text{cd}/m^2]$
+    - $[\text{nits}] = [\text{cd}/\text{m}^2]$
 - 電気的な入力に対して非線形な応答を持つ。
     - 電気光学伝達関数(Electro Optical Transfer Function; EOTF)
     - いわゆる"ガンマカーブ"
@@ -30,7 +29,7 @@ reference-section-title: '参考文献'
     - ディスプレイの表示能力(capability)そのまま。
     - こんにちではよく使われている。
 
-#### 今のテレビと標準規格 [@Fry2017]
+### 今のテレビと標準規格
 
 - 今のテレビは0.01nitsから300nits超。HDR的なことまでできる。
     - ハードウェアは標準規格以上の能力がある。
@@ -41,7 +40,7 @@ reference-section-title: '参考文献'
     - 最終的にコントラストが強めに出る傾向がある。
 - 輝度についても、同じように上限方向に飽和している。(例えば、店頭デモモード)
 
-### トーンマッピング(Tonemapping) [@Fry2017]
+## トーンマッピング(Tonemapping)
 
 - 最終的な出力先はディスプレイであるため、そこで表現できる色空間に合わせて値の範囲を縮小しなければならない。
 - トーンマッピングは、大事なディテールを維持しつつ、広いダイナミックレンジを狭いダイナミックレンジに対応させる処理のこと。
@@ -49,7 +48,7 @@ reference-section-title: '参考文献'
     - シーンの注目している地点を、中間トーン(mid tones)に合わせて露出する。
     - フィルムの特性を模倣する。
 
-#### トーンマッパー(Tonemapper)の例 [@Fry2017]
+### トーンマッパー(Tonemapper)
 
 - シンプルなヤツ: 影響の度合いは、最明部が最も大きく、最暗部が最も少ない。
     - [@Reinhard2002]
@@ -60,7 +59,7 @@ reference-section-title: '参考文献'
 
 実装は[Filmic Tonemapping Operators -- Filmic Worlds](http://filmicworlds.com/blog/filmic-tonemapping-operators)を参照。
 
-### カラーグレーディング(Color grading) [@Fry2017]
+## カラーグレーディング(Color grading)
 
 - カラーグレーディングとは、シーンに特徴的な見た目を適用すること。
 - その始まりは映画産業で、見た目を変えるために使うフィルムを選んだり、現像工程を変化させたりすることを呼んだ。
@@ -71,7 +70,7 @@ reference-section-title: '参考文献'
     - Orange & Teal (肌の補色による色味戦略。参考:[raitank blog](http://www.raitank.jp/archives/1419))
     - "Fix it in post" (= 撮影後に行う修正。参考:[BornDigital](https://www.borndigital.co.jp/book/300.html))
 
-### Frostbiteにおける以前のグレーディングパイプライン [@Fry2017]
+## Frostbiteにおける以前のグレーディングパイプライン
 
 1. ポストプロセス
     - ここまでFP16の線形空間。
@@ -91,7 +90,7 @@ reference-section-title: '参考文献'
 1. UIを描画
 1. ディスプレイに表示
 
-#### 問題 [@Fry2017]
+### 問題
 
 - トーンマッピング
     - RGB個別の一次元カーブだと色相シフトが起こる。
@@ -118,9 +117,9 @@ reference-section-title: '参考文献'
     - クリエイターがこれらすべてを制御できる方法を提供したい。
         - テレビの製造業者由来ではなく、クリエイティブな制御ができるように。
 
-### HDRディスプレイ対応 [@Fry2017]
+## HDRディスプレイ対応
 
-#### 単純なアプローチ [@Fry2017]
+### 単純なアプローチ
 
 - SDRの最終的な色情報を逆トーンマッピングして、もとのHDRデータを抽出する。
     - Shoulderをもとに戻すにはどうすれば。
@@ -139,7 +138,7 @@ reference-section-title: '参考文献'
     - マイルドな色を使うようチームに頼んでみる。
     - Shoulderの範囲を使わないようにUIをスケールする。
 
-#### Frostbiteのアプローチ [@Fry2017]
+### Frostbiteのアプローチ
 
 - HDRからLUT空間へ変換する。
 - LUT空間でグレーディングする。
@@ -152,7 +151,7 @@ reference-section-title: '参考文献'
 - UIは見た目が異なるので別に処理する。
 - 現在のHDR規格は現行のディスプレイ性能より広い範囲をカバーするので、規格に従えば将来の高性能ディスプレイならよりよく見えるようになるかも。
 
-##### HDRグレーディング
+#### HDRグレーディング
 
 - HDRフレンドリーな分布関数を用いる。
     - 色々(log, S-Log, LogC)試したけど、結局はST.2084かPQ(Perceptual Quantiser)を使うことにした。(参考:[Phileweb](http://www.phileweb.com/review/article/201503/17/1558.html))
@@ -169,9 +168,9 @@ reference-section-title: '参考文献'
 - "Resolve Live"は多大なワークフロー改善をもたらした。
     - キャプチャ/モニタカードを買う必要がある。
 
-##### ディスプレイマッピング
+#### ディスプレイマッピング
 
-- The HDR version of the game is the reference version
+- ゲームのHDRバージョンをリファレンスとする。(The HDR version of the game is the reference version)
 - トーンマッピングはパイプラインの最後にした。
 - トーンマッピングは接続しているディスプレイに応じて異なる。
     - SDRでは、アグレッシブなトーンマッピング。
@@ -200,7 +199,7 @@ reference-section-title: '参考文献'
     - 画像/ゲームの多くでは目視で調整される。
         - ぜんぜんPBRじゃないけど、これは数学ではなくて知覚についてなので。
 
-##### 万事OK...じゃない
+#### 万事OK...じゃない
 
 - SDRの性能は0.1-100nitsだが、ディスプレイはその性能に合わせて200から400nitsまで上限を拡大する。
 - HDRは100nitsは100nitsなので、比較すると暗く写ってしまう。
@@ -212,7 +211,7 @@ reference-section-title: '参考文献'
 
 - 既存のアセットで色相シフトを活用したものがあれば直さなければならない。
 
-##### VFXの再制作
+#### VFXの再制作
 
 - 炎のエフェクトが変化するのがもっともよくあった苦情(complaint)だった。
     - VFXは前のトーンマッパーで起こるクリッピングによる色相シフトをを使って作られていた。
@@ -223,8 +222,106 @@ reference-section-title: '参考文献'
     - 温度でランプを指す。
     - ちょうどいいようにランプを調整する。
 
-##### こんどこそOK...じゃない
+#### こんどこそOK...じゃない
+
+- 色相を保存したShoulderは常に望まれているわけではない。
+    - 飽和した非常に明るいビジュアル(エフェクト)を大いに妨げている。
+    - あるフィルムのルックに合わせることを妨げている。
+- 開発は継続している。
+- 色相シフトの再導入を試している。
+
+#### 色相シフトの再導入
+
+- まだ完了していないけど、できてきている。
+- 今年発売するゲームでは違う実装になっているかも。
+    - 色相を維持するほうが良いものもある。
+    - 色相をシフトしたほうが良いものもある。
+    - 色相シフトの具合をコンテンツによって変えられるようにすることになりそう。
+
+## ACES
+
+- ACES = Academy Color Encoding System
+- 映画のCGI用のカラーマネージメントの標準規格。
+- 処理パイプラインを定義する。
+- "見た目"とディスプレイマッピングが含まれている。
+
+- パイプライン。
+    - IDT(Input Device Transform)では、入力空間からACESの空間に変換する。
+    - LMT(Look Modification Transform)では、グレードとルックを適用する。
+    - RRT(Reference Rendering Transform)は、ようはフィルミックトーンマッピング。
+    - ODT(Output Device Transform)では、一貫性を保つように各ディスプレイに応じで出力を変換する。
+
+- なぜこのまま使わなかったの？
+    - この仕事を始めた2014年頃は、ACESがまだ動き始めたばかりだった。
+    - 初期のバージョンではFP16が必要で、いくつかのテクスチャフォーマットに適さなかった。
+    - フィルミックRRTに納得できなかった。
+- その原理には賛同していたので、そのコンセプトレベルで用いた。
+    - 処理順。
+    - 広いmaster work空間を使う。
+    - LMT = グレーディング。
+    - ODT = ディスプレイマッピング。
+
+- 私は使うべき？
+    - 絶対にyes。
+    - ACESccやACEScgも調べておくと良いかも。
+- Frostbiteでは使うの？
+    - 将来では、ほぼ確実にyes。
+    - 調査は継続したい。
+    - 原理は共有してるし、空間もきちんと定義されているから、移行は容易だろう。
+    - アセットにACESのカラーマネージメントを採用するのは大いにある話。
+
+## LUTの問題
+
+パフォーマンスとクオリティのトレードオフの話。
+
+パフォーマンスを稼ぐため、ディスプレイマッピングをグレーディングと同じLUTに注入したい。
+ディスプレイマッピングをグレーディングの最後に組み合わる処理の順序はコンポジションシェーダの初めにやることと同じ。グレードに注入するコストも安いので、実質タダ。
+しかし、PQ分布ですら起こった、マッハバンディングとして現れるような、精度の問題がある。
+
+線形フィルタリングは曲線を区分(piecewise)線形近似に変換する。
+2点のみが寄与するので、一次元では大丈夫に見えるが、LUTはボリューム(三次元)である。
+輝度軸(黒から白へのグレースケール)は対角線にあり、テクセルの中間では8近傍が等しく寄与する[?]。(so exactly half way between texels 8 neighbors contribute equally)
+
+### LUTフィルタリング
+
+高階のフィルタ使う、例えば、トライリニアをトライキュービックにすれば、改善することかもしれないが、そのコストは高い。
+
+### LUT空間
+
+- RGB: やってはいけない。
+- YCgCo: 一番高速な非相関空間。RGBと比べて大幅な改善が見られる。
+- YCbCr: YCgCoより良い。
+- ICtCp: YCbCrと比べて良くない。YCgCoと匹敵する。
+
+我々のディスプレイマッピング空間とそのままマッチするので、ICtCpがベストとなるべきだが、そうではなかった。
+この理由は、以下で述べるが、色域(color gamut)に由来する。
+
+非相関なものはRGBより輝度で優れている。
+線形フィルタリングを使っていても、輝度軸と彩度軸はキューブマップの軸と平行になっている。
+輝度のみのランプは一次元であり、関係する近傍は少なくなるため、区分線形近似のアーティファクトは減少する。
+
+### カラーグレーディングLUTの正確性
+
+- 非相関なLUTはディスプレイマッピングの精度問題を改善する。
+    - 輝度が複数に跨がらずにひとつの軸に整列している。
+    - 三次元でなく、一次元の区分線形近似(piecewise linear approximation)
+- 既存のRGB LUTの上部にディスプレイマッピングを焼きこんでいる。
+    - 異なる空間が問題を起こすかもしれないことを考えておく。
+- 異なる空間でのLUTのアクセスパターンをプロットしておく。
+    - 各空間でLUTが触れるパーセンテージを計測する。
+    - カラーグレーディングの精度に影響があるかどうかを定める。
+
+つまり、非相関であれば、目立ったアーティファクトなしに線形フィルタリングが使える。
+
+基本的には、より多くのテクセルを使えば、グレーディングの精度が上がる。
+
+非相関な空間は根本的に触れるテクセルが少ない。つまり、カラーグレーディングの正確性に影響がある可能性がある。
+この点で言えば、ICtCpはYCC系よりも正確だが、RGBよりは正確でない。
+
+(結局の所、ビジュアルのアーティファクトが最小になるので、)RGBでなんとかしていた。だが、将来のために非相関な空間にたいする調査を継続してゆく。
+
+## パフォーマンス
 
 TODO
 
-### 参考文献
+## References
