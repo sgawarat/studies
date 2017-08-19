@@ -36,13 +36,51 @@ $\theta_l$と$\theta_v$は法線に対する$\boldsymbol l$と$\boldsymbol v$の
 
 ### The "MERL 100"
 
-![MERL 100に含まれるBRDFの画像スライス](assets/Figure1.png)
+![MERL100に含まれるBRDFの画像スライス](assets/Figure1.png){#fig:Slices_of_MERL100_BRDFs}
+
+等方的なBRDFマテリアルのサンプル100種が @Matusik2003 によりキャプチャされた。そこには、塗料、木材、金属、織物、岩石、ゴム、プラスチック、その他の合成材質を含む広範囲のマテリアルが網羅されている。このデータセットは[Mitsubishi Electric Research Laboratories](http://www.merl.com/brdf/)から無料で手に入れることができ、一般的には新しいBRDFモデルの評価に使われる。これらのBRDFのスライスを[@fig:Slices_of_MERL100_BRDFs]に示す。
+
+MERL100の各BRDFは、$\theta_h$軸、$\theta_d$軸、$\phi_d$軸にそってそれぞれが$90$、$90$、$180$の三次元へ密にサンプルされる。これらは、スペキュラのピーク近くにデータサンプルが集中するように歪ませてある(warped)$\theta_h$軸を除いて、$1$度刻みになっている。これは、データが扱いやすいという点では良いことだが、特に水平近くでデータがどれだけ正確なのかについて明確でない。このため、一部の研究者はフィッティングを行うときに水平近くのデータを破棄しているが、このデータはマテリアルの外観(appearance)における重大な(profound)効果を持つ可能性を考えるためにはいまだ有効である。
+
+### BRDFエクスプローラー(BRDF Explorer)
+
+![ディズニーのBRDFエクスプローラー](assets/Figure2.png){#fig:BRDF_Explorer}
+
+MERLの測定マテリアルを調べて(examine)、解析的モデルと比較するため、我々は[@fig:BRDF_Explorer]で示される、新しいツールであるBRDFエクスプローラーを開発した。ソースコードは[GitHub](https://github.com/wdas/brdf)から手に入れることができる。BRDFエクスプローラーは以下の機能を有する。
+
+- GLSLで描かれた解析的BRDFの読み込み。
+- @Ngan2005 がキャプチャした異方的マテリアルのサンプルを含む測定BRDFの読み込み。
+- 複数データのプロット。(3D半球表示、極座標、様々なデカルト座標系)
+- 計算済みアルベドのプロット。(半球での方向における反射率)
+- 露出制御付き画像スライス表示。
+- 重点サンプリングされたIBLによって照らされたオブジェクトの表示。
+- 照らされた球の表示。
+- パラメトリックモデルのためのUIによる動的制御。
+
+このツールは、新しいモデルの開発と同様に、測定マテリアルと既存の解析的モデルとの比較において非常に貴重(invaluable)であった。驚くことに、モデルのパラメータとBRDF空間に対するより深い理解をもたらすことから、アーティストのためのインタラクティブなBRDFエディタとしても非常に有用であることが判明した。
+
+### 画像スライス(Image slice)
+
+![赤いプラスチック(red-plastic)と光沢のある赤いプラスチック(specular-red-plastic)のBRDF画像スライスと"スライス空間"の概略図(schematic view)](assets/Figure3.png){#fig:BRDF_images_slices}
+
+測定データを可視化する最も単純で最も直観的な方法のひとつは、単に画像の束として見ることであり、我々は、これがデータに関する直観を得るための非常に強力なツールであることを発見した。結論として、MERL100のマテリアルの興味深い特徴はすべて$\phi_d = 90$のスライスに見ることができる。この空間の概略図は、2つのマテリアルのサンプルと合わせて、[@fig:BRDF_images_slices]で示される。その他のスライスは、[@fig:Slices_for_different_phi_d]で示される通り、$phi_d = 90$のスライスに対して大まかに(roughly)歪んでいるだけである。この観察結果は、$f(\theta_h, \theta_d)$の形式に簡単化した等方的なBRDFモデルの基礎として、@Romeiro2008 や @Pacanowski2012 のような近年の研究で利用されていた。
+
+![$\phi_d$が異なるときの光沢のある赤いプラスチック(specular-red-plastic)のスライス。右上の黒の範囲は$\boldsymbol l$か$\boldsymbol v$のいずれかが水平線の下に潜り込むBRDF領域の部分を表す。](assets/Figure4.png){#fig:Slices_for_different_phi_d}
+
+画像スライスでは、左端がスペキュラのピークを表し、上端がフレネルのピークを表す。下端では光のベクトルと視線のベクトルが完全に一致する(coincident)。すなわち、下端は再帰反射(retroreflection)を表す。特に右下はグレージング(grazing)再帰反射を表す。ディフューズ反射率はBRDF空間全体で表されるが、一般的には画像の中央をディフューズ応答として特定する(isolate)。
+
+[@fig:BRDF_images_slices]の概略図には$\theta_l$または$\theta_v$の等値線(isoline)も含まれている。多くのディフューズ効果はこの等高線(contour)に従う傾向にある。これらの等値線は$\phi_d$をゼロに近づけると直線になり、$\phi_d$のスライスを比較することで、マテリアル応答のどの部分がディフューズ反射に由来しているかと、どの部分がスペキュラ反射に由来しているかについての洞察を得られる。もうひとつのヒントはもちろん色についてである。つまり、ディフューズ反射率はその表面に起因し、(表面が金属のように)色付けされているわけではない(is not tinted)。
+
+
+## MERLマテリアルの観察結果(Observations from MERL materials)
+
+### ディフューズの観察結果(Diffuse observations)
+
+![ディフューズ色の種類を表すマテリアル群。上段:レンダリングされた球における点光源の応答。下段:BRDF画像スライス。](assets/Figure5.png){#fig:Diffuse_color_variation}
+
+ディフューズ反射率は、表面に対して屈折(refract)したり、散乱(scatter)したり、一部が吸収(absorb)したり、再放出(re-emit)したりする光を表す。一部の光が吸収されると、ディフューズ応答は表面の色で色付けされる。すると、色付けが行われた非金属マテリアルの部分はディフューズであるとみなすことができる。
 
 TODO
-
-## MERLマテリアル[^MERL]の観察結果
-### Diffseの観察結果
-Diffuse反射は，表面下へ屈折(refract)して，散乱(scatter)，吸収(absorb)，再放出(re-emit)される光を表現する．光が吸収されると，その結果として物体表面に色が付く．つまり，非金属な材質に色が付く場合，それはdiffuse反射に起因する可能性がある．
 
 Lambert diffuseモデルは，屈折光が十分に散乱し，directionality[^directionality]が完全に失われると仮定する．したがって，diffuse反射率は視点に依存しない．しかし，純粋なLambertian response[^Lambertian_response]を示す材質はそう多くはない．
 
