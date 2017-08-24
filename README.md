@@ -12,7 +12,7 @@ link-citations: true
 
 ### 物理ベースシェーディング
 
-- [ ] [@Walter2007] [[paper](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf)]
+- [x] [@Walter2007] [[paper](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf)]
     - GGXの原著。
 
 - [ ] [@Burley2012] [[slides](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_slides_v2.pdf), [notes](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf)]
@@ -27,6 +27,9 @@ link-citations: true
 
 - [x] [@Hoffman2016] [[slides](http://blog.selfshadow.com/publications/s2016-shading-course/hoffman/s2016_pbs_recent_advances_v2.pdf), [video](https://www.youtube.com/watch?v=zs0oYjwjNEo)]
     - 2016年最新の物理ベースシェーディング手法のまとめ。
+
+- [ ] [@Heitz2016a] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_cFVlUkFhWXdleEU)]
+    - Smithモデルを用いた複数回の散乱のマイクロファセットBSDFをモデル化。
 
 ### シェーディング技術
 
@@ -99,5 +102,11 @@ link-citations: true
     - モバイル系メーカーによるVulkan APIの概要。
 - [x] [@Hector2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-vulkan-devday-uk/7-Keeping-your-GPU-fed.pdf)]
     - モバイル系メーカーによるVulkan APIの概要。
+
+- [ ] [@Chajdas2016] [[slides](http://www.gdcvault.com/play/1022999/D3D12-Vulkan-Lessons)]
+    - D3D12とVulkanの横断的なtips。バリアとキューについて。
+
+- [x] [@Thomas2017] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2017/03/GDC2017-D3D12-And-Vulkan-Done-Right.pdf)]
+    - D3D12とVulkanの横断的なtips。バリアとキューについて。
 
 ### References
