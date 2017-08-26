@@ -84,9 +84,7 @@ MERLの測定マテリアルを調べて(examine)、解析的モデルと比較�
 
 ![*赤いプラスチック(red-plastic)*、*光沢のある赤いプラスチック(specular-red-plastic)*、ランバートディフューズの点光源に対する応答。](assets/Figure7.png){#fig:7}
 
-Lambertディフューズモデルは、屈折光が、指向性(directionality)が完全に失われてしまうくらい十分に散乱していると仮定する。したがって、ディフューズ反射率は定数[^lambert_diffuse_reflectance_is_constant]になる。しかし、Lambert的な応答を表すマテリアルは非常に少ないことを[@fig:1]と[@fig:5]における様々な画像スライスに見ることができる。
-
-[^lambert_diffuse_reflectance_is_constant]: _ Lambertシェーダに含まれる$\boldsymbol{n} \cdot \boldsymbol{l}$はライティングの積分の一部であり、BRDFの部分ではないことに注意。
+Lambertディフューズモデルは、屈折光が、指向性(directionality)が完全に失われてしまうくらい十分に散乱していると仮定する。したがって、ディフューズ反射率は定数になる。しかし、Lambert的な応答を表すマテリアルは非常に少ないことを[@fig:1]と[@fig:5]における様々な画像スライスに見ることができる。
 
 [@fig:6]に示されるように、多くのマテリアルにはグレージング自己反射での落ち込みが見られ、その他大勢にはピークが見られる。これは、画像スライスにおける見かけ上の(apparent)色付けに起因するディフューズ現象であるように見える。これはラフネスと強く相関している。つまり、より高いスペキュラピークをもつ滑らかな表面は輪郭が暗くなる(have a shadowed edge)傾向があり、粗い表面は逆に明るくなる(a peak instead of a shadow)傾向がある。この相関は自己反射の応答曲線や[@fig:7]のレンダリングされた球に見ることができる。
 
@@ -257,107 +255,41 @@ $$
 
 明示的な屈折率の代わりに、*specular* パラメータは入射するスペキュラの量を決定する。このパラメータの正規化された範囲は入射スペキュラの範囲$[0.0, 0.08]$に線形にリマップされている。これは$[1.0, 1.8]$の範囲における屈折率に対応し、ほとんどの基本的なマテリアルを網羅する(encompass)。パラメータ範囲の中央は非常に典型的な値である屈折率の1.5に対応しており、これをデフォルトとしている。*specular* パラメータはより高い屈折率に至るために1を超えてもよいが、注意して行われるべきである。このパラメータマッピングは、現実世界の入射の反射率があまりにも直感に反して低いため、アーティストにもっともらしいマテリアルを作ってもらうさいに大いに役立った。
 
+クリアコート層では、ポリウレタンを表現する屈折率1.5を固定して用い、その代わりとして、アーティストが *clearcoat* パラメータを使って層の全体的な強さをスケールできるようにする。正規化されたパラメータ範囲は$[0, 0.25]$の全体スケールに対応する。この層は、ビジュアル的なインパクトが大きいにもかかわらず、比較的少ないエネルギー量を示すので、ベース層からはエネルギーを差し引かない。ゼロに設定すると、クリアコート層は事実上無効化され、そのコストは発生しない。
+
+### スペキュラにおけるFの詳細(Specular F details)
+
+我々の目的において、SchlickのFresnel近似 [-@Schlick1994] は満足する出来であり(sufficient)、実質的に完全なFresnel式よりも単純である。しかも、近似によって発生する誤差は他のファクタに起因する誤差よりも極めて小さい。
+
+$$
+F_{Schlick} = F_0 + (1 - F_0)(1 - \cos\theta_d)^5
+$$
+
+ここで、定数$F_0$は垂直入射(normal incidence)におけるスペキュラ反射率を表し、誘電体では無色(achromatic)になり、金属では有色(chromatic)になる(つまり、色付けされる)。実際の値は屈折率に依存する。スペキュラ反射はマイクロファセットに起因する。すなわち、$F$は、表面の法線のなす角ではなく、光のベクトルとマイクロノーマル(つまり、ハーフベクトル)のなす角$\theta_d$に依存する。
+
+Fresnel関数は、入射スペキュラ反射率とグレージング角での一体化(unity)との(非線形な)補間として見ることができる。その応答はグレージング入射ではすべての光が反射するために無色になることに注意する。
+
+### スペキュラにおけるGの詳細(Specular G details)
+
+我々のモデルでは、複合的な(hybrid)アプローチを取った。Smithのシャドウイングファクタが第一のスペキュラで利用できると考えて、WalterによるGGXのGを用いる。ただし、光沢のある表面における極端な増加を抑えるためにラフネスをリマップしている。具体的には、オリジナルのラフネスを$[0, 1]$から$[0.5, 1]$に線形にスケールする。注:これを先に説明したようにラフネスを二乗する前に行う。そして、最終値は$\alpha_g = (0.5 + \text{roughness} / 2)^2$となる。
+
+このリマッピングは、ラフネス値が小さいときにスペキュラが若干"強すぎる(too hot)"というアーティストによるフィードバックと同様に、測定データとの比較に基づいていた。これは、ラフネスにより変化し、少なくとも部分的に物理ベースであり、もっともらしく見えるG関数を与える。クリアコートのスペキュラでは、SmithのGの導出を使わず、ラフネスを$0.25$の固定値としたGGXのGをそのまま使うと、もっともらしくあり、アーティスト的にも満足すると分かった。
+
+### レイヤリングとパラメータブレンディング(Layering vs parameter blending)
+
+新しいモデルに決めた(settle)後は、どうやって我々のシェーダに統合するかを決める必要がある。第一の疑問はどのパラメータが空間的に変化する必要があるかであり、その答えは以下である。アーティストが単純に2つの異なるマテリアルを1つの表面に置いたり、2つを間をマスクしたりしたい場合、すべてのパラメータ間で補間する必要があるだろう。また、そのマスクはフィルタリングされるだろうし、ぼやけたマスクのエッジではマテリアル応答はもっともらしいままでなければならない。
+
+すべてのパラメータが正規化され、少なくとも視覚的には線形である我々のデザイン原則の利点のひとつは、一般的にマテリアルが非常に直観的な方法で補間することである。この例は[@fig:19]に示されている。
+
+![我々のモデルを用いた、非常に異なる2つマテリアル、光沢のある金属質な金と青いゴムとの間の補間結果。](assets/Figure19.png){#fig:19}
+
+![マテリアルレイヤを示すシェーダエディタのスクリーンショット。マスク式中の変数は空間的に変化するシェーダモジュール、一般的にはテクスチャマップを参照する。](asserts/Figure20.png){#fig:20}
+
+ロバストに補間できることを実感して(realize)からは、マスクを通してすべての空間的な変化を達成できないかと考えるようになった(wondered)。そのアイデアはアーティストがマテリアルプリセットのリストから選択し、テクスチャマスクを使ってこれらを単純にブレンドすることである。これは、驚くほど(phenomenally)うまくいき、ワークフローを大いに単純化し、マテリアルの一貫性を改善し、シェーダ評価を著しく効率的にすることが分かった(turned out)。我々のシェーダUIを[@fig:20]に示す。
+
+## Wrech-It Ralphでのプロダクション経験(Production experience on Wreck-It Ralph)
+
 TODO
-
-clearcoat層では，ポリウレタンの代表値であるIOR$1.5$の固定値を利用し，代わりに，アーティストが*clearcoat*パラメータを使用している層の全体強度(strength)をスケールできるようにする．正規化したパラメータの範囲は$[0, 0.25]$のoverall scale[^overall_scale]に対応する．この層は，ビジュアルに大きな影響があるにも関わらず，相対的に小さなエネルギー量を示す．そこで，ベース層からいずれのエネルギーも差し引かないことにした．また，0に設定すると，clearcoat層は事実上無効化され，無駄が生じない(incurs no cost)．
-
-### Specular Fの詳細
-Disneyの目的では，SchlickのFresnel近似は十分で，完全なFresnel式よりおおむね簡単であり，加えて，近似ににより引き起こされるエラーはその他の要因によるエラーよりはるかに小さい．
-
-$$
-F_{\rm Schlick} = F_0 + (1 - F_0)(1 - \cos\theta_d)^5
-$$
-
-ここで，定数$F_0$は直角入射におけるspecular反射率を表し，誘電体では無色になり，金属では有色になる．実際の値は屈折率に依存する．Specular反射はmicrofacetで行われることに注意されたし．すなわち，$F$は，入射方向と法線のなす角ではなく，光源方向とhalf-vectorのなす角である$\theta_d$に依存している．
-
-Fresnel関数は入射specular反射とgrazing angleでのunity[^unity]間の(非線形)補間とみることができる．すべての光が反射されるように，応答がgrazing incidenceで無色になることに注意されたし．
-
-### Specular Gの詳細
-Smithのshadowing要素がprimary specularで利用可能なことを考えて，GGXのためにWalterのより導出された$G$を使い，光沢のある表面における極端なゲインを減らすため元のroughness$[0, 1]$を$[0.5, 1]$にリマップする．最終版では$\alpha_g = (0.5 + {\rm roughness} / 2)^2$とした．
-
-このマッピングは，specularが小さなroughness値でいささか強すぎるというアーティストのフィードバックとともに，計測データとの比較に基いている．これはroughnessで変化し，少なくとも一部は物理ベースで，もっともらしく見える$G$関数をもたらす．Clearcoat specularでは，Smithの$G$を使わず，単に固定のsoughness値$0.25$をとしたGGXの$G$を使う．
+Wrech-It Ralph(邦題:シュガー・ラッシュ)
 
 ## 参考文献
-[Physically-Based Shading at Disney (notes), SIGGRAPH 2012](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf)
-
-[Simon's Tech Blog: Microfacet BRDF](http://simonstechblog.blogspot.jp/2011/12/microfacet-brdf.html)
-
-[CS6630: Realistic Image Synthesis Spring 2012 -- Cornell University Department of Computer Science](http://www.cs.cornell.edu/Courses/cs6630/2012sp/slides/05ufacet.pdf)
-
-[再帰性反射 -- Tari Lari Run](http://bygzam.seesaa.net/article/134477830.html)
-
-[表面が粗い物体のディフューズライティングで起こる現象 : Retro-Reflection(再帰性反射) -- hanecci's Blog](http://d.hatena.ne.jp/hanecci/20130519/p1)
-
-[Torrance Sparrow モデルに対する解釈](http://www21.ocn.ne.jp/~glass-cg/cg/ts_explanation.pdf)
-
-[Ken Torrance’s accomplishments -- Real-Time Rendering](http://www.realtimerendering.com/blog/ken-torrances-accomplishments/)
-
-[Deriving the Smith shadowing function for the GTR BRDF -- CHAOSGROUP](http://docs.chaosgroup.com/display/RESEARCH/Deriving+the+Smith+shadowing+function+for+the+GTR+BRDF)
-
-[Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs (1) -- graphics.hatenablog.com](http://graphics.hatenablog.com/entry/2014/02/12/060548)
-
-[ゲームグラフィックス特論 第9回 高度な陰影付け](http://www.slideshare.net/tokoik/ss-13348390)
-
-[閉形式(closed-form)とは -- minus9d's diary](http://minus9d.hatenablog.com/entry/20130624/1372084229)
-
-<!-- 参考画像 -->
-[fig-microfacet]: microfacet.png
-
-[fig-grazing_retro-reflection]: grazing_retro-reflection.png
-
-[fig-specularD]: specularD.png
-
-[fig-specularF]: specularF.png
-
-[fig-albedo]: albedo.png
-
-[fig-specularG]: specularG.png
-
-[fig-brdf_parameters]: brdf_parameters.png
-
-[fig-detail_diffuse]: detail_diffuse.png
-
-[fig-GTR]: GTR.png
-
-<!-- 脚注 -->
-[^microfacet]: micro- + facet(小さな面)
-
-[^NDF]: Disneyの資料中では *Microfacet Distribution Function* だが，このテキストではその他の資料に合わせて *Normal Distribution Function; NDF* とする．
-
-[^MERL]: [http://www.merl.com/brdf/](http://www.merl.com/brdf/)
-
-[^directionality]: 有向性．ここではdiffuseのことなので，方向に関する要素に対して拡散の程度に何らかの相関があるということ．
-
-[^Lambertian_response]: Lambert反射の性質．responseは反射や屈折をなどの光に対する応答(反応)のこと．
-
-[^grazing_angle]: 面スレスレの角度，法線とのなす角が90°に近い
-
-[^tail]: 単調減少するグラフの後半部分．long tailは後半部分の減少量が少なく，より漸近的であること．
-
-[^specular_lobe]: retro-reflectionのspecular強度を半球にプロファイルしたもの．
-
-[^Torrance-Sparrow]: Microfacetのshadowing-masking効果を導入することでoff-specular peakを理論的に説明するモデル．
-
-[^off-specular_peak]: 粗い面でspecularのピークが鏡面反射方向からずれて観測される現象．
-
-[^shadowing-masking]: shadowingはmicrofacetが入射光を遮る現象のこと．maskingはmicrofacetが反射光を遮る現象のこと．
-
-[^Amplified_Fresnel]: 式的には，$G$項は$\frac{1}{4{\rm cos}\theta_l {\rm cos}\theta_v}$が$+\infty$に発散するよりも早く$+0$に収束するため，grazing angleにおいて$\frac{G}{4{\rm cos}\theta_l {\rm cos}\theta_v} < 1$となるためだと考えられる．
-
-[^albedo]: 入射光に対する反射率の比．アルベド．
-
-[^directional_albedo]: ある一方向に対するアルベド．
-
-[^art-directable]: アーティストが思い通りの調整ができる．
-
-[^This_is_in_lieu_of_an_explicit_index-of-refraction]: パラメータ*specular*で屈折率を表現できる，という意味か．原文だと，"This is in lieu of an explicit index-of-refraction."
-
-[^Fresnel_factor]: 屈折に対するFresnelの法則，および，Helmholtzの相反性(reciprocity)により，表面下に入るときと出るときの2回分を説明する必要がある．
-
-[^full_subsurface_transport]: あくまでシェーディングの話なのでGI的なことはできない，ということか．
-
-[^closed-form_integral]: 閉形式の積分．閉形式は有限個の良く知られた(well-known)関数によって解析的に表される式のこと．ようは積分が上手に解けるということか．
-
-[^overall_scale]: 要調査
-
-[^unity]: 要調査
