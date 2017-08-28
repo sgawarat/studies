@@ -15,8 +15,8 @@ link-citations: true
 - [x] [@Walter2007] [[paper](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf)]
     - GGXの原著。
 
-- [ ] [@Burley2012] [[slides](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_slides_v2.pdf), [notes](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf)]
-    - マイクロファセット理論の総合的な調査報告書。
+- [x] [@Burley2012] [[slides](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_slides_v2.pdf), [notes](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf)]
+    - 測定データから見るマイクロファセット理論の分析と映像分野での採用事例。
 
 - [x] [@Heitz2014]
  [[paper](http://jcgt.org/published/0003/02/03/paper.pdf)]
