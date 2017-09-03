@@ -1,35 +1,52 @@
 ---
 bibliography: 'reading-list.bib'
-link-citations: true
+numberSections: false
 ---
 # memo
 
 ## 注目人物
 
 - Bruce Walter
+    - GGXの発案。[@Walter2007]
+- Eric Heitz
+    - シェーディング[@Heitz2014]やライティング[@Heitz2017]の研究。
+    - 2017年現在はUnity所属。
+- Natty Hoffman
+- Sébastien Lagarde [[blog](https://seblagarde.wordpress.com/)]
+    - Frostbiteでエンジン大改造をした。[@Lagarde2014]
+    - 2017年現在はUnityのレンダリングリサーチ・ディレクター。
+- Stephen Hill [[blog](http://blog.selfshadow.com/)]
+    - SIGGRAPHのPBSコースの資料を毎年まとめているSelf Shadowブログの管理人。
+    - 2017年現在はLucasfilm所属。
 
 ## 文献目録
 
-### 物理ベースシェーディング
+### マイクロファセット理論
 
 - [x] [@Walter2007] [[paper](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf)]
     - GGXの原著。
 
+- [x] [@Heitz2014] [[paper](http://jcgt.org/published/0003/02/03/paper.pdf)]
+    - マイクロファセット理論におけるG項の考察。
+
+### マイクロフレーク理論
+
+- [x] [@Heitz2016a] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_cFVlUkFhWXdleEU)]
+    - Smithモデルを用いた複数回の散乱のマイクロファセットBSDFをモデル化。
+
+- [ ] [@Heitz2015] [[paper](https://drive.google.com/file/d/0BzvWIdpUpRx_dXJIMk9rdEdrd00/view), [sup1](https://drive.google.com/file/d/0BzvWIdpUpRx_djVyMG9jMnltdTg/view), [sup2](https://www.cs.cornell.edu/projects/diffusion-sg10/anisotropic_web.pdf)]
+    - GGXをマイクロフレーク理論に応用したSGGX分布の提案。
+
+### 物理ベースレンダリング
+
 - [x] [@Burley2012] [[slides](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_slides_v2.pdf), [notes](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf)]
     - 測定データから見るマイクロファセット理論の分析と映像分野での採用事例。
-
-- [x] [@Heitz2014]
- [[paper](http://jcgt.org/published/0003/02/03/paper.pdf)]
-    - マイクロファセット理論におけるG項の考察。
 
 - [x] [@Hoffman2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/hoffman/s2015_pbs_physics_math_slides.pdf), [video](https://www.youtube.com/watch?v=j-A0mwsJRmk)]
     - 2015年最新の物理ベースシェーディング手法のまとめ。
 
 - [x] [@Hoffman2016] [[slides](http://blog.selfshadow.com/publications/s2016-shading-course/hoffman/s2016_pbs_recent_advances_v2.pdf), [video](https://www.youtube.com/watch?v=zs0oYjwjNEo)]
     - 2016年最新の物理ベースシェーディング手法のまとめ。
-
-- [ ] [@Heitz2016a] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_cFVlUkFhWXdleEU)]
-    - Smithモデルを用いた複数回の散乱のマイクロファセットBSDFをモデル化。
 
 ### シェーディング技術
 
@@ -55,7 +72,7 @@ link-citations: true
 
 ### HDRレンダリング
 
-- [ ] [@Fry2017] [[slides](http://www.gdcvault.com/play/1024466/High-Dynamic-Range-Color-Grading)]
+- [x] [@Fry2017] [[slides](http://www.gdcvault.com/play/1024466/High-Dynamic-Range-Color-Grading)]
     - HDRディスプレイを前提とした次世代のカラーグレーディングパイプライン。
 
 ### グローバル・イルミネーション
