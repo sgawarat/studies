@@ -1,6 +1,8 @@
 ---
 title: 'Moving Frostbite to Physically Based Rendering 3.0'
+codeBlockCaptions: true
 figureTemplate: 図 \[i\] \[titleDelim\] \[t\]
+listingTemplate: リスト \[i\] \[titleDelim\] \[t\]
 ---
 # まえがき(Introduction) {#sec:1}
 
@@ -90,7 +92,7 @@ $$
 f_r(\boldsymbol v) = \frac{F(\boldsymbol{v}, \boldsymbol{h}, f_0, f_{90}) G(\boldsymbol{v}, \boldsymbol{l}, \boldsymbol{h}) D(\boldsymbol{h}, \alpha)}{4 \langle \boldsymbol{n} \cdot \boldsymbol{v} \rangle \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle}
 $$ {#eq:2}
 
-$D$項は[@fig:6]が示すように、表面の外観において重要な役割を担っている。[@Walter2007;@Burley2012]はGGX分布のような"ロングテール"のNDFが現実世界の表面をキャプチャするときに良好な結果を示すことを指摘している。$G$項もまた高いラフネス値において重要な役割を担っている。@Heitz2014 はSmithの可視性関数が$G$項として正確かつ厳密であることを示している。それに加えて、以下に示すような、マスキングとシャドウイングの間にある相関をモデリングしたマスキング-シャドウイング関数の更に正確な形式があるにもかかわらず、Smithの可視性関数の近似バージョンが使われる傾向があることを指摘している。[@fig:7]はシンプルなSmithの関数と高さ相関(hight-correlated)のSmithの関数との差異を示している。
+$D$項は[@fig:6]が示すように、表面の外観において重要な役割を担っている。[@Walter2007; @Burley2012]はGGX分布のような"ロングテール"のNDFが現実世界の表面をキャプチャするときに良好な結果を示すことを指摘している。$G$項もまた高いラフネス値において重要な役割を担っている。@Heitz2014 はSmithの可視性関数が$G$項として正確かつ厳密であることを示している。それに加えて、以下に示すような、マスキングとシャドウイングの間にある相関をモデリングしたマスキング-シャドウイング関数の更に正確な形式があるにもかかわらず、Smithの可視性関数の近似バージョンが使われる傾向があることを指摘している。[@fig:7]はシンプルなSmithの関数と高さ相関(hight-correlated)のSmithの関数との差異を示している。
 
 $$
 G(\boldsymbol{v}, \boldsymbol{l}, \boldsymbol{h}, \alpha) = \frac{\chi^+(\boldsymbol{v} . \boldsymbol{h}) \chi^+(\boldsymbol{l} . \boldsymbol{h})}{1 + \Lambda(\boldsymbol{v}) + \Lambda(\boldsymbol{l})} \text{ with } \Lambda(\boldsymbol{m}) = \frac{-1 + \sqrt{1 + \alpha^2 \tan^2(\theta_m)}}{2} = \frac{-1 + \sqrt{1 + \frac{\alpha^2 (1 - \cos^2(\theta_m))}{\cos^2(\theta_m)}}}{2}
@@ -104,12 +106,101 @@ $$
 f_d(\boldsymbol v) = \frac{\rho}{\pi} \frac{1}{|\boldsymbol{n} \cdot \boldsymbol{v}| |\boldsymbol{n} \cdot \boldsymbol{l}|} \int_{\Omega} G(\boldsymbol{v}, \boldsymbol{l}, \boldsymbol{m}) D(\boldsymbol{m}, \alpha) \langle \boldsymbol{v} \cdot \boldsymbol{m} \rangle \langle \boldsymbol{l} \cdot \boldsymbol{m} \rangle d\boldsymbol{m}
 $$ {#eq:4}
 
-これまではこのような単純なLambertモデルでも問題なかったが、[@fig:8]が示すように、スペキュラ項との一貫性を保つため、ディフューズ項の計算に表面のラフネスを取り入れる必要がある[@Burley2012](すなわち、スペキュラ項とディフューズ項で同じラフネスを用いるべきである)。
+これまではこのような単純なLambertモデルでも問題なかったが、[@fig:8]が示すように、スペキュラ項との一貫性を保つため、ディフューズ項の計算に表面のラフネスを取り入れる必要がある[@Burley2012](すなわち、スペキュラ項とディフューズ項で同じラフネスを用いるべきである)。[@eq:4]は解析的に解くことができないが、 @Oren1994 はガウス分布のNDFとV型空洞のG項を用いることでOren-Nayarモデルとして知られる[@eq:4]の経験的近似を発見した。モデルを正しくサポートするためには、[@Gotanda2014]で説明されているようにGGXのNDFにも[@eq:4]に対する同じような近似を作るべきである。[@sec:B]にその詳細を載せるが、さらなる研究が必要である。
+
+![鏡のBRDF$f_m$を持つスペキュラ項$f_r$(左)とディフューズBRDF$f_m$を持つディフューズ項$f_d$(右)におけるマイクロスケールでの相互作用。](assets/Figure8.png){#fig:8}
+
+@Burley2012 は現実世界の表面を観察した結果から以下の式で示されるディフューズモデルを発表した。このモデルは経験的だが、MERLデータベースのマテリアルの主な特徴を再現でき、加えて単純であるため、Frostbiteで用いることとした。このディフューズ項はマテリアルのラフネスを計算に取り入れており、グレージング角での自己反射をいくらか生み出すことができる。
+
+$$
+f_d = \frac{\rho}{\pi} (1 + F_{D90}(1 - \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle)^5) (1 + F_{D90}(1 - \langle \boldsymbol{n} \cdot \boldsymbol{v} \rangle)^5) \text{ where } F_{D90} = 0.5 + \cos(\theta_d)^2 \alpha
+$$ {#eq:5}
+
+### エネルギー保存則(Energy conservation)
+
+エネルギー保存則は扱うエネルギー量が受け取ったエネルギー量より多くならないことを考慮する上で重要な概念である。加えて、グレージング角においてディフューズ項よりスペキュラ項のほうが光をより散乱させるという振る舞いを正しく扱うことが可能になる。Frostbiteでは、計算を簡単にするため、半球状の固定照明による与えられた方向に対する反射率の総計である方向性半球反射率(hemispherical-directional reflectance)がBRDF全体で1未満であることでエネルギーが保存されているとした。
+
+$$
+\rho_{hd}(\boldsymbol{v}) = \int_{\Omega} f(\boldsymbol{v}, \boldsymbol{l}) \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle d\boldsymbol{l} = \int_{\Omega} (f_r(\boldsymbol{v}, \boldsymbol{l}) + f_d(\boldsymbol{v}, \boldsymbol{l})) \langle \boldsymbol{n} \cdot \boldsymbol{l} \ge 1
+$$ {#eq:6}
+
+スペキュラモデルとディフューズモデルとの関連性が直接的ではないため、適切な導出を作ることは簡単ではない(スペキュラ項とディフューズ項がともにマイクロファセットモデルの基づく場合は[@sec:C]を参照)。ディズニーのディフューズモデルはエネルギー保存則を満たしていないことに注意する必要がある(脚注4: @Burley2012 が説明するように、これはアーティストがあらゆるラフネス値を通して同じディフューズ色を得られるようにすることを目的とした仕様によるものである)。[@fig:9] (a)はディズニーのディフューズモデルの方向性半球反射率を表しているが、見るからに値は1を越えており、エネルギー保存則を満たしていないことが分かる。
+
+![様々な視野角とラフネスにおけるディズニーのディフューズBRDFの方向性半球反射率のプロット。(a)左:オリジナルの反射率。(b)中:新しい再正規化を施した反射率。(c)右:スペキュラ項とディフューズ項の組み合わせ。](assets/Figure9.png){#fig:9}
+
+そこで、我々は自己反射の特性を維持しつつエネルギーのゲインを補正するような修正を追加した。[@lst:1]は再正規化ファクタを導入したディズニーの評価関数を示している。[@fig:9] (c)ではスペキュラのマイクロファセットモデル$f_r$とディズニーのディフューズモデル$f_d$を合成した$f$の方向性半球反射率を表しており、完全に1にはなっていないが十分に近い値になっている。[@fig:10]ではオリジナルと再正規化バージョンとの比較を示している。
+
+Listing: エネルギーの再正規化を含むディズニーのディフューズBRDFのコード。`linearRoughness`は知覚的に線形なラフネスである([@sec:3.2.1]を参照)。
+```{#lst:1 .c}
+float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughness) {
+    float energyBias     = lerp(0, 0.5, linearRoughness);
+    float energyFactor   = lerp (1.0, 1.0 / 1.51, linearRoughness);
+    float fd90           = energyBias + 2.0 * LdotH*LdotH * linearRoughness;
+    float3 f0            = float3(1.0f, 1.0f, 1.0f);
+    float lightScatter   = F_Schlick(f0, fd90, NdotL).r;
+    float viewScatter    = F_Schlick(f0, fd90, NdotV).r;
+
+    return lightScatter * viewScatter * energyFactor;
+}
+```
+<!--dummy block-->
+```c
+```
+
+![(a)上:ディズニーのディフューズ項とLambertのディフューズ項との比較。(b)下:オリジナルのディズニーのディフューズ項と再正規化バージョンとの比較。](assets/Figure10.png){#fig:10}
+
+### 形状の特性(Shape characteristics)
+
+スペキュラのマイクロファセットによるBRDFはしばしば無視(bypass)されるが最終的な外観に強い影響を及ぼすある性質を持つ。特に以下の2つの現象が重要である。
+
+- **半角パラメータ化(Half-angle parameterization)**: このパラメータ化は通常の入射角では等方的になるがグレージング角では異方的になるというBRDF形状の非線形な変換を暗に示している。さらなる洞察は[@sec:4.9]を参照のこと。
+- **オフスペキュラ(Off-specular)**: BRDFローブは時折反射した視線方向(反射方向(mirror direction))を中心とすると仮定されるが、[@fig:11]に見られるように、ラフネスが大きくなると$\langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle$とマスキング-シャドウイング項$G$によってBRDFローブは法線方向に引っ張られる(gets shifted)ようになる。これは"*オフスペキュラピーク(Off-specular peak)*"と呼ばれ、表面の粗い外観を表すのに重要な役割を担っている。
+
+![様々な視野角でのBRDFローブ形状の例。グレージングな視野角では支配的なローブは反射方向$R$ではなく方向$M$の方を向いている。上段:$\alpha = 0.4$。下段:$\alpha = 0.8$。](assets/Figure11.png){#fig:11}
+
+TODO
+
+## {#sec:3.2}
+
+### {#sec:3.2.1}
+
 
 # {#sec:4}
+
+## {#sec:4.1}
+
+## {#sec:4.2}
+
+## {#sec:4.3}
+
+## {#sec:4.4}
+
+## {#sec:4.5}
+
+## {#sec:4.6}
+
+## {#sec:4.7}
+
+## {#sec:4.8}
+
+## {#sec:4.9}
 
 # {#sec:5}
 
 # {#sec:6}
+
+\appendix
+
+# {#sec:A}
+
+# {#sec:B}
+
+# {#sec:C}
+
+# {#sec:D}
+
+# {#sec:E}
+
+# {#sec:F}
 
 # 参考文献(References)
