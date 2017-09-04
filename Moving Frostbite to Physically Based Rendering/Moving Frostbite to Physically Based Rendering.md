@@ -2,9 +2,10 @@
 title: 'Moving Frostbite to Physically Based Rendering 3.0'
 codeBlockCaptions: true
 figureTemplate: 図 \[i\] \[titleDelim\] \[t\]
+tableTemplate: 表 \[i\] \[titleDelim\] \[t\]
 listingTemplate: リスト \[i\] \[titleDelim\] \[t\]
 ---
-# まえがき(Introduction) {#sec:1}
+# まえがき(Introduction) {id="sec:1"}
 
 Frostbiteは'映画的ルック(cinematic look)'を追求してきたことから、物理ベースレンダリングへの移行も自然なことだった。移行作業は[@Drobot2013]、[@Karis2013]、[@Harduin2013]、[@Kojima2013]といったゲーム業界の最新技術を基に行い、既存技術の改良とオープン問題の削り出し(chip away)を試みた。
 
@@ -33,7 +34,7 @@ PBRを採用するとなると、レンダラやツールを含めたグラフ�
 |$\chi^+(a)$|Heaviside関数: $a>0$のとき1、$a<=0$のとき0|
 : 数学的な表記法(mathematical notation) {#tbl:1}
 
-# リファレンス(Reference) {#sec:2}
+# リファレンス(Reference) {id="sec:2"}
 
 ## モデルと仮説の検証(Validating models and hypothesis)
 
@@ -64,7 +65,7 @@ MitsubaのようなモダンなPBRパストレーサーは最新のレンダリ�
 
 正しいリファレンスを使うことが重要である。これは明らかなように思えるが、リファレンスが良くない場合、近似もまた良くならない。髪シェーディングモデルを近似するときはリファレンスとして現実世界に一番近いものを使おう。式を近似するときは誤差を計算できるように、Fresnelの式に対するOren-NayrやSchlickの近似式のような、すでにある近似式ではなくオリジナルの式を必ず使おう。唯一完全に信用できるリファレンスは現実世界のみである。
 
-# マテリアル(Material) {#sec:3}
+# マテリアル(Material) {id="sec:3"}
 
 ## マテリアルモデル(Material models)
 
@@ -131,7 +132,8 @@ $$ {#eq:6}
 そこで、我々は自己反射の特性を維持しつつエネルギーのゲインを補正するような修正を追加した。[@lst:1]は再正規化ファクタを導入したディズニーの評価関数を示している。[@fig:9] (c)ではスペキュラのマイクロファセットモデル$f_r$とディズニーのディフューズモデル$f_d$を合成した$f$の方向性半球反射率を表しており、完全に1にはなっていないが十分に近い値になっている。[@fig:10]ではオリジナルと再正規化バージョンとの比較を示している。
 
 Listing: エネルギーの再正規化を含むディズニーのディフューズBRDFのコード。`linearRoughness`は知覚的に線形なラフネスである([@sec:3.2.1]を参照)。
-```{#lst:1 .c}
+
+~~~{.c .numberLines id="lst:1"}
 float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughness) {
     float energyBias     = lerp(0, 0.5, linearRoughness);
     float energyFactor   = lerp (1.0, 1.0 / 1.51, linearRoughness);
@@ -142,10 +144,7 @@ float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughn
 
     return lightScatter * viewScatter * energyFactor;
 }
-```
-<!--dummy block-->
-```c
-```
+~~~
 
 ![(a)上:ディズニーのディフューズ項とLambertのディフューズ項との比較。(b)下:オリジナルのディズニーのディフューズ項と再正規化バージョンとの比較。](assets/Figure10.png){#fig:10}
 
@@ -160,47 +159,52 @@ float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughn
 
 TODO
 
-## {#sec:3.2}
+## (Material system) {id="sec:3.2"}
 
-### {#sec:3.2.1}
+### () {id="sec:3.2.1"}
 
+## (PBR and decals) {id="sec:3.3"}
 
-# {#sec:4}
+# (Lighting) {id="sec:4"}
 
-## {#sec:4.1}
+## (General) {id="sec:4.1"}
 
-## {#sec:4.2}
+## (Analytical light parameters) {id="sec:4.2"}
 
-## {#sec:4.3}
+## (Light unit) {id="sec:4.3"}
 
-## {#sec:4.4}
+## (Punctual lights) {id="sec:4.4"}
 
-## {#sec:4.5}
+## (Photometric lights) {id="sec:4.5"}
 
-## {#sec:4.6}
+## (Sun) {id="sec:4.6"}
 
-## {#sec:4.7}
+## (Area lights) {id="sec:4.7"}
 
-## {#sec:4.8}
+## (Emissive surfaces) {id="sec:4.8"}
 
-## {#sec:4.9}
+## (Image based lights) {id="sec:4.9"}
 
-# {#sec:5}
+## (Shadow and occlusion) {id="sec:4.10"}
 
-# {#sec:6}
+## (Deferred / Forward rendering) {id="sec:4.11"}
+
+# (Image) {id="sec:5"}
+
+# (Transition to PBR) {id="sec:6"}
 
 \appendix
 
-# {#sec:A}
+# (Listing for reference mode) {id="sec:A"}
 
-# {#sec:B}
+# (Oren-Nayar and GGX's diffuse term derivation) {id="sec:B"}
 
-# {#sec:C}
+# (Energy conservation) {id="sec:C"}
 
-# {#sec:D}
+# (Optimization algorithm for converting Disney's parametrization) {id="sec:D"}
 
-# {#sec:E}
+# (Rectangular area lighting) {id="sec:E"}
 
-# {#sec:F}
+# (Local light probe evaluation) {id="sec:F"}
 
 # 参考文献(References)
