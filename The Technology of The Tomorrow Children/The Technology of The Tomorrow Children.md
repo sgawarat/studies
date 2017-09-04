@@ -1,5 +1,6 @@
 ---
 title: The Technology of The Tomorrow Children [@McLaren2015]
+bibliography: bibliography.bib
 numberSections: false
 ---
 # 概要(Overview)
@@ -16,13 +17,13 @@ numberSections: false
 - PS4ならやってくれるだけのパワーがあると確かに感じていた。
 - はじめはベストなやり方が明確ではなかった。
 - Light Propagation VolumesやVirtual Point Lightを調査した。
-- 最も有望だと思ったのがVoxel Cone Tracing [@Crassin2011]だった。
+- 最も有望だと思ったのがVoxel Cone Tracingだった。
 
 ## ボクセルコーントレーシング(Voxel Cone Tracing)
 
 - ハイエンドGPUでリアルタイムGIを可能にする。
-- 以下によって実現する。
-    1. ボクセル化したシーンをSparse Voxel Octreeへ格納する。
+- [@Crassin2011]では以下によって実現する。
+    1. シーンをSparse Voxel Octreeへ格納する。
     1. Sparse Voxel Octreeへライティング情報を注入する。
     1. コーン(円錐)をトレースして、ピクセル位置の間接照明の影響を収集する。
 
@@ -60,6 +61,65 @@ numberSections: false
     - 実践だとそれほど問題にはならないが、コーントレーシングは大雑把な推定であることに留意しておく。
 
 ## シーン表現(Scene Representation)
+
+- シーンを表現するためにはボクセルを使う。
+    - そのままでは莫大なメモリが必要になるので、何か策を取らなければならない。
+- [@Crassin2011]ではSparse Voxel Octreeを使う。
+    - 非常にコンパクト。
+    - GPUに100%最適化されているとは思えない。
+        - データの参照先を行ったり来たりする(walking)。
+        - ポインタ辿ってデータを参照する(pointer chasing)。
+- 我々はVoxel Texture Cascadeを使うことにした。
+
+### カスケード(Cascades)
+
+![カスケードの例。](assets/cascades.png){#fig:cascades}
+
+- 前のレベルは次のレベルにオーバーラップされる。
+- 各レベルは同じ解像度のテクスチャを持ち、次のレベルは前のレベルの各辺2倍の領域に対応する。
+- 使用メモリの総量を削減でき、これ自体がLODとして機能する。
+- 単なる3Dテクスチャであり、GPUで自然に扱うことができる。
+
+### 何をボクセルに格納するか(What's stored in the voxels?)
+
+- ジオメトリ情報。
+- Gバッファに類似したもの。
+- ただし、2Dではなく3Dで。
+
+#### ボリューメトリックGバッファ(Volumetric G-Buffer)
+
+|属性              |フォーマット      |バイト毎ボクセル面　|アルファ   |
+|-----------------|---------------|---------------|---------|
+|アルベド           |R8G8B8A8_UNORM |4              |重みファクタ|
+|法線              |R8G8B8A8_SNORM |4              |未使用　   |
+|占有率(Occupancy)　|R8_UNORM       |1              |N/A      |
+|放射量(Emission)　 |R11G11B10_FLOAT|4              |N/A      |
+: ボクセルに格納するジオメトリ情報。 {#tbl:volumetric-g-buffer}
+
+- 各属性は別々の3Dテクスチャに持つ。
+- アルベド、法線、占有率、放射量を格納する。
+
+### ボリューメトリックライトバッファ(Volumetric Light Buffers)
+
+|バッファ   |フォーマット      |バイト毎ボクセル面　|
+|:--------|---------------|:--------------|
+|直接光　　　|R11G11B10_FLOAT|4              |
+|第１バウンス|R11G11B10_FLOAT|4              |
+|第２バウンス|R11G11B10_FLOAT|4              |
+: ボクセルに格納するライト情報。 {#tbl:volumetric-light-buffers}
+
+- ディファード系アルゴリズムでいうライトバッファに相当する領域も必要になる。
+- 直接光によるライティング、一回目のバウンスによるライティング、二回目のバウンスによるライティングを格納する。
+- R11G11B10_FLOATは正確さとサイズの良いトレードオフを実現する。
+
+### 異方的ボクセル(Anisotropic Voxels)
+
+- 質を高めるため、ボクセルの面ごとに情報を格納する。
+- 実際には[@tbl:volumetric-g-buffer; @tbl:volumetric-light-buffers]に記された情報を6面分格納する。
+- これによりボクセルは方向により異なる色を返す(異方性を持つ)ことができるようになる。
+- 面を考慮しないと、ボクセルはひとつの色しか持たないので、光の照っていない方向にもその情報を渡すことになる。
+
+### データレイアウト(Data Layout)
 
 TODO
 
