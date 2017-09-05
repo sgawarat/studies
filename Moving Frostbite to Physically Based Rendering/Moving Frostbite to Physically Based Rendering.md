@@ -1,9 +1,10 @@
 ---
-title: 'Moving Frostbite to Physically Based Rendering 3.0'
+title: Moving Frostbite to Physically Based Rendering 3.0 [@Lagarde2014]
 codeBlockCaptions: true
 figureTemplate: 図 \[i\] \[titleDelim\] \[t\]
 tableTemplate: 表 \[i\] \[titleDelim\] \[t\]
 listingTemplate: リスト \[i\] \[titleDelim\] \[t\]
+bibliography: bibliography.bib
 ---
 # まえがき(Introduction) {id="sec:1"}
 
@@ -125,13 +126,13 @@ $$
 \rho_{hd}(\boldsymbol{v}) = \int_{\Omega} f(\boldsymbol{v}, \boldsymbol{l}) \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle d\boldsymbol{l} = \int_{\Omega} (f_r(\boldsymbol{v}, \boldsymbol{l}) + f_d(\boldsymbol{v}, \boldsymbol{l})) \langle \boldsymbol{n} \cdot \boldsymbol{l} \ge 1
 $$ {#eq:6}
 
-スペキュラモデルとディフューズモデルとの関連性が直接的ではないため、適切な導出を作ることは簡単ではない(スペキュラ項とディフューズ項がともにマイクロファセットモデルの基づく場合は[@sec:C]を参照)。ディズニーのディフューズモデルはエネルギー保存則を満たしていないことに注意する必要がある(脚注4: @Burley2012 が説明するように、これはアーティストがあらゆるラフネス値を通して同じディフューズ色を得られるようにすることを目的とした仕様によるものである)。[@fig:9] (a)はディズニーのディフューズモデルの方向性半球反射率を表しているが、見るからに値は1を越えており、エネルギー保存則を満たしていないことが分かる。
+スペキュラモデルとディフューズモデルとの関連性が直接的ではないため、適切な導出を作ることは簡単ではない(スペキュラ項とディフューズ項がともにマイクロファセットモデルの基づく場合は[@sec:C]を参照)。Disneyのディフューズモデルはエネルギー保存則を満たしていないことに注意する必要がある(脚注4: @Burley2012 が説明するように、これはアーティストがあらゆるラフネス値を通して同じディフューズ色を得られるようにすることを目的とした仕様によるものである)。[@fig:9] (a)はDisneyのディフューズモデルの方向性半球反射率を表しているが、見るからに値は1を越えており、エネルギー保存則を満たしていないことが分かる。
 
-![様々な視野角とラフネスにおけるディズニーのディフューズBRDFの方向性半球反射率のプロット。(a)左:オリジナルの反射率。(b)中:新しい再正規化を施した反射率。(c)右:スペキュラ項とディフューズ項の組み合わせ。](assets/Figure9.png){#fig:9}
+![様々な視野角とラフネスにおけるDisneyのディフューズBRDFの方向性半球反射率のプロット。(a)左:オリジナルの反射率。(b)中:新しい再正規化を施した反射率。(c)右:スペキュラ項とディフューズ項の組み合わせ。](assets/Figure9.png){#fig:9}
 
-そこで、我々は自己反射の特性を維持しつつエネルギーのゲインを補正するような修正を追加した。[@lst:1]は再正規化ファクタを導入したディズニーの評価関数を示している。[@fig:9] (c)ではスペキュラのマイクロファセットモデル$f_r$とディズニーのディフューズモデル$f_d$を合成した$f$の方向性半球反射率を表しており、完全に1にはなっていないが十分に近い値になっている。[@fig:10]ではオリジナルと再正規化バージョンとの比較を示している。
+そこで、我々は自己反射の特性を維持しつつエネルギーのゲインを補正するような修正を追加した。[@lst:1]は再正規化ファクタを導入したDisneyの評価関数を示している。[@fig:9] (c)ではスペキュラのマイクロファセットモデル$f_r$とDisneyのディフューズモデル$f_d$を合成した$f$の方向性半球反射率を表しており、完全に1にはなっていないが十分に近い値になっている。[@fig:10]ではオリジナルと再正規化バージョンとの比較を示している。
 
-Listing: エネルギーの再正規化を含むディズニーのディフューズBRDFのコード。`linearRoughness`は知覚的に線形なラフネスである([@sec:3.2.1]を参照)。
+Listing: エネルギーの再正規化を含むDisneyのディフューズBRDFのコード。`linearRoughness`は知覚的に線形なラフネスである([@sec:3.2.1]を参照)。
 
 ~~~{.c .numberLines id="lst:1"}
 float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughness) {
@@ -146,7 +147,7 @@ float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughn
 }
 ~~~
 
-![(a)上:ディズニーのディフューズ項とLambertのディフューズ項との比較。(b)下:オリジナルのディズニーのディフューズ項と再正規化バージョンとの比較。](assets/Figure10.png){#fig:10}
+![(a)上:Disneyのディフューズ項とLambertのディフューズ項との比較。(b)下:オリジナルのDisneyのディフューズ項と再正規化バージョンとの比較。](assets/Figure10.png){#fig:10}
 
 ### 形状の特性(Shape characteristics)
 
@@ -157,11 +158,94 @@ float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughn
 
 ![様々な視野角でのBRDFローブ形状の例。グレージングな視野角では支配的なローブは反射方向$R$ではなく方向$M$の方を向いている。上段:$\alpha = 0.4$。下段:$\alpha = 0.8$。](assets/Figure11.png){#fig:11}
 
-TODO
+ラフネス値が大きいとオフスペキュラピークによる差異が大きくなる可能性がある。この重要な特徴を計算に入れるため、この"支配的な向き(dominant direction)"のモデル化を試みた。これはエリアライト([@sec:4.7])と画像ベースライト([@sec:4.9])を評価するときに用いた。
 
-## (Material system) {id="sec:3.2"}
+### Frostbiteの標準モデル(*Frostbite* standard model)
 
-### () {id="sec:3.2.1"}
+まとめると、Frostbiteの"標準"マテリアルモデルは他のゲームエンジンで用いられるものと近い[@Karis2013; @Neubelt2013; @Burley2012]。これは以下から構成されている。
+
+- **スペキュラ項** $f_r$: Smithの相関あり可視性関数とGGXのNDFによるスペキュラのマイクロファセットモデル([@eq:2])。
+- **ディフューズ項** $f_d$: エネルギーの再正規化を施したDisneyのディフューズ項。
+
+両パートでは、ライティングを統合するときに支配的向きに対して補正をかける(オフスペキュラピークを制御する)ことができるようになっている(詳しくは次節)。Frostbiteはクリアコートのような異なるタイプのマテリアルや表面下散乱を含むマテリアルもサポートしているが、この文書では標準的マテリアルモデルのみに焦点を当ててゆく。
+
+Listing: BSDFの評価コード。
+
+~~~ {.c .numberLines id="lst:2"}
+float3 F_Schlick(in float3 f0, in float f90 , in float u) {
+    return f0 + (f90 - f0) * pow(1.f - u, 5.f);
+}
+
+float V_SmithGGXCorrelated(float NdotL , float NdotV , float alphaG) {
+    // 相関あり版G_SmithGGXのオリジナル式
+    // lambda_v             = (-1 + sqrt(alphaG2 * (1 - NdotL2) / NdotL2 + 1)) * 0.5f;
+    // lambda_l             = (-1 + sqrt(alphaG2 * (1 - NdotV2) / NdotV2 + 1)) * 0.5f;
+    // G_SmithGGXCorrelated = 1 / (1 + lambda_v + lambda_l);
+    // V_SmithGGXCorrelated = G_SmithGGXCorrelated / (4.0f * NdotL * NdotV);
+
+    // 最適化バージョン
+    float alphaG2 = alphaG * alphaG;
+    // 注意:"NdotL *"と"NdotV *"の関係が他と逆なのは間違いではなく意図したもの
+    float Lambda_GGXV = NdotL * sqrt((-NdotV * alphaG2 + NdotV) * NdotV + alphaG2);
+    float Lambda_GGXL = NdotV * sqrt((-NdotL * alphaG2 + NdotL) * NdotL + alphaG2);
+    return 0.5f / (Lambda_GGXV + Lambda_GGXL);
+}
+
+float D_GGX(float NdotH, float m) {
+    // 1/PIはあとでかける
+    float  m2 = m * m;
+    float f = (NdotH * m2 - NdotH) * NdotH + 1;
+    return  m2 / (f * f);
+}
+
+// 以下は上記の関数を呼び出す例
+float  NdotV = abs(dot(N, V)) + 1e-5f; // avoid  artifact
+float3 H     = normalize(V + L);
+float  LdotH = saturate(dot(L, H));
+float  NdotH = saturate(dot(N, H));
+float  NdotL = saturate(dot(N, L));
+
+// スペキュラBRDF
+float3 F     = F_Schlick(f0, f90, LdotH);
+float  Vis   = V_SmithGGXCorrelated(NdotV, NdotL, roughness);
+float  D     = D_GGX(NdotH, roughness);
+float  Fr    = D * F * Vis / PI;
+
+// ディフューズBRDF
+float  Fd    = Fr_DisneyDiffuse(NdotV, NdotL, LdotH, linearRoughness) / PI;
+~~~
+
+## マテリアルシステム(Material system) {id="sec:3.2"}
+
+### マテリアル(Material) {id="sec:3.2.1"}
+
+Frostbiteを利用するゲームジャンルはスポーツ、レーシング、FPS、オープンワールドに至るまで多岐に渡る。これらのゲームが求めるさまざまな要件を満足するため、エンジンはライティングやマテリアル対応に関する柔軟な制御方法を提供する必要がある。それに加えて、移行を簡潔に行うために前の非PBRなライティングモデルとの互換性を維持する必要があった。ライティングパスは制御可能であり、ディファード、フォワード、またはそのハイブリッドをサポートしている(詳しくは[@sec:4.11])。
+
+Frostbiteでは、"マテリアル"は以下により定義される。
+
+- **ライティングパス**: ディファード、フォワード、またはその両方。
+- **入力パラメータ**の集まり: ディフューズ、滑らかさ(smoothness)、厚さ(thickness)、など。
+- **マテリアルモデル**: 粗い表面、半透明、肌、髪、など(非PBRな粗い表面も含む)。いわゆるシェーダコード。
+- ディファードパスの場合の**Gバッファのレイアウト**。バッファ数は可変。
+
+ゲーム開発班は指定のライティングパスで利用可能なものの中からマテリアル一式を選ぶことができる。各マテリアルは*materialID*属性によりそのゲームで識別される。最も一般的なケースをカバーする*ベース*マテリアル("標準"マテリアルと呼んでいるもの)は常に存在し、他のマテリアルと共有するパラメータ(例えば、ラフネス)を定義する。ディファードシェーディングでは、*ベース*マテリアルは一般に @Burley2012 が示す"Disney"モデル一式になる。それと、"二色(two-color)"と"旧(old)"の2つのベースマテリアルもサポートする。
+
+**Disneyのベースマテリアル**: 我々のDisneyマテリアルでは以下のパラメータを用いる。
+
+Normal
+: 標準的な法線。
+
+BaseColor
+: @Burley2012 のように、非金属オブジェクトにおけるディフューズのアルベドと金属オブジェクトにおける垂直入射($f_0$)を定義する。この属性の下位部はマイクロスペキュラオクルージョン(micro-specular occlusion)を定義する[?]。
+
+Smoothness
+: オブジェクトのラフネスを定義する。値が1のときに滑らかであるとするとアーティストが直観的に扱えるため、また、Frostbiteの非PBRマテリアルモデルがすでにこれを使っているため、ラフネスではなくsmoothnessを選択した。@Burley2012 と同様に、視覚的に線形なsmoothnessにリマップされる($1 - \alpha_{lin}$)。
+
+MetalMask
+: @Burley2012 のように、"金属らしさ"または表面の導電性(すなわち、誘電体か導体か)を定義する。この変数が二値であることをアーティストに示すためこのような名前にした。
+
+Reflectance
+: 非金属マテリアル(つまり、MetalMask < 1)のためのアーティスト・フレンドリーな範囲で垂直入射におけるFresnel反射率($f_0$)を定義する。この属性の下位部は非金属マテリアルにおけるマイクロスペキュラオクルージョン(micro-specular occlusion)を定義する[?]。
 
 ## (PBR and decals) {id="sec:3.3"}
 
