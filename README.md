@@ -19,6 +19,13 @@ numberSections: false
     - SIGGRAPHのPBSコースの資料を毎年まとめているSelf Shadowブログの管理人。
     - 2017年現在はLucasfilm所属。
 
+## 注目文献
+
+- [Khronos2016]Vulkan Sessions Pat 1,2
+- [Lorach2016]Vulkan: the essensials
+- [Lottes2016]Vulkan Fast Paths
+- [Rakos2016]Most Common Vulkan Misstakes
+
 ## 文献目録
 
 ### マイクロファセット理論
@@ -88,6 +95,9 @@ numberSections: false
 - [x] [@Zsolnai2015] [[slides](https://www.cg.tuwien.ac.at/courses/Rendering/VU.SS2017.html), [video](https://www.youtube.com/watch?v=pjc1QAI6zS0)]
     - レイトレーシング技術の概要。
 
+- [ ] [@McGuire2014]
+    - スクリーンスペースで効率的にレイトレースするアルゴリズム。
+
 ### レンダリングエンジン
 
 - [ ] [@Lagarde2014] [[notes](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf)]
@@ -128,5 +138,11 @@ numberSections: false
 
 - [x] [@Thomas2017] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2017/03/GDC2017-D3D12-And-Vulkan-Done-Right.pdf)]
     - D3D12とVulkanの横断的なtips。バリアとキューについて。
+
+- [x] [@Chajdas2017] [[slides](https://www.gdcvault.com/play/1024634/D3D12-Vulkan-Lessons)]
+    - D3D12とVulkanの2017年の最新動向。
+
+- [x] [@Daniell2015] [[slides](http://on-demand.gputechconf.com/siggraph/2015/presentation/SIG1501-Piers-Daniell.pdf)]
+    - VulkanのチュートリアルとNVIDIAでの動き。
 
 ### References
