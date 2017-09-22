@@ -19,13 +19,6 @@ numberSections: false
     - SIGGRAPHのPBSコースの資料を毎年まとめているSelf Shadowブログの管理人。
     - 2017年現在はLucasfilm所属。
 
-## 注目文献
-
-- [Khronos2016]Vulkan Sessions Pat 1,2
-- [Lorach2016]Vulkan: the essensials
-- [Lottes2016]Vulkan Fast Paths
-- [Rakos2016]Most Common Vulkan Misstakes
-
 ## 文献目録
 
 ### マイクロファセット理論
@@ -78,14 +71,16 @@ numberSections: false
 
 - [ ] [@Heubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
     - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
-- [ ] [@McLaren2015] [[slides](http://fumufumu.q-games.com/archives/TheTechnologyOfTomorrowsChildrenFinal.pdf), [video](http://www.gdcvault.com/play/1022428/The-Technology-of-The-Tomorrow)]
+- [x] [@McLaren2015] [[slides](http://fumufumu.q-games.com/archives/TheTechnologyOfTomorrowsChildrenFinal.pdf), [video](http://www.gdcvault.com/play/1022428/The-Technology-of-The-Tomorrow)]
     - Q-Gamesが"Tomorrow Children"から得た、Voxel Cone Tracingの大規模な活用方法。
+- [ ] [@McGuire2017] [[paper](https://casual-effects.com/research/McGuire2017LightField/McGuire2017LightField.pdf), [others](https://casual-effects.com/research/McGuire2017LightField/index.html)]
+    - light field probeを用いたリアルタイムGI。
 
 ### レイトレージング
 
 - [x] [@Zsolnai2015] [[slides](https://www.cg.tuwien.ac.at/courses/Rendering/VU.SS2017.html), [video](https://www.youtube.com/watch?v=pjc1QAI6zS0)]
     - レイトレーシング技術の概要。
-- [x] [@McGuire2014]
+- [x] [@McGuire2014] [[paper](http://jcgt.org/published/0003/04/04/paper.pdf), [others](http://jcgt.org/published/0003/04/04/)]
     - スクリーンスペースで効率的にレイトレースするアルゴリズム。
 
 ### レンダリングエンジン
@@ -126,7 +121,17 @@ numberSections: false
     - D3D12とVulkanの2017年の最新動向。
 - [x] [@Daniell2015] [[slides](http://on-demand.gputechconf.com/siggraph/2015/presentation/SIG1501-Piers-Daniell.pdf)]
     - VulkanのチュートリアルとNVIDIAでの動き。
-- [ ] [@Sellers2016]
+- [x] [@Sellers2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-gdc/Khronos-Vulkan-Sessions-Part%20I_GDC_Mar16.pdf)]
     - Vulkanのメモリ管理についてのtips。
+- [ ] [@Sellers2016a] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/03/VulkanFastPaths.pdf)]
+    - Vulkanのデスクリプタ、レンダパス、バリアについてのtips。
+- [ ] [@Witczak2016] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/05/Most-common-mistakes-in-Vulkan-apps.pdf)]
+    - Vulkanのプラクティス集。
+- [ ] [@Schott2016] [[slides](http://developer.download.nvidia.com/gameworks/events/GDC2016/mschott_lbishop_gl_vulkan.pdf)]
+    - OpenGLとVulkanのtips。
+- [x] [@Caloca2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
+    - UnrealEngine4のVulkan対応で得られた知見。
+- [x] [@Gneiting2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
+    - idTech6のVulkan対応で得られた知見。
 
 ### References
