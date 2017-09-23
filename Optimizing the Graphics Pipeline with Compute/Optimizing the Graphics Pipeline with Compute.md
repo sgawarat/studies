@@ -1,6 +1,7 @@
 ---
 titile: Optimizing the Graphics Pipeline with Compute [@Wihlidal2016]
 bibliography: bibliography.bib
+codeBlockCaptions: true
 numberSections: false
 ---
 # 略語(Acronyms)
@@ -201,6 +202,103 @@ numberSections: false
 
 # Cluster Culling
 
-TODO
+- 球面座標で**空間的にコヒーレント**なバケットを用いたトライアングルクラスタを生成する。
+    - 256個のトライアングルを1つとするクラスタに分けるようにオフライン処理する。
+    - 貪欲法による空間とキャッシュ的にコヒーレントなバケットを用いる(bucketing)アルゴリズムを使う。
+- 各トライアングルクラスタはキャッシュコヒーレントになるように最適化する。
+- 各クラスタの最適な境界円錐を生成する。[19]
+    - 単位球上に法線を射影する。
+    - **もっと小さく囲む円(minimum enclosing circle)**を計算する。
+    - 直径(diameter)が円錐の角度になる。
+    - 中心点はデカルト座標系に射影すると円錐の法線になる。
+- 円錐は`R8G8B8A8_SNORM`に格納される。
+    - 8ビットでも精度は十分。
+- `dot(cone.normal, -view) < -sin(cone.angle)`ならカリングする。
+    - 最適化として、`-sin`化した円錐の角度を格納する。
+- 丸め誤差に対する余裕を持たせたいなら、円錐の角度を少しだけ大きくする。
+
+- コンソールではクラスタサイズを**64**にすると便利ではある。
+    - 固有の最適化が使えるようになる。
+    - 描画が多すぎるとCPがボトルネックになるため**最適にならない**。
+    - LDSにバインドされない。(we were never bound by LDS atomics.)
+- プロファイリングに基づくと、**256がスイートスポットであるように思える**。
+    - 頂点がより再利用される。
+    - アトミック処理がより少なくなる。
+- 256より大きいとどうなる？
+    - 2つのVGTは256個のトライアングルごとに交互に切り替わる。
+    - **頂点の再利用はその切り替えを生き残れない**。
+
+- トライアングルのクラスタを粗くリジェクトする。[4]
+- 以下に対してカリングする。
+    - 視線(境界円錐)
+    - 錐台(境界球)
+    - Hi-Zデプス(スクリーンスペース境界箱)
+        - 視点の歪みに気を付ける。[22]
+        - **射影下では球は楕円体になる**。
+
+- 詳しい話は[4]を参照。
+
+# Draw Compaction
+
+![](assets/Compaction GPU capture.png)
+
+- GPUのキャプチャ。
+    - グレーの描画は空のDrawIndirectを表す。
+    - CPのコストは処理中の描画に隠蔽される。
+    - 133us付近から空描画の束に当たり効率が低下している。
+    - 151us付近から10us程度のアイドル時間がある。
+- 下がった効率はすぐにはもとに戻らない。
+    - CUがwaveで埋まるまで時間がかかる。
+- ゼロサイズ描画をコンパクト化することはとても重要である。
+    - GPUカリングで節約しても依然として辛い。
+    - プリミティブが0個でもindirect引数をフェッチするのはタダではない。
+        - 最大300nsのメモリレイテンシが存在する。
+        - CPはこれをいくらか隠蔽することができるが、隠蔽できなかった分が積み重なってゆく。
+    - ステート変更もタダじゃない。
+        - CPはコマンドバッファパケットを消費している。
+
+- CPUは最悪のケースの描画数を発行する。
+    - ゼロサイズ描画は生き残ったプリミティブが0でもGPUにindirect引数を処理させる。
+    - GPUは描画数とステート変化に渡る制御が必要である。
+- DirectX 12の`ExecuteIndirect`APIはオプションでカウントバッファとオフセットを持つ。
+    - CPが展開(unroll)する描画の上限をクランプするのに使う。
+- 一部のIHVは現時点でこの値をコンピュートシェーダでパッチするか、他の準最適パスを実行する。
+    - この機能は新しく、IHVにこの分野でドライバを改善するよう働きかけるには広く使われる必要があるだろう。
+
+~~~{.c id="lst:parallel_reduction"}
+groupshared uint localValidDraws;
+[numthreads(256, 1, 1)]
+void main(uint3 globalId : SV_DispatchThreadID, uint3 threadId : SV_GroupThreadID) {
+    if (threadId.x == 0) localValidDraws = 0;
+
+    GroupMemoryBarrierWithGroupSync();
+
+    MultiDrawIndirectArgs drawArgs;
+    const uint drawArgId = globalId.x;
+    if (drawArgId < batchData[g_batchIndex].drawCount)
+        loadIndirectDrawArgs(drawArgId, drawArgs);
+
+    uint localSlot;
+    if (drawArgs.indexCount > 0)
+        InterlockedAdd(localValidDraws, 1, localSlot);
+
+    GroupMemoryBarrierWithGroupSync();
+
+    uint globalSlot;
+    if (threadId.x == 0)
+        InterlockedAdd(batchData[batchIndex].drawCountCompacted, localValidDraws, globalSlot);
+
+    GroupMemoryBarrierWithGroupSync();
+
+    if (drawArgId < drawArgCount && thisLaneActive)
+        storeIndirectDrawArgs(globalSlot + localSlot, drawArgs);
+}
+~~~
+: 並列リダクションのコード。
+
+- 描画コンパクションのクロスプラットフォーム的なアプローチとして、[@lst:parallel_reduction]のよな並列リダクションがある。
+- GCNの固有機能とスレッドグループサイズを64にすることで、より良くできる。
+
+
 
 # References
