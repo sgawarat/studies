@@ -257,6 +257,8 @@ numberSections: false
     - ステート変更もタダじゃない。
         - CPはコマンドバッファパケットを消費している。
 
+![](assets/ExecuteIndirect.png)
+
 - CPUは最悪のケースの描画数を発行する。
     - ゼロサイズ描画は生き残ったプリミティブが0でもGPUにindirect引数を処理させる。
     - GPUは描画数とステート変化に渡る制御が必要である。
@@ -265,7 +267,7 @@ numberSections: false
 - 一部のIHVは現時点でこの値をコンピュートシェーダでパッチするか、他の準最適パスを実行する。
     - この機能は新しく、IHVにこの分野でドライバを改善するよう働きかけるには広く使われる必要があるだろう。
 
-~~~{.c id="lst:parallel_reduction"}
+~~~c
 groupshared uint localValidDraws;
 [numthreads(256, 1, 1)]
 void main(uint3 globalId : SV_DispatchThreadID, uint3 threadId : SV_GroupThreadID) {
@@ -294,11 +296,103 @@ void main(uint3 globalId : SV_DispatchThreadID, uint3 threadId : SV_GroupThreadI
         storeIndirectDrawArgs(globalSlot + localSlot, drawArgs);
 }
 ~~~
-: 並列リダクションのコード。
 
-- 描画コンパクションのクロスプラットフォーム的なアプローチとして、[@lst:parallel_reduction]のよな並列リダクションがある。
-- GCNの固有機能とスレッドグループサイズを64にすることで、より良くできる。
+- 描画コンパクションのクロスプラットフォーム的なアプローチとして、上記のような並列リダクションがある。
+- GCNの固有機能とスレッドグループサイズを64にすれば、もっと良くできる。
+
+![`__XB_MBCNT64(__XB_Ballot64(indexCount > 0))`の図解。](assets/MBCNT64.png)
+
+- コンパクションの最適化に伴い、各スレッドが連続した範囲に書き込む必要がある。
+    - インデックスとしてスレッドIDが使えない。
+- 並列リダクションのようなグローバル同期を回避したい。
+- 並列型prefix sumが使える。
+
+- `__XB_Ballot64`
+    - 64ビットのマスクを生成する。
+    - 各ビットが各wavefrontスレッドの述語(predicate)が評価される。
+    - アクティブでないスレッドのビットは0になる。
+- `V_MBCNT_LO_U32_B32`[5]
+    - 0から31ビットまでの立っているビットの数を計算するGCN固有命令。
+- `V_MBCNT_HI_U32_B32`[5]
+    - 32から63ビットまでの立っているビットの数を計算するGCN固有命令。
+- `__XB_MBCNT64`
+    - 自身のスレッドのインデックスより下位の中で立っているビットの数を計算する。
+    - ballotと組み合わせて、各スレッドで自身より番号の小さいアクティブなスレッドの数を計算できる。
 
 
+~~~c
+[numthreads(64, 1, 1)]
+void main(uint3 globalId : SV_DispatchThreadID, uint3 threadId : SV_GroupThreadID) {
+    const uint laneId = threadId.x;
+
+    const uint drawArgId = globalId.x;
+    const uint drawArgCount = batchData[g_batchIndex].drawCount;
+
+    MultiDrawIndirectArgs drawArgs;
+    if (drawArgId < batchData[g_batchIndex].drawCount)
+        loadIndirectDrawArgs(drawArgId, drawArgs);
+
+    const bool thisLaneActive = drawArgs.indexCount > 0;
+    uint2 clusterValidBallot = __XB_Ballot64(clusterValidBallot);
+
+    uint outputArgCount = __XB_S_BCNT1_U64(clusterValidBallot);
+
+    uint localSlot = __XB_MBCNT64(clusterValidBallot);
+
+    uint globalSlot;
+    if (laneId == 0)
+        InterlockedAdd(batchData[batchIndex].drawCountCompacted,    outputArgCount, globalSlot);
+
+    globalSlot = __XB_ReadLane(globalSlot, 0);
+
+    if (drawArgId < drawArgCount && thisLaneActive)
+        storeIndirectDrawArgs(globalSlot + localSlot, drawArgs);
+}
+~~~
+
+- GCNに最適化されたコンパクションは**バリアを使わない**。
+- 複数のwavefrontはアトミック演算1つだけで同期する。
+- すべてのスレッドへglobalSlotを複製するために**Laneを読む**。
+
+# Triangle Culling
+
+- ひとつのwavefrontの**各スレッドはトライアングルを1つ**処理する。
+- コンパクションインデックスを決定するため、カリングマスクをballotして数える。
+- ひとつのwavefrontを横断する頂点の再利用を維持する。
+- すべてのwavefrontを横断する頂点の再利用を維持する。 --- **ds_ordered_count**[5][15]
+    - 半透明やプロシージャルなレンダリングのような全体の順序が重要になる場合にds_ordered_countを使う。
+    - メッシュ全体での頂点の再利用にds_ordered_countを使うとコストに見合わない。
+    - 3906個程度のワークアイテムで+0.1ms。
+    - ds_ordered_countを使うと、絶妙に調整されたwavefrontの制限を越えて最適化できる。
+
+![](assets/Triangle Culling Overview.png)
+
+- 各ワークアイテムを通してスレッドごとにトライアングルひとつに対して処理されるカリングシェーダの処理の概略。
+    - インデックスと頂点のデータをアンパックする。
+    - さまざまなカリングフィルタを通す。
+        - 重要な最適化として、コンソールではコンパイラに分岐の統一性(uniformity)のヒントを与えるため、ballotとの比較で分岐することができる。
+    - 数え上げ/コンパクション/予約を行う。
+    - インデックスを16ビットで書き込む。
+        - コンピュートシェーダは16ビット値を書き出せないので、ゼロクリアした出力バッファにInterlockedOrで書き込む。
+
+- ballotがない場合、
+    - コンパイラはほとんどのif文で2つのテストを生成する。
+        1. 1つ以上のスレッドがif文に入る場合。
+            - 実行マスクを設定して、if文を実行する。
+        2. どのスレッドもif文に入らない場合。
+            - 直接ジャンプする。
+- ballot(または、高レベルなballotであるanyやallなど)がある、または、スカラ値で分岐する(`__XB_MakeUniform`)場合、
+    - コンパイラは2番目のケースしか生成しない。
+    - divergence[^divergent_braching]を扱うための余分な制御フローロジックをスキップする。
+- **統一的な分岐の強制**と**divergenceの回避**のためにballotを使う。
+    - すべてのスレッドにカリングテストの完全なシーケンスを実行させても害はない。
+    - いずれかのスレッドを実行する必要があれば、SIMDが64の幅を持つため、結局の所すべてのスレッドを実行する。
+- Hi-Zカリングのように、メモリフェッチやLDS処理が絡む場合にはdivergent branchingを使うべき。
+
+[^divergent_braching]: Divergent branchingとは、「スレッドごとに分岐先が異なる(例えば、スレッドIDが奇数/偶数で分岐する)場合、あらかじめすべてのスレッドが分岐先の処理を実行して、条件に合ったスレッドのみがその結果を採用する」という仕組みのこと。([参考](http://www.toffee.jp/streaming/gpgpu/advanced_gpgpu/2015/advanced_gpgpu03.pdf))
+
+# Orientation Culling
+
+TODO
 
 # References
