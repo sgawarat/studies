@@ -30,7 +30,7 @@ numberSections: false
 
 ### マイクロフレーク理論
 
-- [x] [@Heitz2016a] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_cFVlUkFhWXdleEU)]
+- [x] [@Heitz2016b] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_cFVlUkFhWXdleEU)]
     - Smithモデルを用いた複数回散乱を持つマイクロファセットBSDFのモデル化。
 - [x] [@Heitz2015] [[paper](https://drive.google.com/file/d/0BzvWIdpUpRx_dXJIMk9rdEdrd00/view), [sup1](https://drive.google.com/file/d/0BzvWIdpUpRx_djVyMG9jMnltdTg/view), [sup2](https://www.cs.cornell.edu/projects/diffusion-sg10/anisotropic_web.pdf)]
     - GGXをマイクロフレーク理論に応用したSGGX分布の提案。
@@ -69,7 +69,7 @@ numberSections: false
 
 ### グローバル・イルミネーション
 
-- [ ] [@Heubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
+- [ ] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
     - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
 - [x] [@McLaren2015] [[slides](http://fumufumu.q-games.com/archives/TheTechnologyOfTomorrowsChildrenFinal.pdf), [video](http://www.gdcvault.com/play/1022428/The-Technology-of-The-Tomorrow)]
     - Q-Gamesが"Tomorrow Children"から得た、Voxel Cone Tracingの大規模な活用方法。
@@ -78,7 +78,7 @@ numberSections: false
 
 ### レイトレージング
 
-- [x] [@Zsolnai2015] [[slides](https://www.cg.tuwien.ac.at/courses/Rendering/VU.SS2017.html), [video](https://www.youtube.com/watch?v=pjc1QAI6zS0)]
+- [x] [@Zsolnai-Feher2015] [[slides](https://www.cg.tuwien.ac.at/courses/Rendering/VU.SS2017.html), [video](https://www.youtube.com/watch?v=pjc1QAI6zS0)]
     - レイトレーシング技術の概要。
 - [x] [@McGuire2014] [[paper](http://jcgt.org/published/0003/04/04/paper.pdf), [others](http://jcgt.org/published/0003/04/04/)]
     - スクリーンスペースで効率的にレイトレースするアルゴリズム。
@@ -123,7 +123,7 @@ numberSections: false
     - VulkanのチュートリアルとNVIDIAでの動き。
 - [x] [@Sellers2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-gdc/Khronos-Vulkan-Sessions-Part%20I_GDC_Mar16.pdf)]
     - Vulkanのメモリ管理についてのtips。
-- [ ] [@Sellers2016a] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/03/VulkanFastPaths.pdf)]
+- [ ] [@Sellers2016b] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/03/VulkanFastPaths.pdf)]
     - Vulkanのデスクリプタ、レンダパス、バリアについてのtips。
 - [ ] [@Witczak2016] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/05/Most-common-mistakes-in-Vulkan-apps.pdf)]
     - Vulkanのプラクティス集。
@@ -133,5 +133,11 @@ numberSections: false
     - UnrealEngine4のVulkan対応で得られた知見。
 - [x] [@Gneiting2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
     - idTech6のVulkan対応で得られた知見。
+- [x] [@Hebert2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
+    - メモリ管理のtips。
+- [x] [@Hector2016b] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
+    - レンダパスのtips。
+- [x] [@Archard2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
+    - パイプラインキャッシュのtips。
 
 ### References
