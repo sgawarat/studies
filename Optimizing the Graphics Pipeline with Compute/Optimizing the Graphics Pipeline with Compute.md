@@ -393,6 +393,53 @@ void main(uint3 globalId : SV_DispatchThreadID, uint3 threadId : SV_GroupThreadI
 
 # Orientation Culling
 
+# Triangle Orientation and Zero Area (2DH)
+
+~~~c
+float det = determinant(float3x3(vertex[0].xyw, vertex[1].xyw, vertex[2].xyw));
+bool cull = det <= 0.0f;
+~~~
+
+- 平均して、メッシュの50%は背面によりカリングされると思われる。なので、できるだけ安価なテストが必要である。最も安価な方法のひとつは[3]で述べられる、同時座標系による3x3行列の行列式[2]を用いるものがある。このテクニックはクリッピングやプロジェクションを回避する。これには視野の分割に起因する1/4の割合の逆数計算命令が含まれる。
+- GCN特有の最適化として、背面カリングがすでにwavefront内のすべてのトライアングルを取り除いた場合、その後のすべてのテストをスキップすることができる。行列式テストの向きは前面か背面のどちらのトライアングルをカリングするかに基づく。
+- この独特なテストは、ゼロエリアが小さなプリミティブテストでなく縮退トライアングルテストであるため、MSAAやEQAAの条件下で働く(これは、いずれにしても、いかなるまともなメッシュパイプラインはオフラインによる除去であるべきである)。
+
+# Patch Orientation Culling
+
+- テッセレートされたパッチをカリングするとき、2DHの行列式テストは視野に入ってきた背面に対してうまく働かない。これらの面は変位(displacement)前にカリングされ、その輪郭の一部を失う。
+- テッセレートされたパッチには、代わりに最大変位量により決定される内積バイアスを加えたビュー空間による背面カリングを行う。
+
+# Small Primitive Culling
+
+# Rasterizer Efficiency
+
+![](assets/Rasterizer Efficiency.png)
+
+- 各GCNラスタライザはクロックあたり1トライアングルの読み出しとクロックあたり最大16ピクセルの生成を行うことができる。これのため、小さいトライアングルはラスタライズするには極めて非効率である。
+- 左図はピーク効率を表し、4つの四角形と16ピクセルを生成する。中図は4つの四角形を生成するが、12ピクセルのみが有効である。ヘルパーレーンのためピクセルシェーダでは16スレッドを消費する。ヘルパーレーンはパックと準備に時間がかかるため、実際にピクセルレートが低下する。中図の効率は、GPUが2x2のピクセルをシェーディングするので、部分的に埋められた四角形のために失われる。
+- 右図はプリミティブセットアップ制限に当たるようになる。
+
+~~~c
+float3 main() : SV_Target0 {
+    bool inside = false;
+    float2 barycentric = fbGetBarycentricLinearCenter(); // __XB_GetBarycentricCoords_Linear_Center
+
+    if (barycentric.x >= 0 && barycentric.y >= 0 && barycentric.x + barycentric.y <= 1)
+        inside = true;
+
+    uint2 insideBallot = fbBallot(inside); // __XB_Ballot64
+    uint insideCount = countbits(insideBallot.x) + countbits(insideBallot.y);
+    float insidePercent = insideCount * (1.0f / 64.0f);
+    return float3(1 - insidePercent, insidePercent, 0);
+}
+~~~
+
+- カリングに直接は関係ないが、この役に立つピクセルシェーダは、クロックあたりに運ばれるピクセル数に影響を与えるため、密すぎるメッシュを見分ける。これは補助ピクセルの数を計測することで行われる。言い換えるなら、wavefrontのスレッド数で割った遮蔽されたピクセルの数である。
+- MSAAは範囲外の重心(barycentric)座標を持つ有効なピクセルスレッドを持つため、線形な中心から線形な重心(centroid)への切り替えはこの場合ではより正確になる。
+- 小さなトライアングルがコンテンツにどれだけ広まっていたか、小さなプリミティブフィルタが効果的かどうか、について大まかに知るためにこれを使った。ボーナスとして、このツールは現在アーティストがメッシュにどれだけ密集してLOD設定が与えられているかを知るために使い、適宜間引くことができる。
+
+# Small Primitive Culling (NDC)
+
 TODO
 
 # References
