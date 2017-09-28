@@ -14,7 +14,7 @@ numberSections: false
     - 各CUはクロックあたり64のFMA命令のスループットを持つ。
 - Wave - 足並みを揃えて(in lock-step)実行する64のシェーダ呼び出し。
 - 以下の命令はCUにおいて異なるwaveで同時に複数発行(multi-issue)を行うことができる。
-    - SMEM - スカラーメモリ命令(K$へのアクセス、動的に統一(uniform)アドレスを経由したバッファアクセス)。
+    - SMEM - スカラーメモリ命令(K$へのアクセス、(dynamically uniform)アドレスを経由したバッファアクセス)。
     - SALU - スカラー算術命令(イメージやバッファのアクセス)。
     - VMEM - ベクトルメモリ命令。
     - VALU - ベクトル算術命令。
@@ -77,6 +77,66 @@ numberSections: false
 
 # Constant and Descriptor loads on GCN --- Hardware background
 
-- TODO
+- 定数とデスクリプタはSMEM命令によりブロック読み込みされる。
+    - これは(dynamically uniform)アドレスとして知られているいかなるバッファ読み込みにも適用することができる。
+    - サポートされるアドレスモード: デスクリプタからのベース+レジスタか即値オフセットのいずれか。
+        - S_BUFFER_LOAD_DWORD* dst, デスクリプタ, オフセットを提供するSGPR
+        - S_BUFFER_LOAD_DWORD* dst, デスクリプタ, 20ビット即値オフセット
+            - 20ビット=1MBであり、大きなバッファかデスクリプタセット用であり、初めに即値オフセットのアクセスデータを保持し、その後に動的アクセスデータを保持する。
+- S_BUFFER_LOAD_DWORD* は1命令で1,2,4,8,16,32ビット値をブロック読み込みすることができる。
+    - ドライバは複数の定数の読み込みを1つの大きなブロック読み込みに合体することができる。
+    - 使用の局所性によりグループ化した定数とこれをサポートするためにアライメントされたブロックを保持するのが最善である。
+    - ブロック読み込みはGCNで動的ベースアドレスを低コストにする。
+        - // 8つの32ビット定数に対する動的ベースのために1つの追加のSALU命令を使う例。
+        - S_ADD_U32 オフセット, ベース + 即値オフセット
+        - S_BUFFER_LOAD_DWORDX8 dst, デスクリプタ, オフセット
+- デスクリプタはS_LOAD_DWORD*経由で読み込まれる(ベースにはデスクリプタの代わりにポインタを使う)。
+    - S_BUFFER_LOAD_DWORD*と同様に同じアドレスモードとブロック読み込みのサポート。
+
+# One Set Design --- Fast path, "bindless" or rather "bind-everything" on Vulkan
+
+- 1つの巨大なデスクリプタセットにすべてのデスクリプタを配置する。
+    - `layout(set=0, binding=N) uniform texture2D textures[hugeNumber]`
+- 1つの巨大なデスクリプタセットを常にバインドしたままにする。
+    - Draw/Dispatchごとに`vkCmdBindDescriptorSets`を呼ばなくて良くなる。
+    - 代わりにバインドする配列への各描画インデックスに対して`vkCmdPushConstants`経由でPush Constant(s)を使う。
+- Push Constant経由の描画ごとの頻度を持つベースインデックス: textures[pushConstant + 1]
+    - S_ADD_U32 配列ベース, デスクリプタセットベース, 32ビット即値オフセット
+        - この命令は事実上タダで、配列バインディングからの第2のテクスチャに対して必要としない。
+    - S_LOAD_DWORDX8 テクスチャデスクリプタ, 配列ベース, 20ビット即値オフセット
+- フレームごとの頻度を持つテクスチャは即値で指すことができる: textures[2]
+    - S_LOAD_DWORDX8 テクスチャデスクリプタ, デスクリプタセットベース, 20ビット即値オフセット
+    - そのセットのベースに向かってフレームごとの頻度を持つテクスチャを保持するのが最善である。
+
+# Dynamic Descriptors --- UNIFORM_BUFFER_DYNAMIC & STORAGE_BUFFER_DYNAMIC
+
+- 動的ベースアドレスは`vkCmdBindDescriptorSets`の`dynamicOffsets`で提供する。
+- ドライバはバインド呼び出しに対する動的オフセットに基づくユニークなGCNバッファデスクリプタを組み立てる。
+    - この16バイトバッファデスクリプタはできるだけUSER-DATA SGPRに配置される。
+- おみやげ
+    - 描画ごとの頻度では、これは良いオーバーヘッド量を持つ(CPU処理、USER-DATAの追加スペース)。
+        - かわりにPush Constantsを試す。
+    - 動的デスクリプタはUSER-DATAに配置される。
+        - シェーダで間接参照を取り除くためにこれを使うことができる。
+        - 初めにデスクリプタを読み込む必要なしにすべての定数に達する。
+
+# One Dynamic Buffer Descriptor Design -- Fast path, "bind-everything" applied to constant data
+
+- 一例: per-frame、per-pass、per-drawの定数を渡す必要がある描画。
+- これを最適化し得る。
+    - 各描画で同じままにする1つのUNIFORM_BUFFER_DYNAMIC。
+        - "One Set Design"の拡張。動的デスクリプタはセットがバインドされるときに作られる(per-drawの代わりにper-passで)。
+        - 間接参照、USER-DATAの動的デスクリプタを取り除く。
+    - per-drawを変化したりper-drawオフセットを供給する1つの32ビットPush Constant。
+- 各パス(フレームごとの少数のパス)は別々のUNIFORM_BUFFER_DYNAMICデスクリプタを得る。
+    - バッファコンテンツ: per-frame、per-pass、draw0、draw1、... drawN。
+    - per-frameデータは各パスで重複し、即値オフセットでアクセスすることができる。
+    - per-passデータは即値オフセットでアクセスすることができる。
+    - per-drawはPush Constantで供給される動的ベースオフセットを使う。
+        - 速い。GCNは定数をブロック読み込みする。
+
+#
+
+TODO
 
 # References
