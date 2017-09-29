@@ -440,6 +440,140 @@ float3 main() : SV_Target0 {
 
 # Small Primitive Culling (NDC)
 
+![合格。](assets/Small Primitive Culling passed.png)
+
+![不合格。](assets/Small Primitive Culling failed.png)
+
+- `any(round(min) == round(max))`
+
+- 元々は非常に包括的な固定点ハードウェア精度の小さなプリミティブフィルタから始めたが、後にMSAAではないターゲットのために近似へと変更した。
+- MSAAターゲットはそのテストをサンプル数に基づいて拡大することによりバイアスする必要がある。プログラマブルなサンプル点を用いているなら、自分でなんとかしなさい。MSAAでは、ピクセルの中心と最も外側のサブピクセルサンプルとの間の(サブピクセル中の)最大距離を本質的に定める必要があり、そのテストに影響を与えるためにこれを使う。
+- 一般的なアイデアはトライアングルのスクリーン空間での境界箱を求めて、最近傍のピクセルの角に最大値と最小値を合わせる(snap)ことである。最大値と最小値が同じ水平または垂直な辺に合わされば、そのトライアングルはピクセル中心を囲っていないことになり、ピクセルカバレッジに寄与しない。
+
+![カリングされるべきトライアングルがテストを合格する例。](assets/Small Primitive Culling false positive.png)
+
+- このテストは保守的であり、カリングされるべきトライアングルがテストに合格する場合がある。このテストがどれだけ安価であるかを考慮すると、この場合を不合格にするのは割に合わない。
+
+# Frustum Culling (NDC)
+
+- クラスタやトライアングルのGPU錐台カリングはオブジェクトが錐台の面と交差しているときのみ効果的となることから、大抵のエンジンではCPUによりオブジェクト全体の錐台カリングを行っている。先のカリングフィルタの、射影後の頂点とALU資源の貯金を持ち合わせている。そこで、我々は4サイクルで4面の伝統的な錐台カリングを行う。これは、特に多くの部分から成る複合オブジェクトに対してへり(fringe)のケースでいくつかの利点が生まれる。
+- NearとFar面のかリングは通常ほとんどのタイトルでALUコストに見合わない。背面カリングと同様に、ビューの外側から内側へテッセレートするパッチの不正確なカリングを抑制するため、テッセレートされたパッチが耐性値のある形式を必要とすることに言及するのは重要である。
+
+# Depth Tile Culling (NDC)
+
+- もうひとつ利用可能なトライアングルカリングのアプローチは手動の深度テストを行うことである。しかし、クラスタ及びトライアングルカリングにおいて直接的に深度を読み出すことは可用性やその時々での遮蔽物の質により極めてシーン依存である。一般的なテクニックは、深度バッファを作り、LDSに最適化された並列リダクション[9]を行い、各タイルでの保守的な最大最小深度値を格納することである。
+- 私の最初のテストでは、あとでトライアングルやクラスタのスクリーン空間での境界箱とテストする16x16の深度タイルグリッドを生み出す完全なZプリパスを実行した。もし境界箱が単一のタイルの中に完全に含まれているなら、高速な深度テストを行い、リジェクトする。このアプローチは高速だが、わずかなトライアングルしか取り除かない。タイルの境界をまたぐような遮蔽されたトライアングルはリジェクトされない。複数のタイルをまたぐ大きなトライアングルをカリングするようにフィルタを修正することは極めて高価であり、コストに見合わない。
+
+~~~
+float4 zQuad = g_linearZ.Gather(g_pointClamp, (DTid.xy * 2 + 1) * g_rcpDim);
+
+float minZ = min(zQuad.x, min3(zQuad.y, zQuad.z, zQuad.w));
+float maxZ = max(zQuad.x, max3(zQuad.y, zQuad.z, zQuad.w));
+
+// LDSをバイパスした、データを共有するためのlane swizzling
+minZ = min(minZ, __XB_LaneSwizzle(minZ, 0x2F | (0x01 << 10)));
+minZ = min(minZ, __XB_LaneSwizzle(minZ, 0x1F | (0x02 << 10)));
+minZ = min(minZ, __XB_LaneSwizzle(minZ, 0x2F | (0x08 << 10)));
+minZ = min(minZ, __XB_LaneSwizzle(minZ, 0x1F | (0x10 << 10)));
+
+maxZ = max(maxZ, __XB_LaneSwizzle(maxZ, 0x2F | (0x01 << 10)));
+maxZ = max(maxZ, __XB_LaneSwizzle(maxZ, 0x1F | (0x02 << 10)));
+maxZ = max(maxZ, __XB_LaneSwizzle(maxZ, 0x2F | (0x08 << 10)));
+maxZ = max(maxZ, __XB_LaneSwizzle(maxZ, 0x1F | (0x10 << 10)));
+
+// 四象限をマージするために0, 4, 32, 36のスレッドを組み合わせる。
+minZ = min(minZ, __XB_LaneSwizzle(minZ, 0x1F | (0x04 << 10)));
+maxZ = max(maxZ, __XB_LaneSwizzle(maxZ, 0x1F | (0x04 << 10)));
+minZ = min(minZ, __XB_LaneSwizzle(minZ, 32);
+maxZ = min(maxZ, __XB_LaneSwizzle(maxZ, 32);
+
+if (GI == 0)
+    g_minMaxZ[Gid.xy] = float(minZ, maxZ);
+~~~
+
+- LDSストレージを迂回しつつデータを共有するためにGCNのlane swizzlingを使った並列深度リダクションのバリアント。圧縮済みの16ビットのESRAM深度バッファにより、この計算は1080pのXB1上で約41usで動作し、完全に帯域に縛られている。ライトタイルカリングを含むレンダリングの他の部分にこのリダクションの結果を用いる。
+
+# Depth Pyramid Culling (NDC)
+
+`int mipMapLevel = min(ceil(log2(max(longestEdge, 1.f))), levels - 1);`
+
+- 深度カリングのもうひとつのアプローチは階層的なZピラミッド[10][11]である。これは、深度バッファの解像度から始まり、すべて単一のピクセルへと到達する。ピラミッドの第1レベルは、深度タイルの手法と同様に、深度が定まった(laydown)あとにデータが追加される。その後、ダウンサンプリングパスを通して残りのMIPレベルにデータを追加する。
+- MIPレベルNにおける各テクセルはMIPレベルN-1における対応するすべてのテクセルの最大と最小の深度を含む。境界ボリュームの最長辺の深度をHi-Zピラミッドに格納されている深度と比較することでカリングを行う事ができるピラミッドは単一のレベルへ落ちるため、オーバーラップした四角形を扱うために複数のフェッチを用いる代わりに、非常に簡単にフェッチする単一のMIPレベルを得ることができる。
+- HTILEによる高速化を除けば、これが深度ベースカリングとして最終的に用いたアプローチである。
+
+# AMD GCN HTILE
+
+- GCNは通常のGPU深度処理を高速化するHTILEと呼ばれるメタデータを持つ。ピクセルの8x8グループごとに対応する32ビットのメタデータブロックを持つ。このメタデータは通常のGPU深度処理を高速化するが、シェーダ内で手動でデコードして、単一のテストによる64ピクセルの早期リジェクションや、ほかの似たような目的のために使うことができる。
+- HTILEは通常は不正確であり、その境界は保守的でなければならない。加えて、すべての深度値は境界を再計算するために読み込まれなければならないため、"resummarize"するまで境界は成長しか行うことができない。
+- コンソールでは、HTILEはシェーダ内テスト用に深度バッファを伸長したり、後の深度が有効なレンダパスでHi-Zを無効にすることをせずに保守的な深度テストをもたらすために用いられる。我々はHTILEサーフェスをR32_UINTテクスチャとしてバインドし、手動でタイル情報をデコードし、深度テクスチャを生み出す伸長コンピュートシェーダを持つ。
+- HTILEを使う上でいくつかの了解(gocha)が存在するが、手動のHTILEデコーディング及びエンコーディングはさまざまなシナリオにおいて大きなパフォーマンス的成功である。現時点で、HTILEはコンソールの開発者によってのみ直接的にアクセス可能である。
+
+~~~
+// 深度境界を計算する
+float minZ = depth;
+float maxZ = depth;
+
+// wave幅リダクションにより深度タイル境界を計算する
+minZ = waveWideMin(minZ);
+maxZ = waveWideMax(maxZ);
+
+// HiZとZMaskを半分の解像度のHTileに書き込む
+if (GI == 0) {
+    uint htileOffset = getHTileAddress(Gid.xy, g_outTiledDimensions);
+    uint htileValue = encodeCompressedDepth(minZ, maxZ);
+    g_htileHalf.Store(htileOffset, htileValue);
+}
+~~~
+
+- 初めにダウンサンプリングされたHi-ZピラミッドのMIPレベルを計算するとき、すでに入力の深度値を読み出していたという事実を活用する(leverage)。つまり、フルまたはハーフ解像度の深度値の線形化を行うこともでき、ハーフ解像度のHTILEを書き出すこともできる。そうすれば、パーティクルのような他のパスは、ハーフ解像度の深度バッファをresummarizeする必要なしに、そのMIPレベルに対するHi-Zカリングを使うことができる。
+- 各HTILEメタデータブロックを64ピクセルから構築する必要があるため、単純にすでに4を1に減らした最大最小値を使うことは出来ない。HTILEで正しい最大最小値を生むために8x8タイルですべてのピクセルを並列に減らすことが必要になる。
+- LDSでの並列リダクション、またはより良い方法として、lane swizzlingにより行うことができる。
+
+~~~
+uint waveWideMin(float value) {
+    value = min(value, __XB_LaneSwizzle(value, 0x1F | (0x01 << 10)));
+    value = min(value, __XB_LaneSwizzle(value, 0x1F | (0x02 << 10)));
+    value = min(value, __XB_LaneSwizzle(value, 0x1F | (0x08 << 10)));
+    value = min(value, __XB_LaneSwizzle(value, 0x1F | (0x10 << 10)));
+    value = min(value, __XB_LaneSwizzle(value, 0x1F | (0x04 << 10)));
+    value = min(value, __XB_ReadLane(value, 32));
+    return value;
+}
+
+uint waveWideMin(float value) {
+    value = max(value, __XB_LaneSwizzle(value, 0x1F | (0x01 << 10)));
+    value = max(value, __XB_LaneSwizzle(value, 0x1F | (0x02 << 10)));
+    value = max(value, __XB_LaneSwizzle(value, 0x1F | (0x08 << 10)));
+    value = max(value, __XB_LaneSwizzle(value, 0x1F | (0x10 << 10)));
+    value = max(value, __XB_LaneSwizzle(value, 0x1F | (0x04 << 10)));
+    value = max(value, __XB_ReadLane(value, 32));
+    return value;
+}
+~~~
+
+- 各HTILEエントリは8x8ピクセルブロックを表すので、lane swizzlingを使った、ひとつのタイルでの64深度値に渡るwave幅のminとmaxの処理を使う事ができる。
+- DS_SWIZZLE_B32命令は、DSメモリバンクを読み書きせずに、オフセットマスクに基づいて入力のスレッドデータをswizzleして返す。
+- lane swizzleは、64ではなく、32レーンでのみ動作する。つまり、初めの32レーンと終わりの32レーンをマージすることで最後に組み合わせる必要がある。これは他のレーンから減らした値を捕まえることができるため、read lane命令で行われる。
+
+~~~
+uint encodeCompressedDepth(float minDepth, float maxDepth) {
+    // 最大最小深度をUNORM14に変換する
+    uint htileValue = __XB_PackF32ToUNORM16(minDepth - 0.5 / 65535.0, maxDepth + 3.5 / 65535.0);
+
+    // minDepthを2ビットだけシフトアップして、下位4ビットを設定する。
+    htileValue = __XB_BFI(__XB_BFM(14, 18), htileValue, htileValue << 2);
+    return htile |= 0xF;
+}
+~~~
+
+- resummarize中に深度の読み戻しコストを払うのではなく、ダウンサンプリング処理中にHTILEを手動でエンコードすることができる。
+- HTILEは各8x8ピクセルタイルごとにNearとFarの深度をエンコードする。Nearは自明な受け入れ(trivial accept)に用いられ、Farは自明な拒否(trivial reject)に用いられる。これらの面の間にあるいずれかのものは高解像度テストを行う必要がある。
+- ステンシルが有効であれば、14ビットのnear値とfar面への6ビットの差分を持つ。
+- ステンシルが優子でなければ、最大最小深度は2つの14ビット値にエンコードされる。下位4ビットはzMaskであり、クリアするところを0にセットする。
+- 我々のHi-Zピラミッドはステンシルを必要としないので、このエンコーディングルーチンはHi-Stencilなし用である。
+
+# Software Z
+
 TODO
 
 # References
