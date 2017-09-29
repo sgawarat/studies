@@ -135,7 +135,93 @@ numberSections: false
     - per-drawはPush Constantで供給される動的ベースオフセットを使う。
         - 速い。GCNは定数をブロック読み込みする。
 
-#
+# Image Descriptors: Sampled vs Storage --- Optimal descriptor choice
+
+- リードオンリーのSAMPLED_IMAGEはSTORAGE_IMAGEを読み込みだけに使うより早くなる可能性がある。
+    - GCNハードウェアでこれらが同じデスクリプタタイプを共有するとしても。
+    - 正しいVulkanデスクリプタタイプを使うために依然として重要である。
+- `STORAGE_IMAGE`タイプは`GENERAL`レイアウトにする必要がある。
+    - 圧縮されない。
+- `SAMPLED_IMAGE`タイプは`SHADER_READ_ONLY_OPTIMAL`レイアウトにすることができる。
+    - 圧縮をサポートできる。
+    - GCN3(Tonga/Antigua/Fiji)でレンダターゲット用Delta Color Compression(DCC)が追加される。
+- DCCは標準のリードオンリー、非ブロック圧縮、フォーマット化されたテクスチャ(RGBA8、RGBA16F、など)でも使うことができる。
+    - テクスチャアップロード処理を調整することが鍵である。
+    - `TRANSFER_DST_OPTIMAL`と一緒にグラフィックキューで`vkCmdCopyBufferToImage`を使う。
+    - バッファからイメージへコピーするために内部的にピクセルシェーダを使い、出力時にDCC圧縮される。
+
+# Immutable Samplers --- No-load samplers
+
+- デスクリプタセットレイアウトに不変サンプラを指定する機能を持つ。
+    - `vkDescriptorSetLayoutBinding::pImmutableSamplers`
+- PSO生成時にサンプラデータを渡す。
+    - サンプラをシェーダにコンパイルすることができる。
+- 不変サンプラはSMEM読み込みの代わりにSALU命令により構築することができる。
+    - シェーダでのレイテンシ量を減らす。
+    - SALUパイプはほぼ十分に活用されていない。
+
+# Descriptor Set Layout --- How descriptors are filled in descriptor pool GPU memory
+
+- デスクリプタは64バイトのキャッシュラインを持つK$を通して読み出される。
+    - キャッシュラインごとに2つのイメージデスクリプタか、4つのバッファデスクリプタか、その組み合わせを取れる。
+    - 大きなデスクリプタセットでは、デスクリプタにまばらなランダムアクセスをしないのが最善である。代わりに、使用の局所性を維持するためのグループを使う。
+    - "One Set Design"では、使用の局所性に沿ったキャッシュラインを維持するために副割り当てを行うのが最善である。
+- デスクリプタは`VkDescriptorSetLayoutBinding`に現れる順にGPUメモリにパックされる。
+    - GPUメモリマッピングへのレイアウト例。
+
+|レイアウト|デスクリプタのバイト数|メモリオフセット|キャッシュライン|
+|-|-|-|-|
+|`layout(set=0, binding=0) uniform sampler s0;`|16|0|0|
+|`layout(set=0, binding=1) uniform samplerBuffer sb0;`|16|16|0|
+|`layout(set=0, binding=2) uniform texture2D t0;`|32|32|0|
+|`layout(set=0, binding=3) uniform samplerBuffer sb[4];`|16*4=64|64|1|
+|`layout(set=0, binding=4) uniform texture2D t1[2];`|32*2=64|96|2|
+
+# Descriptor Pools --- Used to allocate descriptor sets
+
+- `VkDescriptorPoolCreateInfo::flags`は`0`にする。
+    - `FREE_DESCRIPTOR_SET_BIT`を使わない。
+        - プールは`vkFreeDescriptorSets`をサポートするためにフラグメンテーションを引き起こし得るドライバ管理パスに落ちる。
+        - ドライバ管理の動的メモリ割り当てを使う。
+    - `vkResetDescriptorPool`をサポートするだけのパスを使うことを提案する。
+        - デスクリプタプールは事前割当されたGPUとCPUメモリチャンクになる。
+        - アロケーションはオフセットを増加させるようなもの。
+    - 合理的な限界を設定することを忘れないこと。
+        - `VkDescriptorPoolCreateInfo::maxSets`はCPUメモリ量に影響する。
+    - Windowsでのデスクリプタプールはリソースの利用率に基づく可変マッピングを持つ。
+        - 合理的な限界を維持することで最速パスを有効化する。
+        - 最速パスは直接アクセス可能なGPUメモリの256MB最大ウィンドウを共有する。
+            - GCNデスクリプタは典型的には多くて32バイト(MBのGPUメモリあたりballparkの32Kデスクリプタ)。
+            - `vkUpdateDescriptorSets`はデスクリプタプールのGPUメモリに直接書き込む。
+            - `vkCopyDescriptorSet*`を使うと、CPUでGPUメモリを読み込んだ後GPUメモリに書き込む(単純に書き込むくらいに速くない)。
+
+# Updating Descriptor Sets --- Getting pipelined update, key for texture streaming with "One Set Design"
+
+- `vkUpdateDescriptorSets`の効果は即時であることができる(GPUメモリが書き込んでいる途中で関数が戻ることにより)。
+    - なので、使用中かもしれないデスクリプタに書き込むことはできない。
+    - テクスチャストリーミングするやつの挑戦。
+        - フレームの間でデスクリプタを更新したい。
+- パイプラインの更新のワークアラウンド。最小レイテンシのVRでの例。
+    - デスクリプタセットのコピー2つを維持する。
+        - 各フレームごとに切り替える。
+        - 使用中のときに更新するのをさけるために必要な同期を追加する。
+    - アップデートは他方へ行われ、次のフレームが新しいデスクリプタを得る。
+        - 次のフレームは他のコピーに次の更新を行い、次の次のフレームは新しいデスクリプタを得る。
+    - 同じデスクリプタにエイリアスサれていない更新である限り、`vkUpdateDescriptorSets`を複数スレッドから呼び出すことができる。
+
+# Summary --- "Bind-everything"
+
+- Vulkanで簡単なパスでもある高速なパスを示した。
+    - こぼれなしのUSER-DATAの高速パスを維持する。
+    - 複雑なデスクリプタセット管理なし。シンプルなパイプラインの更新モデルによる重複したデスクリプタセット。
+    - 1つのデスクリプタセットレイアウト。レイアウト互換性による複雑性をなくす。
+    - 主なデスクリプタセットのバインド呼び出しの除去。
+    - 各マテリアルで各フレームユニークなデスクリプタセットを再構築するオーバーヘッドの回避。
+    - その他。
+
+# Vulkan Fast Paths - Render Passes
+
+# Renderpasses --- What on earth is that?
 
 TODO
 
