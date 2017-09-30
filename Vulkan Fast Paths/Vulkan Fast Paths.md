@@ -223,6 +223,176 @@ numberSections: false
 
 # Renderpasses --- What on earth is that?
 
+- レンダパスはGPU処理と背中合わせのチャンクである。
+    - Vulkanオブジェクトにより表される。
+    - 1つ以上のサブパスを含む。
+    - すべてのレンダリングはレンダパスの内側で起こる。
+        - 単一のサブパスしか持っていなくても。
+    - サブパス間依存性はレンダパスの一部である。
+        - ドライバは未来の知識に基づいて仕事をスケジュールすることができる。
+        - ドライバは依存関係の知識からDAG(有向非巡回グラフ;Directed Acyclic Graph)を生成する。
+- レンダパスはドライバ用タイムマシンである！
+
+# Renderpass in Words --- A thousand words
+
+- 以下を考える。
+    - サブパス1はリソースAを生み出し、
+    - サブパス2により消費され、リソースBを生む。
+    - サブパス3はリソースCを生みだし、
+    - サブパス4により消費され、リソースDを生む。
+    - 最後に、サブパス5はリソースBとDを消費し、最終出力Eを生む。
+- なんやかんや書いてあるけど
+    - 要するにこれは、APIの呼び出し順のようなもの。
+
+# Renderpass in Pictures --- Seems like a fair trade
+
+![](assets/p22.png)
+
+# Creating Renderpasses --- Ok. How do I make one?
+
+- シンプルなAPI --- `vkCreateRenderPass`
+- レンダパスオブジェクトを生成する。
+    - `device`で使用可能。
+    - `pCreateInfo`の情報を使う。
+
+# Renderpass Infomation --- So, what's in a renderpass?
+
+- `VkRenderPassCreateInfo`構造に秘密がある。
+- アタッチメント、サブパス、依存性情報の配列。
+
+# Attachments --- Where am I drawing?
+
+- `VkAttachmentDescription`の配列。
+- レンダパスはいかなるアタッチメント数でも使う事ができる。
+    - これらはサブパスで参照される。
+
+# Attachments --- Where's the data?
+
+- 各アタッチメントは以下を含む。
+    - フォーマットとサンプル数。
+    - ロード処理 --- どこからデータを取ってくるか(メモリ、クリア、don't care)。
+    - ストア処理 --- どこへデータを送るか(メモリ、don't care)。
+        - ステンシル用は分かれている。
+    - レンダパスの初めと終わりに期待されるレイアウト。
+        - ドライバはレイアウト変更を挿入するだろう。
+
+# Subpasses --- Which bit am I drawing?
+
+- `VkSubpassDescription`の配列。
+- リファレンス色、深度ステンシル、入力(input)、解決(resolve)アタッチメント。
+
+# Color Attachments --- This is where your data goes
+
+- カラーアタッチメントの配列。
+- これらは普通のカラーアタッチメントである。
+    - レンダパスでのアタッチメントの総数は無制限。
+    - サブパスごとに参照されるカラーアタッチメントの数は限度がある。
+    -
+
+# Input Attachments --- Read from previous subpasses
+
+- 入力アタッチメントの配列。
+- 入力アタッチメントは前のサブパスの出力である。
+    - サブパス間のデータ依存性を表す。
+
+# Other Attachments --- More stuff
+
+- 解決、保護(preserve)、深度ステンシルのアタッチメント。
+- 解決アタッチメント: 解決させるMSAAアタッチメントを置く。
+- 深度ステンシルアタッチメント: 深度とステンシル。
+- 保護アタッチメント: 保護されなければならないアタッチメントのリスト。
+
+# Additional Dependencies --- Even more information
+
+- 追加の依存性情報。
+    - `VkRenderPassCreateInfo::pDependencies`
+- 副次的効果のために使われる。
+    - 例えば、後のサブパスで消費されるイメージかバッファに保存する場合とか。
+
+# Graph Building --- Can you DAG it?
+
+- ドライバはDAGを形成するためにレンダパス構造を使う。
+    - サブパスはデータを生み出し、消費する。
+    - リソースバリアはドライバが自動的に挿入する。
+    - レンダパス生成時にスケジューリング情報が生成される。
+- 1つのノードだけのDAGは役に立たない。
+    - 便利にするには、複数のサブパスをレンダパスに含める必要がある。
+
+# But Wait, There's More --- Order in the next 20 minutes
+
+- 内部ドライバ処理。
+    - アタッチメントは初期ステートと最終ステートを持つ。
+        - 例えば、クリアはサブパス開始の一部である。
+    - アタッチメントは出力から入力に進む。
+        - カラーキャッシュをflushして、テクスチャキャッシュを無効化して、レイアウトを変更して、フェンスを挿入する。
+    - いくつかのサーフェスはさらなる注意が必要である。
+        - 例えば、圧縮された深度はシェーダでは直接読み出せない。
+        - 内部ドライバ伸長が必要。
+
+# Load Ops --- Let's make things clear
+
+![](assets/p34.png)
+
+# Flush --- Make sure we all agree
+
+![](assets/p35.png)
+
+# Invalidate --- Make sure we really agree
+
+![](assets/p36.png)
+
+# Predicting the Future --- It's easy when you know how
+
+- レンダパスはドライバが未来を予測することを可能にする。
+    - 本当は予測ではない --- あなたが何をしようとしていたかを教えている。
+    - クリア、内部blits、キャッシュ処理などをスケジュールする。
+        - すべて静的に行われる。
+        - レンダパスが生成された時に。
+- 「俺ｽｰﾊﾟｰﾊｶｰwwwﾗｸｼｮｰwwww」
+    - まあ、無理だよ。
+    - いくつかの内部ドライバ処理はAPIに開示されていない。
+    - あるものはとあるハードウェアのみを必要とする。
+
+# Let's Get Crazy --- Doubling down on the nutty stuff
+
+- PSOはレンダパスに関して作られる。
+    - 各PSOはどのレンダパスとサブパスが一緒に使われるかを知っている。
+    - レンダパスはサブパスの出力がどこに行くかを知っている。
+    - レンダパスはすべてのアタッチメントのフォーマットを知っている。
+- 出力が使われなければ、省かれる。
+    - 出力における正確さを減らす。
+    - 未使用のチャネルを削除する。
+- 出力が直接消費される場合、
+    - レンダパスの特殊化により、PSOが焼き切れる(fuse)。
+
+# Sumary --- Recap
+
+- レンダパスはデータと実行フローをカプセル化する。
+    - ドライバは内部処理をスケジュールできる。
+    - 描画時の驚きを取り除く。
+    - 早期にデータの運命を決定する。
+- GPUパフォーマンスに対する大いなるチャンス。
+    - ストールやパイプラインバブル(pipeline bubbles)を排除する。
+    - レンダリングに伴う内部処理をインターリーブする。
+    - キャッシュの利用率を最適化する。
+    - データフローに基づくフォーマットと割り当て戦略を選択する。
+
+# Best Practice --- Do this
+
+- いくつかのサブパスの小さなレンダパスでも良い。
+    - 深度プリパス、Gバッファレンダリング、ライティング、ポストプロセス。
+- 依存性は必ずしも必要ではない。
+    - 複数の出力を生み出す複数のシャドウマップパス。
+- やろうとしていることはレンダパスに混ぜ込む。
+    - `vkCmdClearAttachment`よりLoadOpのクリアを推奨。
+    - 明示的なバリアよりレンダパスのアタッチメントで最終レイアウトを指定することを推奨。
+    - "don't care"を使うことを惜しまない。
+    - 解決アタッチメントを使ってMSAAを解決する。
+
+# Vulkan Fast Paths - Barriers & Sync
+
+# Barriers --- Why do we need them
+
 TODO
 
 # References
