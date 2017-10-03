@@ -54,13 +54,24 @@ numberSections: false
     - Forward ShadingからTiled Shadingまでのメジャーどころを総ざらい。
 - [x] [@Oosten2015] [[blog](https://www.3dgep.com/forward-plus/)]
     - Forward Shading、Deferred Shading、Forward+それぞれに対する実装の解説とパフォーマンスの比較。
+<!-- あとで読む -->
+- [ ] [@Drobot2017]
+    - "Call of Duty: IW"で用いたライト割り当ての改善方法。
+- [ ] [@Garawany2016]
+    - "Uncharted 4"で用いたDeferred Lighting。
 
 ### ライティング技術
 
 - [x] [@Heitz2016] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_d09ndGVjNVJzZjA)]
     - 多角形の面光源をリアルタイムで扱う手法。
+<!-- あとで読む -->
 - [ ] [@Heitz2017] [[slides](http://blog.selfshadow.com/publications/s2017-shading-course/heitz/s2017_pbs_ltc_lines_disks.pdf)]
     - 線光源と円光源をリアルタイムで扱う手法。
+
+### シャドウイング技術
+
+<!-- あとで読む -->
+- [ ] [@Lauritzen2010]
 
 ### HDRレンダリング
 
@@ -69,12 +80,15 @@ numberSections: false
 
 ### グローバル・イルミネーション
 
-- [ ] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
-    - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
 - [x] [@McLaren2015] [[slides](http://fumufumu.q-games.com/archives/TheTechnologyOfTomorrowsChildrenFinal.pdf), [video](http://www.gdcvault.com/play/1022428/The-Technology-of-The-Tomorrow)]
     - Q-Gamesが"Tomorrow Children"から得た、Voxel Cone Tracingの大規模な活用方法。
+<!-- あとで読む -->
 - [ ] [@McGuire2017] [[paper](https://casual-effects.com/research/McGuire2017LightField/McGuire2017LightField.pdf), [others](https://casual-effects.com/research/McGuire2017LightField/index.html)]
     - light field probeを用いたリアルタイムGI。
+- [ ] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
+    - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
+- [ ] [@Mara2016]
+    - Deep G-Buffer。
 
 ### レイトレージング
 
@@ -85,14 +99,22 @@ numberSections: false
 
 ### レンダリングエンジン
 
+- [x] [@ODonnell2017] [[slides](http://www.gdcvault.com/play/1024612/FrameGraph-Extensible-Rendering-Architecture-in)]
+    - EAの"Frostbite"が採用した、FrameGraph(依存関係を定義するしくみ)とTransientリソース(フレーム内でリソースを共有するしくみ)。
+- [x] [@Wihlidal2016] [[slides](https://www.gdcvault.com/play/1023109/Optimizing-the-Graphics-Pipeline-With)]
+    - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化。
+<!--  あとで読む -->
 - [ ] [@Lagarde2014] [[notes](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf)]
     - EAが"Frostbite"を物理ベースにするときに採用した方法とその知見。
 - [ ] [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
-- [x] [@ODonnell2017] [[slides](http://www.gdcvault.com/play/1024612/FrameGraph-Extensible-Rendering-Architecture-in)]
-    - EAの"Frostbite"が採用した、FrameGraph(依存関係を定義するしくみ)とTransientリソース(フレーム内でリソースを共有するしくみ)。
-- [ ] [@Wihlidal2016] [[slides](https://www.gdcvault.com/play/1023109/Optimizing-the-Graphics-Pipeline-With)]
-    - "Frostbite"における、ドローコールのバッチ処理とカリングの最適化事例。
+- [ ] [@Rodrigues2017]
+    - Ubisoftの"Anvil Next"をDirecX12に移行したときの知見。
+- [ ] [@Carpentier2017]
+    - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
+- [ ] [@Sousa2013]
+    - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど。
+
 
 #### ジョブシステム
 
@@ -123,12 +145,8 @@ numberSections: false
     - VulkanのチュートリアルとNVIDIAでの動き。
 - [x] [@Sellers2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-gdc/Khronos-Vulkan-Sessions-Part%20I_GDC_Mar16.pdf)]
     - Vulkanのメモリ管理についてのtips。
-- [ ] [@Sellers2016b] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/03/VulkanFastPaths.pdf)]
-    - Vulkanのデスクリプタ、レンダパス、バリアについてのtips。
-- [ ] [@Witczak2016] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/05/Most-common-mistakes-in-Vulkan-apps.pdf)]
-    - Vulkanのプラクティス集。
-- [ ] [@Schott2016] [[slides](http://developer.download.nvidia.com/gameworks/events/GDC2016/mschott_lbishop_gl_vulkan.pdf)]
-    - OpenGLとVulkanのtips。
+- [x] [@Sellers2016b] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/03/VulkanFastPaths.pdf)]
+    - GCNアーキテクチャにおけるVulkanのデスクリプタ、レンダパス、バリアのtips。
 - [x] [@Caloca2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
     - UnrealEngine4のVulkan対応で得られた知見。
 - [x] [@Gneiting2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
@@ -139,5 +157,20 @@ numberSections: false
     - レンダパスのtips。
 - [x] [@Archard2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
     - パイプラインキャッシュのtips。
+<!-- あとで読む -->
+- [ ] [@Witczak2016] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/05/Most-common-mistakes-in-Vulkan-apps.pdf)]
+    - Vulkanのプラクティス集。
+- [ ] [@Schott2016] [[slides](http://developer.download.nvidia.com/gameworks/events/GDC2016/mschott_lbishop_gl_vulkan.pdf)]
+    - OpenGLとVulkanのtips。
+- [ ] [@Themaister2017]
+    - フレームグラフベースレンダラの実装とそこからの知見。
+- [ ] [@Hodes2016]
+    - DirectX12のtips。
+- [ ] [@Hodes2017]
+    - 非同期コンピュートのAMDとNVIDIAのプラクティス。
+- [ ] [@Lorach2016]
+    - Vulkanのtips。
+- [ ] [@Thomas2016]
+    - DirectX12のプラクティス。
 
 ### References
