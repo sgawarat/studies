@@ -959,6 +959,58 @@ illuminance *= FB_PI;
 
 ![球型エリアライティング。緑色のハイライトは、一般に地平線ハンドリングなしの式$\frac{radius^2}{distance^2}\langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle$を使っている所なので、正確である。左:小さなエリアライトでは、ライティングのほとんどが正しい。右:大きなエリアライトでは、正確な結果を表す範囲が減少している。故に、正しい値はライトが地平線と交差していないか対応する立体角が小さい所の陰影付けされる点に限られることが分かる。](assets/Figure36.png){#fig:36}
 
+**備考**: [@sec:4.7.1]は光量単位を使うと照明レベルをライト面積から独立させるということに言及している。(一般性を失わずに)地平線ハンドリングをしない式を使うことで、光量$\phi$を伴う球型エリアライトの照度は以下で求められる。
+
+$$
+E = L_{\text{in}} \pi \text{FormFactor} = \frac{\phi}{4 \pi^2 r^2} \pi \frac{r^2}{d^2} \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle = \frac{\phi}{4\pi d^2} \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle
+$$ {#eq:38}
+
+この式は($\langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle = 1$としたときの)ポイントライトの照度([@eq:19])と一致し、球表面の面積と独立している。これは[@sec:4.4]の現実世界の測定結果とも一致する。
+
+#### ディスク型エリアライト(Disk area lights)
+
+![ディスク型エリアライト。左:傾いたパッチ$dA$と向きを持たない(向き合った)ディスクの単純なケース。中と右:ディスクとパッチ$dA$が無作為に向きを持ち、地平線より下にある可能性がある一般的なケース。](assets/Figure37.png){#fig:37}
+
+- @Coombe2005 は向きを持ったディスクに対する正確な地平線ハンドリングを持たない解法を提案する。球のときと同じように、地平線の上だけでは十分ではなく、数式は地平線より上の小さな対応する立体角と制約方向(constraint orientation)でのみ働く。
+- 放射輸送の一覧表(catalogue)の構成[@Howell2015]は地平線の場合を正しく扱うが、傾いた平面と方向を持たないディスクに限られる([@fig:37]参照)。ディスクの方向を計算に入れるため、我々は数式にライト平面の法線$\boldsymbol{n}_{\text{light}}$を持つ追加の$\langle \boldsymbol{n}_{\text{light}} \cdot -\boldsymbol{l} \rangle$をかける。この追加は制限された方向の中での地平線の上と小さな対応する立体角でリファレンスと一致させることができるが、その他の場合では小さな食い違い(discrepancy)がある。我々の目的では十分に良い結果を出している。
+
+これら2つのケースの式は[@lst:8]に報告され、結果は[@fig:38]に示される。
+
+![左:正しい水平線ハンドリングを持つディスク型エリアライトの結果。右:リファレンス。](assets/Figure38.png){#fig:38}
+
+~~~ {.c .numberLines id="lst:8"}
+float cot(float x) { return cos(x) / sin(x); }
+float acot(float x) { return atan(1 / x); }
+
+#if WITHOUT_CORRECT_HORIZON  // 水平線より上の解析解
+
+// フォームファクタの式は打ち消される必要がある(1 / FB_PI)を持つ。
+// そのためilluminanceは"FB_PI *"を持つ。
+float illuminance = FB_PI * saturate(dot(planeNormal, -L)) * saturate(dot(worldNormal, L)) / (sqrDist / (radius * radius) + 1);
+
+#else  // 水平線ありの解析解
+
+// ほぼ厳密解
+float h = length(lightPos - worldPos);
+float r = lightRadius;
+float theta = acos(dot(worldNormal, L));
+float H = h / r;
+float H2 = H * H;
+float X = pow((1 - H2 * cot(theta) * cot(theta)), 0.5);
+
+float illuminance = 0;
+if (theta < acot(1 / H)) {
+    illuminance = (1 / (1 + H2)) * cos(theta);
+} else {
+    illuminance = -H * X * sin(theta) / (FB_PI * (1 + H2)) + (1 / FB_PI) * atan(X * sin(theta) / H) + cos(theta) * (FB_PI - acos(H * cot(theta))) / (FB_PI * (1 + H2));
+}
+
+// saturate(dot(planeNormal, -L))をかけたほうがground truthと良く一致する。式の第一の部分と良くマッチするが、第2の部分とは食い違いが起こる。まだ改良途中だが、十分良好な結果を示している。
+illuminance *= FB_PI * saturate(dot(planeNormal, -L));
+#endif
+~~~
+: ディスク型エリアライトの照度。
+
 **備考**: TODO
 
 ### () {id="sec:4.7.3"}
