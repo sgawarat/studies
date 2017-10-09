@@ -274,6 +274,169 @@ for (uint wordIndex = wordMin; wordIndex <= wordMax; wordIndex++) {
 
 # Rasterization based culling
 
+# Classic compute culling issues
+
+- 正確性。[Wro2017]
+- オクルージョン。[Kas2011]
+- 複雑な形状。[Heitz2016]
+
+- 解決策？
+    - Classic Rasterized Deferred Rendering [Har2004]
+
+# Conservative Rasterized Culling
+
+- ライトはメッシュである(ライトプロキシ)。
+- タイル/クラスタにアトミックに書き込む。
+    - Flat Bit ArrayのlightBitをInterlockedORする。
+- ハードウェアサポートのない保守的ラスタライゼーション。
+    - フル解像度でラスタライズする。
+    - 高速化のために4xMSAA。[Drobot2017]
+- 固定パイプラインのハードウェア最適化。
+    - 早期Z(HiZ)
+    - 深度境界テスト(HiZ)
+    - ステンシル(HiS)
+<!--  -->
+- 1パスでのタイルラスタライゼーション。
+    - ライトメッシュボリュームの中にあるピクセルはPSを実行し、タイルにlightBitをInterlockORする。
+    - カメラがライトメッシュの内にある場合、
+        - ZモードをGREATERにして、
+        - 背面をレンダリングする。
+    - カメラがライトメッシュの外にある場合、
+        - ZモードをLESS_EQUALにして、
+        - 前面をレンダリングする。
+        - メッシュのZ範囲(spans)に深度境界テストを設定する。
+<!--  -->
+- 2パスでのタイルラスタライゼーション。
+    - カメラがライトメッシュの外にある場合、(2パスのピクセルパーフェクトテスト)
+        - 第1パスで前面をステンシルする。
+        - 第2パスで背面をステンシルして、PSを実行する。
+        - 詳しくは[Thi2011]を参照。
+
+~~~c
+// Flat Bit Arrayで使う。
+[earlydepthstencil] // UAVありでEarlyZが有効か確かめる
+void ps_main(const PixelInput pixel) {
+    uint tileIndex = FrustumGrid_TileFromScreenPos(rasterizerScale * pixel.position.xy); // MSAAラスタライザにスケールする
+    uint lightIndex = uint(entityID.x);
+    const uint lightBit = 1 << (lightIndex % 32); // 正しいライトビットを見つける
+    const uint word = lightIndex / 32;
+    const uint wordIndex = (tileIndex * FRUSTUM_GRID_FRAME_WORDS_LIGHTS) + word; // 正しいワードを見つける
+    {
+        InterlockedOr(lightMasksTile[wordIndex], lightBit); // 正しいワードにあるライトビットを更新する
+    }
+}
+~~~
+
+# Atomic Contention
+
+- ピクセルごとにピクセルより粗いタイルごとの値に書き込むため、重複した無駄な書き込みが発生する。
+- タイルIDでアトミックの余剰分を取り除く(prune)必要がある。
+
+~~~c
+uint WaveCompactValue(uint checkValue) {
+    ulong mask;  // レーンユニークなコンパクションマスク
+    for (;;) {  // すべてのアクティブなレーンが取り除かれるまでループする
+        uint firstValue = WaveReadFirstLane(checkValue);
+        mask = WaveBallot(firstValue == checkValue); // マスクは残りのアクティブレーンに対してのみ更新される
+        if (firstValue == checkValue) break; // 次の反復由来のfirstValueを持つレーンすべてを除外する
+    }
+
+    // この地点では、マスクの各レーンは同じ値を持つ異なるすべてのレーンのビットマスクを含むべき。
+    uint index = WavePrefixCountBits(mask); // これは各レーンに対して異なるマスクで独立して行われることに注目。
+
+    return index;
+}
+
+// Flat Bit Arrayで使う。
+[earlydepthstencil] // UAVありでEarlyZが有効か確かめる
+void ps_main(const PixelInput pixel) {
+    uint tileIndex = FrustumGrid_TileFromScreenPos(rasterizerScale * pixel.position.xy); // MSAAラスタライザにスケールする
+    uint lightIndex = uint(entityID.x);
+    const uint lightBit = 1 << (lightIndex % 32); // 正しいライトビットを見つける
+    const uint word = lightIndex / 32;
+    const uint wordIndex = (tileIndex * FRUSTUM_GRID_FRAME_WORDS_LIGHTS) + word; // 正しいワードを見つける
+
+    const uint key = (wordIndex << FRUSTUM_GRID_MAX_LIGHTS_LOG2);
+    const uint hash = WaveCompactValue(key);
+
+    [branch]
+    if (hash == 0) {  // wavefront内でユニークキーが初めて発生したときのみ分岐する。
+        InterlockedOr(lightMasksTile[wordIndex], lightBit); // 正しいワードにあるライトビットを更新する
+    }
+}
+~~~
+
+# Tile Rasterizer Performance
+
+|アルゴリズム|カリング時間|
+|-|-|
+|Atomic Raster|1.44ms(100%)|
+|Atomic Raster + 4xMSAA|0.27ms(18%)|
+|Atomic Raster + Compaction|0.36ms(25%)|
+|Atomic Raster + Compaction + 4xMSAA|0.10ms(7%)|
+: 3x フルシーンライト - 240x135 - (PS4)
+
+- 多くの最適化バリアントは、per draw basisで十分な活用がなされていないことから、セットアップに縛られ始める。
+- バッチ処理が必要である。
+- 非同期コンピュートによる並列化が良い候補である。
+
+# Cluster Rasterizer
+
+- ライトメッシュボリュームの内にあるクラスタでlightBitを保守的にマークする。
+- カメラがライトメッシュ(コンベックス)の内にある場合、
+    - 背面をレンダリングする。
+    - near平面から保守的な背面の深度にZ方向にクラスタを渡り歩く。
+        - プリパスから早期リジェクトまで保守的深度を使う --- 可能ならば。
+<!--  -->
+- カメラがライトメッシュの外にある(または、非コンベックスの内にある)場合、
+    - 第1パス: MARK
+        - 背面をレンダリングする。
+        - 背面と保守的に交差するクラスタをマークする。
+    - 第2パス: WALK
+        - 前面をレンダリングする。
+        - マークされたクラスタに当たるまで前面の保守的深度からクラスタを渡り歩く。
+        - プリパスから早期リジェクトまで保守的深度を使う --- 可能ならば。
+
+# Triangle Conservative Depth
+
+- MARK/WALKはトライアングルに対する保守的深度を必要とする。
+
+~~~c
+// 微分からトライアングルの深度境界を推定する
+// 微分はほぼWQMを起動するようなもの。レーン幅の処理が正しく振る舞うことを確かめる。
+// Derivatives will most likely trigger WQM! Make sure your lane wide operations behave correctly
+float w = pixel.position.w;
+float wDX = ddx_fine(w);
+float wDY = ddy_fine(w);
+tileMinW = max(tileMinW, w - abs(wDX) - abs(wDY));
+tileMaxW = min(tileMaxW, w + abs(wDX) + abs(wDY));
+// トライアングル頂点の深度チェックからトライアングル深度境界を推定する。[@Drobot2014]
+// トライアングルの外にある微分の場合に保守的にカリングする。
+float w0 = GetVertexParameterP0(pixel.posW);
+float w1 = GetVertexParameterP1(pixel.posW);
+float w2 = GetVertexParameterP2(pixel.posW);
+tileMinW = max(tileMinW, min3(w0, w1, w2));
+tileMaxW = min(tileMaxW, max3(w0, w1, w2));
+~~~
+: [Drobot2014]。WQM = WHOLE_QUAD_MODE([参考](https://www.x.org/docs/AMD/old/AMD_HD_6900_Series_Instruction_Set_Architecture.pdf))
+
+# Cluster Rasterizer Performance
+
+|アルゴリズム|カリング時間|
+|-|-|
+|Atomic Raster|0.99ms(100%)|
+|Atomic Raster + 4xMSAA|0.51ms(55%)|
+|Atomic Raster + Compaction|0.66ms(73%)|
+|Atomic Raster + Compaction + 4xMSAA|0.32ms(35%)|
+: Zombiesオープニングシーンの256個のライト - 60x40x32 - (PS4)
+
+- より十分な活用がなされず、XY解像度が低いため、タイルよりスケーリングが鈍い。
+- バッチ処理が必要である。
+- WALKモードのためレイテンシーが高い。
+- 非同期コンピュートによる並列化が良い候補である。
+
+# Light Proxy
+
 TODO
 
 # References
