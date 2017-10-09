@@ -189,6 +189,91 @@ for (uint wordIndex = wordMin; wordIndex <= wordMax; wordIndex++) {
 
 # Z-Binning
 
+||深度の非連続性|空間解像度|Zによるメモリスケーリング|
+|-|-|-|-|
+|タイル|-|+|+|
+|クラスタ|+|-|-|
+
+- オープンワールドの深度範囲。
+    - 深度の複雑さが大きい所では高効率なクラスタリングのパフォーマンスやメモリは実践的ではない。
+
+# F+ Renderer: Z-binning algorithm
+
+- CPU:
+    - ライトをZでソートする。
+    - 可能性のある深度の合計範囲の上に均一に分布するbin(容器)を設定する。
+    - 各bin境界内の最大最小のライトIDを持つ16ビットLUTを2つ生成する。
+- GPU(PSかCS):
+    - Vector load ZBIN
+    - Wave uniform LIGHT MIN / MAX ID
+    - Wave uniform LOAD of light bit WORDS from MIN / MAX range
+    - ライトの最大最小IDからベクトルビットマスクを生成する。
+    - ベクトルZ-Binマスクでユニフォームのライトをマスクする。
+
+~~~c
+// Z-Binのマスクされたワードを持つエンティティでスカラ化されたフラットビット配列のイテレータ
+wordMin = 0;
+wordMax = max(MAX_WORDS - 1, 0);
+address = containerAddressFromScreenPosition(screenCoords.xy);
+
+zbinAddr = ContainerZBinScreenPosition(screenCoords.z);
+zbinData = maskZBin.TypedLoad(zbinAddr, TYPEMASK_NUM_DATA(FORMAT_NUMERICAL_UINT, FORMAT_DATA_16_16));
+minIdx = zbinData.x;
+maxIdx = zbinData.y;
+mergedMin = WaveReadFirstLane(WaveAllMin(minIdx)); // この点からのスカラ値
+mergedMax = WaveReadFirstLane(WaveAllMax(maxIdx)); // この点からのスカラ値
+wordMin = max(mergedLightMin / 32, wordMin);
+wordMax = min(mergedLightMax / 32, wordMax);
+
+// 可視性ビットのワードの範囲を読む
+for (uint wordIndex = wordMin; wordIndex <= wordMax; wordIndex++) {
+    // レーンごとにビットマスクデータを読み込む
+    mask = entityMasksTile[address + wordIndex];
+    // ZBinマスク単位によるマスク
+    localMin = clamp((int)minIdx - (int)(wordIndex * 32), 0, 31);
+    uint maskWidth = clamp((int)maxIdx - (int)minIdx + 1, 0, 32);
+    // BitFieldMask命令は手動で32のサイズラップをサポートする必要がある
+    uint zbinMask = maskWidth == 32 ? (uint)(0xFFFFFFFF) : BitFieldMask(maskWidth, localMin);
+    mask &= zbinMask;
+    // wavefrontのすべてのレーン上のワードビットマスクをコンパクト化する
+    mergedMask = WaveReadFirstLane(WaveAllBitOr(mask));
+    while (mergedMask != 0) {  // マージされたビットマスク上で処理されるスカラ値
+        bitIndex = firstbitlow(mergedMask);
+        entityIndex = 32 * wordIndex + bitIndex;
+        mergedMask ^= (1 << bitIndex);
+        ProcessEntity(entityIndex);
+    }
+}
+~~~
+
+# F+ Renderer: Memory Performance
+
+|構造(256ビット配列)|XY解像度|Z解像度|複雑さ|ストレージ|エンティティあたりのカリング処理数|
+|-|-|-|-|-|-|
+|Tiled Buffer|240x135|1|O(X*Y)|1036KB|32400|
+|Tiled+ZBin|240x135|8096|O(X*Y+Z)|1036KB+32KB|32400+8096(単純)|
+|Clustered|60x32|18|O(X*Y\*Z)|1106KB|34560|
+
+# F+ Renderer: Z-Bin Performance
+
+|構造(256ビット配列)|不透明レンダリング時間|
+|-|-|
+|Tiled Buffer|9.00ms|
+|Tiled+Zbin|7.65ms(15%削減)|
+: Hangar Fire Scene (PS4 1080p)
+
+# F+ Renderer: Optimization Performance
+
+|構造(256ビット配列)|不透明レンダリング時間|不透明パスの平均占有率|
+|-|-|-|
+|Base Tile|5.7ms(100%)|~3|
+|Based Tile+Zbin|5.2ms(91%)|~3|
+|Scalarized Tile|5.1ms(88%)|~4.3|
+|Scalarized Tile+Zbin|4.6ms(80%)|~4.3|
+: Zombies opening scene (PS4 1080p)
+
+# Rasterization based culling
+
 TODO
 
 # References
