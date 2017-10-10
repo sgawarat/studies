@@ -1011,7 +1011,99 @@ illuminance *= FB_PI * saturate(dot(planeNormal, -L));
 ~~~
 : ディスク型エリアライトの照度。
 
-**備考**: TODO
+**備考**: 球ライトとポイントライトの比較と同じく、ディスクを一定の光量を持つFrostbiteのスポットライトの照度の式と比較する。地平線ハンドリングを持たない(一般性を失わずに)数式を使うことで、光量$\phi$を持つディスク型エリアライトの照度は以下で求められる。
+
+$$
+E = L \pi \text{FormFactor} = \frac{\phi}{\pi^2 radius^2} \pi \frac{radius^2}{distance^2 + radius^2} \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle = \frac{\phi}{\pi distance^2 + \pi radius^2} \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle
+$$ {#eq:39}
+
+Frostbiteでスポットライトの光量のために選ばれた変換は光量単位の特性を模倣することを目標としている。この式と[@eq:21]は($\langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle = 1$のときに)近く、(半径が減少すると追加の項が消えるので、)一方から他方へ滑らかにフェードすることができる([@fig:39]参照)。つまり、照明レベルが光量を伴う面積とは無関係であるという言明(statement)は我々の光量の近似では完全に正しいわけではないが、それが十分に機能することを発見した。
+
+![スポットライト(左)と大きな半径を持つディスクライト(右)の照度の比較。全体の照明レベルは一定のままであり、(球のような)ディスク近くのオブジェクトの小さな領域はディスクの方ではく若干暗くなっていることに注目。](assets/Figure39.png){#fig:39}
+
+ディスク型エリアライトはFrostbiteではスポットライトに似ており、角減衰(angular attenuation)をサポートする。この角減衰はスポットライトの遷移を滑らかにするために現実的なこと考えずに照度に対して単純に適用される。角減衰はエリアライトでシャドウを計算する方法と同じようにライトの位置を偽ることによってスポットライトのときと同じ式で得られる。[@lst:9]と[@sec:4.10.4]を参照。
+
+~~~ {.c .numberLines id="lst:9"}
+// CPUで
+float3 virtualPoint = lightPos + lightForward * (discRadius / tan(halfOuterAngle));
+
+// GPUで
+// ライトの位置を外側の角度に基づいた量だけライトの反対方向にシフトした仮想的な位置で減衰する
+illuminance *= getAngleAtt(normalize(virtualPos - worldPos), lightForward, lightAngleScale, lightAngleOffset);
+~~~
+: 角減衰を含むディスク型エリアライトの照度。
+
+#### 球型とディスク型のエリアライトのマージ(Sphere and disk area light merging)
+
+三角関数の恒等式(trigonometric identities)を使うと、正しい地平線ハンドリングを伴う球型とディスク型のエリアライトの数式が似ていることを示すことができる。これらは対応する角度によってのみ異なるため、評価コードを共有することができる。[@lst:10]にその詳細を示す。高価な逆三角関数はAMDのGCNアーキテクチャにおいて効率的に近似することができる[Drobot2014c]。
+
+~~~ {.c .numberLines id="lst:10"}
+// 正しいディスクというのは常に照らす表面の方を向いているものである。
+// 球と正しいディスクの立体角は2 * PI * (1 - cos(対応する角度))である。
+// 対応する角度sigmaは、球だとarcsin(r / d)であり、正しいディスクだとatan(r / d)である。
+// sinSigmaSqr = sin(対応する角度)^2は、球だと(r^2 / d^2)であり、ディスクだと(r^2 / (r^2 + d^2))である。
+// cosThetaはクランプされていない。
+float illuminanceSphereOrDisk(float cosTheta, float sinSigmaSqr) {
+    float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
+
+    float illuminance = 0.0f;
+    // メモ: 以下のテストはオリジナルの式と等価である。
+    // 曲線には以下の3つのフェーズが存在する。
+    //     cosTheta > sqrt(sinSigmaSqr)のとき、
+    //     cosTheta > -sqrt(sinSigmaSqr)のとき、
+    //     0のとき。
+    // 上２つはcosTheta * cosTheta > sinSigmaSqrとすることで１つにでき、
+    // 代わりにsaturate(cosTheta)を用いる。
+    if (cosTheta * cosTheta > sinSigmaSqr) {
+        illuminance = FB_PI * sinSigmaSqr * saturate(cosTheta);
+    } else {
+        float x = sqrt(1.0f / sinSigmaSqr - 1.0f);  // ディスクではx = d / rに単純化する
+        float y = -x * (cosTheta / sinTheta);
+        float sinThetaSqrtY = sinTheta * sqrt(1.0f - y * y);
+        illuminance = (cosTheta * acos(y) - x * sinThetaSqrtY) * sinSigmaSqr + atan(sinThetaSqrtY / x);
+    }
+    return max(illuminance, 0.0f);
+}
+
+// 球の評価
+float cosTheta = clamp(dot(worldNormal, L), -0.999, 0.999);  // エッジケースを避けるためにクランプする
+// オブジェクトが表面を貫通するのを防ぐ必要がある
+// なので、0で割るのを避けなければならず、0.9999fとする
+float sqrLightRadius = lightRadius * lightRadius;
+float sinSigmaSqr = min(sqrLightRadius / sqrDist, 0.9999f);
+float illuminance = illuminanceSphereOrDisk(cosTheta, sinSigmaSqr);
+
+// ディスクの評価
+float cosTheta = dot(worldNormal, L);
+float sqrLightRadius = lightRadius * lightRadius;
+// ライトを表面に貫通させない
+float sinSigmaSqr = sqrLightRadius / (sqrLightRadius + max(sqrLightRadius, sqrDist));
+// ground truthとのさらなる一致のために、saturate(dot(planeNormal, -L))をかける
+float illuminance = illuminanceSphereOrDisk(cosTheta, sinSigmaSqr) * saturate(dot(planeNormal, -L));
+~~~
+: 球型とディスク型のエリアライトの照度。
+
+#### 矩形型エリアライト(Rectangular area lights)
+
+![矩形型エリアライト。左:矩形の法線がパッチ$dA$を指している単純なケース。中と右:矩形の法線が無作為に向きを持ち、地平線より下にある可能性がある一般的なケース。](assets/Figure40.png){#fig:40}
+
+我々は矩形ライトに対する正しい地平線ハンドリングを持つ手頃な(affordable)フォームファクタの解を見つけられなかった。[@fig:40]は様々な構成を強調している。そこで、代替となる解を探した。万全を期すため、我々は地平線ハンドリングを持たない矩形ライトのフォームファクタを[@sec:E]で提供する。
+
+**最も代表的な点(Most representative point)**: @Drobot2014b は*ライトの立体角で重み付けされた単一の代表的なディフューズポイントライト*で照度の積分を近似することを提案している。
+
+$$
+E(n) = \int_{\Omega_{\text{light}}} L_{\text{in}} \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle d \boldsymbol{l} \approx \Omega_{\text{light}} L_{\text{in}} \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle
+$$ {#eq:40}
+
+この近似は小さな立体角において妥当である。これは$\boldsymbol{l}$を上手に選ぶことで改善し、より大きな立体角に拡張することができる。$\boldsymbol{l}$は陰影付けされる点から*最も代表的な点(MRP)*と呼ばれるエリアライトの点へ向かう方向を指す。MRPはディフューズライティングの積分を計算したときに最も大きな値となる点である。この手法は、ライトの位置がMRPに移動するため、地平線の場合を正しく扱う。これは地平線を計算に入れることで立体角を正しく計算すること、立体角の中にMRPが存在することを暗に示している。残念ながら、これはコストのかかる処理である。立体角は以下の積分により計算できる。
+
+$$
+\Omega_{\text{light}} = \int_{\Omega^+} V(\boldsymbol{l}) d\boldsymbol{l} = \int_{\Omega_{\text{light}}} d\boldsymbol{l}
+$$ {#eq:41}
+
+この数式は$L$と$\langle \boldsymbol{l} \cdot \boldsymbol{n} \rangle$のない照度の積分と似ている用に見える。フォームファクタと同じような流れで数値的か解析的かのいずれかで解くことができる。向きを持つ矩形の立体角の解析的な数式は[@Urena2013]で提供されるが、地平線ハンドリングを持たない。
+
+TODO
 
 ### () {id="sec:4.7.3"}
 
