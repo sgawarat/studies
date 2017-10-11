@@ -75,31 +75,31 @@ numberSections: false
 ![](assets/p11.png)
 
 ~~~c
-// Typical Hierarchical Container iterator
-address = containerAddressFromSamplePosition(samplePosition); // Find address of container for 2D / 3D position
-// First entry is the header. Read and advance pointer
+// 典型的な階層的コンテナイテレータ
+address = containerAddressFromSamplePosition(samplePosition); // 2D及び3D位置からコンテナのアドレスを見つける
+// 初めのエントリはそのヘッダ。読み出して、ポインタを進める
 header = g_EntityClusterData[address++];
 entityCount = GetEntityCountFromHeader( header );
-// Iterate over entities inside the container
+// コンテナ内のエンティティを反復する
 for ( entityItr = 0; entityItr < entityCount; entityItr++)
     ProcessEntity(g_EntityClusterData[address++]);
 ~~~
 
 ~~~c
-// Hierarchical Container iterator scalarized over containers
-address = containerAddressFromSamplePosition(samplePosition); // Find address of container for 2D / 3D position
+// コンテナ上でスカラ化した階層的コンテナイテレータ
+address = containerAddressFromSamplePosition(samplePosition); // 2D及び3D位置からコンテナのアドレスを見つける
 uniformAddress = address;
 currentLaneID = WaveGetLaneIndex();
-execMask = ~ulong(0); // init mask to 111...111 – open for all lanes
+execMask = ~ulong(0); // 111...111にマスクを初期化する – すべてのレーンを開放する
 ulong currentLaneMask = ulong(ulong(1) << ulong(currentLaneID));
-while ((execMask & currentLaneMask) != 0) {  // set EXEC to remaining lanes
+while ((execMask & currentLaneMask) != 0) {  // 残りのレーンにEXECをセットする
     uniformAddress = WaveReadFirstLane(address);
-    laneMask = WaveBallot(uniformAddress == address); // mask of lanes to be processed in current iteration
-    execMask &= ~laneMask; // remove currently alive lanes from mask
-    if (uniformAddress == address) { // execute for lanes with matching coherent address
-        header = g_EntityClusterData[uniformAddress++]; // First entry is the header. Read and advance pointer
+    laneMask = WaveBallot(uniformAddress == address); // 現在のイテレーションで処理されるレーンのマスク
+    execMask &= ~laneMask; // マスクから現時点で生きているレーンを取り除く
+    if (uniformAddress == address) { // コヒーレントなアドレスに一致するレーンを実行する
+        header = g_EntityClusterData[uniformAddress++]; // 初めのエントリはそのヘッダ。読み出してポインタを進める
         entityCount = GetEntityCountFromHeader(header);
-        // Iterate over entities inside the container
+        // コンテナ内のエンティティを反復する
         for (entityItr = 0; entityItr < entityCount; entityItr++)
             ProcessEntity(g_EntityClusterData[uniformAddress++]);
     }
@@ -127,15 +127,15 @@ while ((execMask & currentLaneMask) != 0) {  // set EXEC to remaining lanes
 ![](assets/p15.png)
 
 ~~~c
-// Typical Flat Bit Array iterator
+// 典型的なFlat Bit Arrayイテレータ
 wordMin = 0;
 wordMax = max(MAX_WORDS - 1, 0);
 address = containerAddressFromSamplePosition(samplePosition);
-// Read range of words of visibility bits
+// 可視性ビットのワードの範囲を読む
 for (uint wordIndex = wordMin; wordIndex <= wordMax; wordIndex++) {
     // Load bit mask data per lane
     mask = entityMasksTile[address + wordIndex];
-    while ( mask != 0 ) { // processed per lane
+    while ( mask != 0 ) { // レーンごとに処理される
         bitIndex = firstbitlow( mask );
         entityIndex = 32 * wordIndex + bitIndex;
         mask ^= (1 << bitIndex);
@@ -145,17 +145,17 @@ for (uint wordIndex = wordMin; wordIndex <= wordMax; wordIndex++) {
 ~~~
 
 ~~~c
-// Flat Bit Array iterator scalarized on entity
+// エンティティでスカラ化されたFlat Bit Arrayイテレータ
 wordMin = 0;
 wordMax = max(MAX_WORDS -1, 0);
 address = containerAddressFromSamplePosition(samplePosition);
-// Read range of words of visibility bits
+// 可視性ビットのワードの範囲を読む
 for (uint wordIndex = wordMin; wordIndex <= wordMax; wordIndex++) {
-    // Load bit mask data per lane
+    // レーンごとにビットマスクデータを読み込む
     mask = entityMasksTile[address + wordIndex];
-    // Compact word bitmask over all lanes in wavefront
+    // wavefrontの全てのレーンでワードのビットマスクをコンパクト化する
     mergedMask = WaveReadFirstLane(WaveAllBitOr(mask));
-    while (mergedMask != 0) { // processed scalar over merged bitmask
+    while (mergedMask != 0) { // マージする得たビットマスクうでスカラを処理する
         bitIndex = firstbitlow(mergedMask);
         entityIndex = 32 * wordIndex + bitIndex;
         mergedMask ^= (1 << bitIndex);
@@ -276,12 +276,12 @@ for (uint wordIndex = wordMin; wordIndex <= wordMax; wordIndex++) {
 
 # Classic compute culling issues
 
-- 正確性。[Wro2017]
-- オクルージョン。[Kas2011]
-- 複雑な形状。[Heitz2016]
+- 正確性。[@Wronski2017]
+- オクルージョン。[@Kasyan2011]
+- 複雑な形状。[@Heitz2016]
 
 - 解決策？
-    - Classic Rasterized Deferred Rendering [Har2004]
+    - Classic Rasterized Deferred Rendering [@Hargreaves2004]
 
 # Conservative Rasterized Culling
 
@@ -290,7 +290,7 @@ for (uint wordIndex = wordMin; wordIndex <= wordMax; wordIndex++) {
     - Flat Bit ArrayのlightBitをInterlockedORする。
 - ハードウェアサポートのない保守的ラスタライゼーション。
     - フル解像度でラスタライズする。
-    - 高速化のために4xMSAA。[Drobot2017]
+    - 高速化のために4xMSAA。[@Drobot2017b]
 - 固定パイプラインのハードウェア最適化。
     - 早期Z(HiZ)
     - 深度境界テスト(HiZ)
@@ -310,7 +310,7 @@ for (uint wordIndex = wordMin; wordIndex <= wordMax; wordIndex++) {
     - カメラがライトメッシュの外にある場合、(2パスのピクセルパーフェクトテスト)
         - 第1パスで前面をステンシルする。
         - 第2パスで背面をステンシルして、PSを実行する。
-        - 詳しくは[Thi2011]を参照。
+        - 詳しくは[@Thibieroz2011]を参照。
 
 ~~~c
 // Flat Bit Arrayで使う。
@@ -418,7 +418,7 @@ float w2 = GetVertexParameterP2(pixel.posW);
 tileMinW = max(tileMinW, min3(w0, w1, w2));
 tileMaxW = min(tileMaxW, max3(w0, w1, w2));
 ~~~
-: [Drobot2014]。WQM = WHOLE_QUAD_MODE([参考](https://www.x.org/docs/AMD/old/AMD_HD_6900_Series_Instruction_Set_Architecture.pdf))
+: [@Drobot2014]。WQM = WHOLE_QUAD_MODE([参考](https://www.x.org/docs/AMD/old/AMD_HD_6900_Series_Instruction_Set_Architecture.pdf))
 
 # Cluster Rasterizer Performance
 
@@ -437,6 +437,83 @@ tileMaxW = min(tileMaxW, max3(w0, w1, w2));
 
 # Light Proxy
 
-TODO
+- 解析的ライト形状は遮蔽関係を尊重しない。
+- 高価な過剰なシェーディングが結果として起こる。
+    - シャドウマップにより見た目として正しくなる。
+<!--  -->
+- ライトプロキシのジオメトリはレベルジオメトリにタイトに切り詰められる(最大300トライアングル)。
+- 正確なカリングが結果として起こる。
+- 最小限の過剰なシェーディング。
+<!--  -->
+- プロキシはすべてのステーショナリーライトに対して生成される。
+    - 保守的シャドウマップレンダリング。
+    - 保守的シャドウマップの三角形化。
+        - 三角形化の最適化。
+    - 少ないトライアングルのプロキシのための保守的シャドウマップの深度への貪欲な平面フィッティング。
+<!--  -->
+- 8x8タイルバッファを生成するために使われる。
+    - マスクされていなければ、プロキシの交差は視覚的に8x8タイルの"厳しい"ものになる。
+    - 静的シャドウマップはすべてのライトに必要。
+    - シャドウマップキャッシング[@Drobot2017b]を使う。
+
+# Light Proxy Performance
+
+|ライト形状|フレーム時間|
+|-|-|
+|デフォルト|16.5ms|
+|ライトプロキシ|15.6ms|
+: Open vista in Zombies (最小のライトオクルージョン) - (PS4)
+
+|ライト形状|フレーム時間|
+|-|-|
+|デフォルト|17.5ms|
+|ライトプロキシ|14.4ms|
+: Space ship corridor (良好なライトオクルージョン) - (PS4)
+
+- 非同期オーバーラップの良い候補。
+    - 仕事の大多数はGPUの固定パイプラインを利用する。
+    - 長いアトミックキュー。
+    - 長いWALKループ。
+- "単純な"ケースではCSベースカリングジョブで良いバランスを取る。
+
+# Improvements
+
+- さらなるレンダリングエンティティへプロキシを拡張する。
+    - 複雑な形状のデカール。
+    - 複雑な形状の反射プロブ。
+- ラスタライゼーションバッチ処理の改善。
+    - Zによるソートは効率的なバッチ処理を可能にする。
+    - lightBit % 32のグループにメッシュをマージする。
+        - InterlockedOrのまえにWaveAllBitOr(lightBit)する。
+    - lightBit % 32 のグループにステンシルパスをバッチする。
+        - (R32_UINTテクスチャへ)手動のステンシル書き込み/読み込み。<HiSなし>
+        - manualStencil.StoreのまえにWaveAllBitOr(lightBit)
+        - ベースのステンシル最適化があなたのコンテンツの助けになるときだけ試す。
+    - 8xMSAA
+
+# Bonus Slides
+
+# Spatial acceleration structure : World
+
+- ボクセルツリー。
+    - ワールド空間八分木。
+        - 各リーフは"キューブ"/ボクセルである。
+    - オクルージョンも事前計算する。
+        - つまり、ライトは影付けされ、影響のあるボリュームのみを含まれる。
+    - 簡単な事前計算/キャッシュされた錐台外の3Dルックアップを可能にする。
+    - 高価な走査。
+        - 階層の走査、複数のキャッシュミス、間接読み込みを必要とする。
+    - 大きなメモリ消費(解像度依存)。
+    - 重大な事前計算時間。
+<!--  -->
+- メッシュ毎トライアングル/テクセル。
+    - オクルージョンの事前計算。
+    - メッシュごとのルックアップを可能にする。
+    - トライアングルごと(triID)かテクセルごと(ライトマップのようなもの)を格納する。
+    - ほどほどのメモリ消費(解像度依存)。
+    - フォワードでは一度キャッシュされれば間違いなく最も効率的。
+    - 複雑なパイプライン --- 大きなキャッシング時間。
+- 出荷しなかった面白い実験。
+    - 次のプロジェクトでもう一度やるのが楽しみ。
 
 # References
