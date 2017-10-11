@@ -18,6 +18,8 @@ numberSections: false
 - Stephen Hill [[blog](http://blog.selfshadow.com/)]
     - SIGGRAPHのPBSコースの資料を毎年まとめているSelf Shadowブログの管理人。
     - 2017年現在はLucasfilm所属。
+- Michal Drobot [[blog](https://michaldrobot.com/)]
+    - 2017年現在はinfinity wardの主席レンダリングエンジニア。
 
 ## 文献目録
 
@@ -54,9 +56,9 @@ numberSections: false
     - Forward ShadingからTiled Shadingまでのメジャーどころを総ざらい。
 - [x] [@Oosten2015] [[blog](https://www.3dgep.com/forward-plus/)]
     - Forward Shading、Deferred Shading、Forward+それぞれに対する実装の解説とパフォーマンスの比較。
-<!-- あとで読む -->
-- [ ] [@Drobot2017]
+- [x] [@Drobot2017]
     - "Call of Duty: IW"で用いたライト割り当ての改善方法。
+<!-- あとで読む -->
 - [ ] [@Garawany2016]
     - "Uncharted 4"で用いたDeferred Lighting。
 
@@ -72,6 +74,7 @@ numberSections: false
 
 <!-- あとで読む -->
 - [ ] [@Lauritzen2010]
+    - Sample Distribution Shadow Map
 
 ### HDRレンダリング
 
@@ -82,9 +85,9 @@ numberSections: false
 
 - [x] [@McLaren2015] [[slides](http://fumufumu.q-games.com/archives/TheTechnologyOfTomorrowsChildrenFinal.pdf), [video](http://www.gdcvault.com/play/1022428/The-Technology-of-The-Tomorrow)]
     - Q-Gamesが"Tomorrow Children"から得た、Voxel Cone Tracingの大規模な活用方法。
-<!-- あとで読む -->
-- [ ] [@McGuire2017] [[paper](https://casual-effects.com/research/McGuire2017LightField/McGuire2017LightField.pdf), [others](https://casual-effects.com/research/McGuire2017LightField/index.html)]
+- [x] [@McGuire2017] [[paper](https://casual-effects.com/research/McGuire2017LightField/McGuire2017LightField.pdf), [others](https://casual-effects.com/research/McGuire2017LightField/index.html)]
     - light field probeを用いたリアルタイムGI。
+<!-- あとで読む -->
 - [ ] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
     - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
 - [ ] [@Mara2016]
@@ -114,7 +117,10 @@ numberSections: false
     - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
 - [ ] [@Sousa2013]
     - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど。
-
+- [ ] [@Drobot2017b]
+    - Call of Duty: Infinite Warfareのレンダリングエンジン。
+- [ ] [@Kasyan2011]
+    - "CryEngine 3"の全体。
 
 #### ジョブシステム
 
@@ -162,15 +168,22 @@ numberSections: false
     - Vulkanのプラクティス集。
 - [ ] [@Schott2016] [[slides](http://developer.download.nvidia.com/gameworks/events/GDC2016/mschott_lbishop_gl_vulkan.pdf)]
     - OpenGLとVulkanのtips。
+- [x] [@Lorach2016]
+    - AZDOなOpenGLとVulkanのtips。
+<!-- あとで読む -->
 - [ ] [@Themaister2017]
     - フレームグラフベースレンダラの実装とそこからの知見。
 - [ ] [@Hodes2016]
     - DirectX12のtips。
 - [ ] [@Hodes2017]
     - 非同期コンピュートのAMDとNVIDIAのプラクティス。
-- [ ] [@Lorach2016]
-    - Vulkanのtips。
 - [ ] [@Thomas2016]
     - DirectX12のプラクティス。
+
+#### 最適化
+
+<!-- あとで読む -->
+- [ ] [@Drobot2014]
+    - GCNアーキテクチャを対象とした低レベルな最適化。
 
 ### References
