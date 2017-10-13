@@ -1101,11 +1101,151 @@ $$
 \Omega_{\text{light}} = \int_{\Omega^+} V(\boldsymbol{l}) d\boldsymbol{l} = \int_{\Omega_{\text{light}}} d\boldsymbol{l}
 $$ {#eq:41}
 
-この数式は$L$と$\langle \boldsymbol{l} \cdot \boldsymbol{n} \rangle$のない照度の積分と似ている用に見える。フォームファクタと同じような流れで数値的か解析的かのいずれかで解くことができる。向きを持つ矩形の立体角の解析的な数式は[@Urena2013]で提供されるが、地平線ハンドリングを持たない。
+この数式は$L$と$\langle \boldsymbol{l} \cdot \boldsymbol{n} \rangle$のない照度の積分と似ている用に見える。フォームファクタと同じような流れで数値的か解析的かのいずれかで解くことができる。向きを持つ矩形の立体角の解析的な数式は[@Urena2013]で提供されるが、地平線ハンドリングを持たない。パフォーマンス的な理由で、Drobotは向きを持つ矩形の代わりに地平線ハンドリングを持たない正しいピラミッド型立体角[pahio2013]を使うことを提案する。これらの立体角の式は[lst:11]に集めてある。@Mathar2014 は地平線ハンドリングを持つ常に正面を向く矩形に対する立体角の式化を提供するが、複雑すぎるし、向きを持つ矩形を扱えない。
+
+~~~ {.c .numberLines id="lst:11"}
+float rightPyramidSolidAngle(float dist, float halfWidth, float halfHeight) {
+    float a = halfWidth;
+    float b = halfHeight;
+    float h = dist;
+
+    return 4 * asin(a * b / sqrt((a * a + h * h) * (b * b + h * h)));
+}
+
+float rectangleSolidAngle(float3 worldPos, float3 p0, float3 p1, float3 p2, floatp3) {
+    float3 v0 = p0 - worldPos;
+    float3 v1 = p1 - worldPos;
+    float3 v2 = p2 - worldPos;
+    float3 v3 = p3 - worldPos;
+
+    float3 n0 = normalize(cross(v0, v1));
+    float3 n1 = normalize(cross(v1, v2));
+    float3 n2 = normalize(cross(v2, v3));
+    float3 n3 = normalize(cross(v3, v0));
+
+    float3 g0 = acos(dot(-n0, n1));
+    float3 g1 = acos(dot(-n1, n2));
+    float3 g2 = acos(dot(-n2, n3));
+    float3 g3 = acos(dot(-n3, n0));
+
+    return g0 + g1 + g2 + g3 - 2 * FB_PI;
+}
+~~~
+: 正しいピラミッドと向きを持つ矩形の地平線ハンドリングを持たない立体角。
+
+MRPアプローチの質は立体角の計算の正確性に依存する。残念なことに、立体角の地平線を扱うコストはリアルタイム制約では手頃ではない。なので、代替となる解決法を探した。改善を取り込んだDrobotのMRPアプローチとスクリーンショット比較を[@sec:E]に提供する。
+
+**ライト形状の構造化されたサンプリング**: 我々はいかなる関数でも以下のように記述できることを知っている。
+
+$$
+\int_{\Omega} f(x) d\boldsymbol{l} = \Omega \text{Average}[f(x)]
+$$ {#eq:42}
+
+故に、定数$L_{\text{in}}$の仮定をもって、以下と書くことができる。
+
+$$
+E(n) = \int_{\Omega_{\text{light}}} L_{\text{in}} \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle d\boldsymbol{l} = \Omega_{\text{light}} L_{\text{in}} \text{Average}[\langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle]
+$$ {#eq:43}
+
+立体角上で$\langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle$の平均を見つけることは簡単ではないが、上手に選んだライトポイントで近似することが可能かもしれない。リアルタイム制約を考慮して、ライト表面のカバレッジを最大化するようなライトポイントをN個選ぶことで前述のコサインを平均することにした。矩形ライトの場合では、4つの角と中心を取る。
+
+$$
+E(n) = \int_{\Omega_{\text{light}}} L_{\text{in}} \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle d\boldsymbol{l} \approx \Omega_{\text{light}} L_{\text{in}} \frac{1}{N} \sum_{i = 1}^{N} \max(\langle \boldsymbol{n} \cdot \boldsymbol{l}_i \rangle, 0)
+$$ {#eq:44}
+
+このアプローチの利点は、コサインをクランプすることにより、正の半球に位置する点が表面の法線によって定義するように制限するため、暗黙的に立体角の地平線を扱うことが可能になる。MRPアプローチは1つのサンプルを持つ重点サプリング積分に基づいており、最も重要なものである。このものはライト形状の知識に頼った構造化されたサンプリング積分に基づいている。これは、積分が少数のサンプルに限定されているとき、より正確であることが証明されている[@Dupuy2013]。
+
+我々は矩形型エリアライトにこの手法を採用した。これにより、地平線での立体角を計算しなくても回り込むライティングで正しい強度を持つことができる。しかし、5つのサンプルしか用いていないことに起因するアンダーサンプリングによって目立ったバンディングアーティファクトが僅かに現れる。それを[@fig:41]に示す。このコードは[@lst:12]に提供する。
+
+![左上:正しい地平線ハンドリングを持つ矩形型エリアライトの結果。右上:リファレンス。左下:左上の近接ショット。回り込むライティングが正しい強度を持つが、バンディングが僅かに示しているのが見れる。右下:右上の近接ショット。](assets/Figure41.png){#fig:41}
+
+~~~ {.c .numberLines id="lst:12"}
+if (dot(worldPos - lightPos, lightPlaneNormal) > 0) {
+    float halfWidth = lightWidth * 0.5;
+    float halfHeight = lightHeight * 0.5;
+    float3 p0 = lightPos + lightLeft * -halfWidth + lightUp *  halfHeight;
+    float3 p1 = lightPos + lightLeft * -halfWidth + lightUp * -halfHeight;
+    float3 p2 = lightPos + lightLeft *  halfWidth + lightUp * -halfHeight;
+    float3 p3 = lightPos + lightLeft *  halfWidth + lightUp *  halfHeight;
+    float solidAngle = rectangleSolidAngle(worldPos, p0, p1, p2, p3);
+
+    float illuminance = solidAngle * 0.2 * (
+        saturate(dot(normalize(p0 - worldPos), worldNormal)) +
+        saturate(dot(normalize(p1 - worldPos), worldNormal)) +
+        saturate(dot(normalize(p2 - worldPos), worldNormal)) +
+        saturate(dot(normalize(p3 - worldPos), worldNormal)) +
+        saturate(dot(normalize(lightPos - worldPos), worldNormal))
+    );
+}
+~~~
+: クランプされたコサイン平均の手法による矩形ライトの照度。
+
+**備考**: エリアライトの近似を開発するため、我々はMathematicaでフレームワークを作った(この文書の付属ファイルとして提供されている)。このフレームワークはここや[@sec:E]で述べられているいくつかの手法によるさまざまなエラー推定を含んでいる。我々の経験から、MRPアプローチは、(ブルートフォースで定められる)真のMRPや真の立体角を用いたとしても、ディフューズエリアライトにおいて構造化されたサンプリングアプローチより正確性に劣る。
+
+#### チューブ型エリアライト(Tube area lights)
+
+Frostbiteにおいて、チューブ型エリアライトはカプセル、すなわち、両方の終端が半球となった円柱として表される([@fig:42]参照)。カプセルに対するフォームファクタか立体角をもつけるのは、リアルタイム制約に合わないため、難しい問題である。我々は円柱と2つの半球に分けることで、以前の結果を用いて、カプセルを近似することした。
+
+![チューブ型エリアライト。左:チューブの法線がパッチ$dA$を指し示す単純なケース。中と右:チューブの法線が無作為に向いており、地平線の下に潜り込む可能性がある一般的なケース。](assets/Figure42.png){#fig:42}
+
+- 円柱からの照度は円柱の大きさから生成される正面を向いた矩形ライトとして近似される。
+- 半球からの照度は陰影付けされる点から円柱の軸への最も近い点に位置する球のフォームファクタによって近似される。
+- 両方の照度は足し合わされて最終的な照度になる([@lst:13]と[@fig:43]参照)。
+
+この分割と近似にも関わらず、結果はground truthに十分に近くなる。
+
+~~~ {.c .numberLines id="lst:13"}
+// 線の最も近い点を返す(制限なし)
+float3 closestPointOnLine(float3 a, float3 b, float3 c)　{
+    float3 ab = b - a;
+    float t = dot(c - a, ab) / dot(ab, ab);
+    return a + t * ab;
+}
+
+// 線分の最も近い点を返す(制限あり)
+float3 closestPointOnSegment(float3 a, float3 b, float3 c) {
+    float3 ab = b - a;
+    float t = dot(c - a, ab) / dot(ab, ab);
+    return a + saturate(t) * ab;
+}
+
+// 球は線分の最近傍点に配置される。
+// 矩形平面は以下の正規直交枠(orthonormal frame)で定義される。
+float3 forward = normalize(closestPointOnLine(P0 , P1, worldPos) - worldPos);
+float3 left = lightLeft;
+float3 up = cross(lightLeft , forward);
+
+float3 p0 = lightPos - left * (0.5 * lightWidth) + lightRadius * up;
+float3 p1 = lightPos - left * (0.5 * lightWidth) - lightRadius * up;
+float3 p2 = lightPos + left * (0.5 * lightWidth) - lightRadius * up;
+float3 p3 = lightPos + left * (0.5 * lightWidth) + lightRadius * up;
+
+float solidAngle = rectangleSolidAngle(worldPos, p0, p1, p2, p3);
+
+float illuminance = solidAngle * 0.2 * (
+    saturate(dot(normalize(p0 - worldPos), worldNormal)) +
+    saturate(dot(normalize(p1 - worldPos), worldNormal)) +
+    saturate(dot(normalize(p2 - worldPos), worldNormal)) +
+    saturate(dot(normalize(p3 - worldPos), worldNormal)) +
+    saturate(dot(normalize(lightPos  - worldPos), worldNormal)));
+
+// そして、球の寄与を加える。
+float3 spherePosition = closestPointOnSegment(P0, P1, worldPos);
+float3 sphereUnormL = spherePosition - worldPos;
+float3 sphereL = normalize(sphereUnormL);
+float sqrSphereDistance = dot(sphereUnormL, sphereUnormL);
+
+float illuminanceSphere = FB_PI * saturate(dot(sphereL, data.worldNormal)) * ((lightRadius * lightRadius) / sqrSphereDistance);
+
+illuminance += illuminanceSphere;
+~~~
+: チューブの照度。
+
+![左:正しい地平線ハンドリングを持つチューブ型エリアライトの結果。右:リファレンス。](assets/Figure43.png){#fig:43}
+
+### 5倍ルール(Five times rule) {id="sec:4.7.3"}
 
 TODO
-
-### () {id="sec:4.7.3"}
 
 ## (Emissive surfaces) {id="sec:4.8"}
 
