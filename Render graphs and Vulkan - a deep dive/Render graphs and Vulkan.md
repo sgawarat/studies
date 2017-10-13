@@ -2,6 +2,7 @@
 title: Render graphs and Vulkan - a deep dive [@Themaister2017]
 bibliography: bibliography.bib
 numberSections: false
+codeBlockCaptions: true
 ---
 # Introduction
 
@@ -73,6 +74,124 @@ BeginRenderPass(...)
 `FRAGMENT -> FRAGMENT`のワークロードを扱うだけだとすると、これはそれほどひどいことではなく、なんだかんだ言ってレンダパス間で起こるオーバーラップはそれほどない。コンピュートをごちゃまぜにし始めると、頭がどうにかなりそうになる。なぜなら、このようなパイプラインバリアをあちこちにポンポンと置いていくことは**できない**ので、効率的な実行オーバーラップを達成するためにフレームについての非局所的な知識が必要になる。加えて、異なるキューで非同期コンピュートを行うため、セマフォが必要になることもあるかもしれない。
 
 # Render graph implementation
+
+*主に[render_graph.hpp](https://github.com/Themaister/Granite/blob/master/renderer/render_graph.hpp)と[render_graph.cpp](https://github.com/Themaister/Granite/blob/master/renderer/render_graph.cpp)を参照している。*
+
+*注記:これは巨大なbrain dump(知識の吐き出し)である。順番にモノを見てゆくので、これを読みながら一緒にコード追ってみてください。*
+
+*注意2:実装では用語として"フラッシュ(flush)"と"無効化(invalidate)"を用いている。これはVulkan仕様の専門用語ではない。Vulkanではそれぞれ"make available"と"make visible"を使っている。フラッシュはキャッシュのフラッシュを指し、無効化はキャッシュの無効化を指す。*
+
+基本のアイデアは"大局的な"レンダグラフを持つことである。モノをレンダリングする必要があるシステムの全要素はこのレンダグラフに登録する必要がある。我々はどのパスがあり、どのリソースが参加し、どのリソースが書き込まれるか、などなどを指定する。これは、アプリケーションのスタートアップに一度か、毎フレームに一度か、でなければ必要な時に行われることがある。主なアイデアはフレーム全体の大局的な知識を形作り、より高いレベルでそれに応じた最適化を可能にすることである。モジュールは、バックエンドAPIが自動でスケジューリングせずに依存性を扱うときに直面する主要な問題を解決するため、全体像を見ることを可能にしつつそれらの入力と出力について局所的に推論することができる。レンダグラフはバリア、レイアウト遷移、セマフォ、スケジューリングなどの面倒を見ることができる。
+
+レンダパスからの出力はある次元を必要とするが、かなり素直である。
+
+イメージ。
+```cpp
+struct AttachmentInfo {
+    SizeClass size_class = SizeClass::SwapchainRelative;
+    float size_x = 1.0f;
+    float size_y = 1.0f;
+    VkFormat format = VK_FORMAT_UNDEFINED;
+    std::string size_relative_name;
+    unsigned samples = 1;
+    unsigned levels = 1;
+    unsigned layers = 1;
+    bool persistent = true;
+};
+```
+
+バッファ。
+```cpp
+struct BufferInfo {
+    VkDeviceSize size = 0;
+    VkBufferUsageFlags usage = 0;
+    bool persistent = true;
+};
+```
+
+そして、これらのリソースがレンダパスに追加される。
+```cpp
+// ディファードレンダラのセットアップ
+
+AttachmentInfo emissive, albedo, normal, pbr, depth; // デフォルトはスワップチェーンの大きさ
+emissive.format = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
+albedo.format = VK_FORMAT_R8G8B8A8_SRGB;
+normal.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+pbr.format = VK_FORMAT_R8G8_UNORM;
+depth.format = device.get_default_depth_stencil_format();
+
+auto& gbuffer = graph.add_pass("gbuffer", VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT);
+gbuffer.add_color_output("emissive", emissive);
+gbuffer.add_color_output("albedo", albedo);
+gbuffer.add_color_output("normal", normal);
+gbuffer.add_color_output("pbr", pbr);
+gbuffer.set_depth_stencil_output("depth", depth);
+
+auto& lighting = graph.add_pass("lighting", VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT);
+lighting.add_color_output("HDR", emissive, "emissive");
+lighting.add_attachment_input("albedo");
+lighting.add_attachment_input("normal");
+lighting.add_attachment_input("pbr"));
+lighting.add_attachment_input("depth");
+lighting.set_depth_stencil_input("depth");
+
+lighting.add_texture_input("shadow-main"); // 外部の依存性
+lighting.add_texture_input("shadow-near");
+```
+
+ここではリソースをレンダパスで使えるようする方法が3つ提示されている。
+
+- Write-only。リソースは完全に書き込まれる。`loadOp`は`CLEAR`か`DONT_CARE`。
+- Read-write。inputを保存して、その上に書き込む。`loadOp`は`LOAD`。
+- Read-only。
+
+コンピュートでも似たような話で、非同期コンピュートで行う適応的な輝度更新処理は以下のように記述する。
+
+```cpp
+auto& adapt_pass = graph.add_pass("adapt-luminance", VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+adapt_pass.add_storage_output("average-luminance-updated", buffer_info, "average-luminance");
+adapt_pass.add_texture_input("bloom-downsample-3");
+```
+
+例えば、ここで輝度バッファはRMW(Read-Modify-Write)を得る。
+
+実際の処理を行うために毎フレーム呼ばれる可能性があるコールバックも必要である。G-Bufferでは以下のようになる。
+
+```cpp
+gbuffer.set_build_render_pass([this, type](Vulkan::CommandBuffer& cmd) {
+    render_main_pass(cmd, cam.get_projection(), cam.get_view());
+});
+
+gbuffer.set_get_clear_depth_stencil([](VkClearDepthStencilValue* value) -> bool {
+if (value) {
+    value->depth = 1.0f;
+    value->stencil = 0;
+}
+return true; // CLEARかDONT_CAREか？
+});
+
+gbuffer.set_get_clear_color([](unsigned int render_target_index, VkClearColorValue* value) -> bool {
+    if (value) {
+        value->float32[0] = 0.0f;
+        value->float32[1] = 0.0f;
+        value->float32[2] = 0.0f;
+        value->float32[3] = 0.0f;
+    }
+    return true; // CLEARかDONT_CAREか？
+});
+```
+
+レンダグラフは、リソースを割り当て、これらのコールバックを操って、最終的に適切な順序でGPUにサブミットする責任を持つ。このグラフを終わらせるには、特定のリソースを"バックバッファ"に昇格させる。
+
+```cpp
+// これはアドホックなデバッグにとても使いやすい。:)
+const char* backbuffer_source = getenv("GRANITE_SURFACE");
+graph.set_backbuffer_source(backbuffer_source ? backbuffer_source : "tonemapped");
+```
+
+では、実際の実装に入っていこう。
+
+# Time to bake!
 
 TODO
 
