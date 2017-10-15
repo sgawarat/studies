@@ -1245,7 +1245,36 @@ illuminance += illuminanceSphere;
 
 ### 5倍ルール(Five times rule) {id="sec:4.7.3"}
 
-TODO
+エリアライトがレシーバーの点から遠くにあるとき、逆二乗則によって照度を近似できる。照度に対する一般的な経験則として、逆二乗則を適用するために"*光源への距離は光源の最大の大きさの5倍より大きくあるべきである*"という*5倍ルール(the five times rule)*[@Ryer]がある([@fig:44]参照)。我々は複雑な照度計算をディフューズエリアライトの特性やレシーバーへの距離に基づいたより単純な逆二乗則へと最適化するためにこのルールを使うことができる。[@lst:14]はFrostbiteでの球とディスクのエリアライトのサンプルコードを提供する。このコードは、これらの場合は単純であり、オリジナルのコードの対応する角度テストによってすでに扱われているので、実践では使われていない。矩形とチューブのライトの扱いはよりトリッキーであり、さらなる研究が必要である。
+
+![逆二乗則に従うポイントライトと(フォームファクタに正面を向いた構成を使った)ディスク型エリアライトの比較例。グラフは対数スケールである。$\frac{Distance}{Radius} > 10$のとき、逆二乗則の誤差は1%、すなわち、直径の5倍より小さくなる。](assets/Figure44.png){#fig:44}
+
+~~~ {.c .numberLines id="lst:14"}
+float3 unnormalizedLightVector = P - worldPos;
+float sqrDist = dot(unnormalizedLightVector, unnormalizedLightVector);
+float3 L = normalize(unnormalizedLightVector);
+
+// 球の5倍ルールの例。
+// パンクチュアルライトを取り戻すためにこのルールを使うとき、
+// Frostbiteではライト単位を補う必要がある。
+// 故に、球の場合では、その"最適化"は使い物にならない。
+float irradiance = FB_PI * sqrlightRadius * saturate(cosTheta) / sqrDist;
+
+if (sqrDist < 100.0f * sqrlightRadius) {
+    irradiance = irradianceSphereOrDisk(cosTheta, sinSigmaSqr);
+}
+
+// ディスクの5倍ルールの例。
+// 我々はディスクの向きを計算に入れる必要があり、
+// 球のように、ライト単位を補う必要がある。
+// 今回は、多少のALUを節約するが、これは未だに使い物にならない最適化である。
+float irradiance = FB_PI * sqrLightRadius * saturate(cosTheta) * saturate(dot(planeNormal , -L)) / sqrDist;
+
+if (sqrDist < 100.0f * sqrLightRadius) {
+    irradiance = irradianceSphereOrDisk(cosTheta, sinSigmaSqr) * saturate(dot(planeNormal , -L));
+}
+~~~
+: 球とディスクのライトに対する5倍ルール。
 
 ## (Emissive surfaces) {id="sec:4.8"}
 
