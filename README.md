@@ -20,6 +20,9 @@ numberSections: false
     - 2017年現在はLucasfilm所属。
 - Michal Drobot [[blog](https://michaldrobot.com/)]
     - 2017年現在はinfinity wardの主席レンダリングエンジニア。
+- Tiago Sousa
+    - id softwareの人。
+    - CryENGINE3の開発にも参加している。
 
 ## 文献目録
 
@@ -119,7 +122,7 @@ numberSections: false
     - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど。
 - [ ] [@Drobot2017b]
     - Call of Duty: Infinite Warfareのレンダリングエンジン。
-- [ ] [@Kasyan2011]
+- [ ] [@Sousa2011]
     - "CryEngine 3"の全体。
 
 #### ジョブシステム
@@ -163,16 +166,15 @@ numberSections: false
     - レンダパスのtips。
 - [x] [@Archard2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-siggraph/3D-BOF-SIGGRAPH_Jul16.pdf)]
     - パイプラインキャッシュのtips。
-<!-- あとで読む -->
-- [ ] [@Witczak2016] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/05/Most-common-mistakes-in-Vulkan-apps.pdf)]
+- [x] [@Witczak2016] [[slides](http://32ipi028l5q82yhj72224m8j.wpengine.netdna-cdn.com/wp-content/uploads/2016/05/Most-common-mistakes-in-Vulkan-apps.pdf)]
     - Vulkanのプラクティス集。
-- [ ] [@Schott2016] [[slides](http://developer.download.nvidia.com/gameworks/events/GDC2016/mschott_lbishop_gl_vulkan.pdf)]
+- [x] [@Schott2016] [[slides](http://developer.download.nvidia.com/gameworks/events/GDC2016/mschott_lbishop_gl_vulkan.pdf)]
     - OpenGLとVulkanのtips。
 - [x] [@Lorach2016]
     - AZDOなOpenGLとVulkanのtips。
-<!-- あとで読む -->
-- [ ] [@Themaister2017]
+- [x] [@Themaister2017]
     - フレームグラフベースレンダラの実装とそこからの知見。
+<!-- あとで読む -->
 - [ ] [@Hodes2016]
     - DirectX12のtips。
 - [ ] [@Hodes2017]
