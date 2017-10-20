@@ -40,7 +40,7 @@ numberSections: false
     - ライト。
     - 反射プロブ。
     - 密度ボリューム。
-    - デカール[0]。
+    - デカール[@Sousa2016]。
 
 # Mesh Rendering
 
@@ -187,7 +187,7 @@ numberSections: false
     - 明るい天球ライティングと反対の色調を持つ強い太陽光。
 - 合わさって、平坦なレンダリングになる。
 
-## Normal Mapped SH Lit Particles + Extinction Transmittance Map for Sun [2]
+## Normal Mapped SH Lit Particles + Extinction Transmittance Map for Sun [@Gautron2011]
 
 - SHディファードライトマップは、法線マッピングされたパーティクルを用いており、正確にライティング方向と奥行き感を与える色を分けている。
 - これは太陽でのみ使われるExtinction Shadow Mapによってさらに改善される。
@@ -244,7 +244,7 @@ numberSections: false
 - 使うMSAAレベルを描画ごとに決める。
     - 1サンプル => フル解像度の深度テストを伴うハーフ解像度レンダリング。
     - 4サンプル => フル解像度レンダリング。
-- PSは正しい再構築手法をえらぶためにFMask[3]を読み出す。
+- PSは正しい再構築手法をえらぶためにFMask[@Drobot2015]を読み出す。
     - すべてのサブサンプルを読み出す。
         - エッジ/複数サンプルに近い。
     - バイリニアでサンプル0をアップサンプリングする。
@@ -385,7 +385,7 @@ numberSections: false
 - 各フレーム
     - 再ライティングが必要なN個の反射プロブを選び出す。
     - 各キューブGバッファでのCSワールドスペースボクセルツリーライティング。
-    - 反射プロブをCSフィルタする。[4]
+    - 反射プロブをCSフィルタする。[@Manson2016]
         - SH2のアンビエントライトデータを計算する。
     - 反射キューブマップのBC6h配列へのCS圧縮コピー。
 - 通常の反射プロブとして使われる。
@@ -409,7 +409,7 @@ numberSections: false
 |全MIPのフィルタリング|0.31|
 |全MIPのBC6圧縮|0.18|
 
-# Local directional normalization [5]
+# Local directional normalization [@Lazarov2013]
 
 ```c
 localNormalization = Luma(GetSHLightgrid(worldPos, reflectionDIr));  // refDir方向でGIのSH2を評価する。
@@ -509,7 +509,7 @@ result *= normalizationFactor;  // 局所化されたライティングデータ
 
 ## Base Scene
 
-- ボリューメトリクスはフロクセル[^froxel]バッファを使う。[6] [7]
+- ボリューメトリクスはフロクセル[^froxel]バッファを使う。[@Hillaire2015; @Wronski2014]
 
 [^froxel]: froxel = frustum + voxel
 
@@ -701,6 +701,201 @@ for (i = 0; i < sliceCount; i++) {
 
 # Texture Packer
 
-TODO
+# Texture Packer : Motivation
+
+- ディスクとランタイムメモリは限られている。
+- アーティストに対するアセットパイプラインを複雑にしたくない。
+- 以下は複数のテクスチャサンプルに向いていない。
+    - 異方性フィルダリング。
+    - フォワード+
+- 増大するテクスチャ。
+    - アンチエイジング。
+
+# Core Texture Slots
+
+|セマンティックスロット|圧縮タイプ|バイト毎ピクセル|
+|-|-|
+|ディフューズ(RGB)+アルファ(A)|BC1 / BC3|0.5 / 1.0|
+|スペキュラ(RGB)+光沢(A)|BC3|1.0|
+|法線(XY)|BC5|1.0|
+|遮蔽(A)|BC4|0.5|
+|Reveal(A)|BC4|0.5|
+|総計:4-5テクスチャサンプル||4.0-4.5|
+
+# Additional Texture Slots
+
+|セマンティックスロット|圧縮タイプ|バイト毎ピクセル|
+|-|-|
+|厚さ|BC4|0.5|
+|吸収|BC1|0.5|
+|蛍光|BC1|0.5|
+|輝き(sheen)と布|BC1|0.5|
+|異方性|BC7|1.0|
+|Reveal|BC4|0.5|
+
+# Converter
+
+- ルールセットに従ってテクスチャをパックする。
+- 表現の間を変換する。
+    - Specular ColorモデルからMetalnessモデルへ。
+- 最適なデータ圧縮スキームを選び取る。
+    - すなわち、法線マップのパッキング。
+- 統計的なモーメントを計算する(X及びY上の1次、2次モーメント)。
+    - BRDFアンチエイジング用グロスマップを増加させる。[@Olano2010]
+    - CLEAN/Toksvigマッピングに似ている。[@Hill2011]
+    - 異方性マテリアルのX/Yのグロスマップをサポートする。[@Vlachos2015]
+- さまざまな誤差尺度(error metrics)を計算する。
+    - データにマッチする最適な圧縮スキームを選び取るために誤差尺度を使う。
+    - データに関係する尺度を選ぶ --- つまり、法線マップの標準偏差。
+- 色の差分の代わり。
+- 最適なテクスチャ圧縮フォーマットを選ぶ。
+    - BC4 / BC1 / BC7
+
+## Diffuse
+
+- SpecularモデルからMetalnessへのコンバータ。
+- SpecularとMetalnessのモデルの間を変換するために範囲のカーブを合わせる。
+
+## Specular
+
+- 誘電体/絶縁体の範囲を保存する。
+    - 分離した反射率/F0が必要ない。
+
+## Fused Diffuse Specular
+
+## Metalness
+
+- 絶縁体の範囲について仮定する。
+    - 0.0-0.1の絶縁体 => 単色のスペキュラ。
+    - 0.1以上の誘電体 => 有色のす終えキュラ。
+- シェーダでの伸長処理はALUが5つのみ。
+
+~~~c
+#define INSULATOR_SPEC_RANGE 0.1f
+void DeriveMetalnessAndFusedAlbedoSpecMap(float3 albedo, float3 specular, out float3 fusedAlbedoSpec, out float metalness) {
+    float nonmetal = (1.0f / 3.0f) * (albedo.r + albedo.g + albedo.b);
+    float metal = (1.0f / 3.0f) * (specular.r + specular.g + specular.b);
+
+    nonmetal = saturate(nonmetal, DATA_FORMAT_FP16_MIN_FLT);
+    float specE = saturate(metal - INSULATOR_SPEC_RANGE);
+    float specI = min(metal, INSULATOR_SPEC_RANGE);
+    metalness = specE / (specE + nonmetal);
+    fusedAlbedoSpec = (saturate(specular - INSULATOR_SPEC_RANGE)) + albedo;
+    metalness = specI + (1.f - INSULATOR_SPEC_RANGE) * metalness;
+}
+~~~
+
+~~~c
+void DeriveAlbedoAndSpec(float3 fusedAlbedoSpec, float metalness, out float3 albedo, out float3 specular) {
+    float m = saturate(metalness, - INSULATOR_SPEC_RANGE);
+    m = m * (1.0f / (1.0f - INSULATOR_SPEC_RANGE));
+    float r0 = min(metalness, INSULATOR_SPEC_RANGE);
+    albedo = saturate(1.0f - m) * fusedAlbedoSpec;
+    specular = r0 + m * (fusedAlbedoSpec);
+}
+~~~
+
+# Data Analysis & Normal Maps
+
+- 半八面体法線マップ圧縮。[@Cigolle2014]
+- データ解析。
+    - "ほぼ平坦"な法線マップに対して二次のスケーリングを使う。
+    - 法線ベクトルのスケーリング値はデータパイプラインで決定される。
+        - シェーダで再スケールされる。
+
+~~~c
+// xは[-1, 1]の範囲
+float EncodeSNormQuadraticScaling(float x) {
+    float sqrtX = sqrt(abs(x));
+    return x > 0.0f ? sqrtX : -sqrtX;
+}
+
+// xは[-1, 1]の範囲
+float DencodeSNormQuadraticScaling(float x) {
+    float x2 = x * x;
+    return x > 0.0f ? x2 : -x2;
+}
+~~~
+
+- 0.0の周りの二次スケーリング。
+- '平坦な法線'にさらなる精度を与える。
+
+# Texture Packer
+
+||第1セット(packed_CS)|第2セット(packed_NOG)|第3セット(packed_ART)|
+|-|-|-|-|
+|R|融合したディフューズとスペキュラ色|グロス --- 分散と融合(コンバータにより生成される)|アルファ|
+|G|融合したディフューズとスペキュラ色|法線X|Reveal|
+|B|融合したディフューズとスペキュラ色|遮蔽|厚さ|
+|A|Metalnessマスク(コンバータにより生成される)|法線Y||
+
+# Packed Texture Sets
+
+|最終的に変換したテクスチャ|圧縮タイプ|バイト毎ピクセル|
+|-|-|-|
+|CS(第1セット)|BC7|1.0|
+|NOG(第2セット)|BC7|1.0|
+|A/R/T\<optional\>(第3セット)|BC4/BC1/BC7|0.0-1.0|
+|総計:2-3テクスチャサンプル||2.0-3.0|
+
+|セマンティックスロット|圧縮タイプ|バイト毎ピクセル|
+|-|-|-|
+|総計:4-5テクスチャサンプル|BC1-BC5|4.0-4.5|
+
+|テクスチャサンプル節約率||メモリ節約率|
+|-|-|-|
+|50%-40%||50%-33%|
+
+# Real world results
+
+- モデルのテクスチャ節約率: 最大30%のメモリ。
+- BSP(静的マップジオメトリ/地形)節約率: 最大15-20%のメモリ。
+- シェーダパフォーマンス改善: 最大5%。
+- 償却される起泡性フィルタリングレベル: 4xAF
+- マップ節約率の例:
+    - PHStreets: 11Gb -> 9Gb = ~19%
+    - Metropolis: 5Gb -> 4Gb = ~20%
+<!--  -->
+- 現実世界の結果は理論データからはいくらか異なる。
+- あるケースではアートにより的供されるテクスチャ解像度のミスマッチのためパッキングを使えない。これはパッキングルールの曖昧さ故である。
+
+# Bonus Slides
+
+## Directional SH Occlusion Lightmap
+
+- ディレクショナルSH1オクルージョンライトマップ。
+    - 高いメモリコスト。
+        - 追加の4チャンネルが必要。
+        - 2xBC5(質重視)か1xBC7(パフォーマンスとメモリ重視)
+    - 各'コーン'は格納されたSH1の係数から計算したベントコーンを表す。
+- 出荷しなかった --- 将来の仕事のための準備はできている。
+
+## Probes Only
+
+- 反射シャドウが欠落した右の木枠に注目。
+
+## Probes + Directional SH Occlusion Lightmap
+
+- 部屋の隅近くの大幅な改善をみせる局所的なシャドウに注目。
+
+~~~c
+// 半球八面体にパックする。
+// +Zの半球で正規化された入力を仮定する。[-1, 1]を出力する。
+void EncodeHemiOctaNormal(const float3 v, inout float2 encV) {
+    // 半球を半八面体へ射影し、XY平面に入れる。
+    float rcp_denom = 1.0f / (abs(v[0]) + abs(v[1]) + v[2]);
+    float tx = v[0] * rcp_denom;
+    float ty = v[1] * rcp_denom;
+    encV[0] = tx + ty;
+    encV[1] = tx - ty;
+}
+
+void DecodeHemiOctaNormal(const float2 encV, inout float3 v) {
+    // 単位スクエアを中心ダイアモンドに戻すように回転と拡大縮小する。
+    v[0] = (encV[0] + encV[1]) * 0.5f;
+    v[1] = (encV[0] - encV[1]) * 0.5f;
+    v[2] = 1.0f - abs(v[0]) - abs(v[1]);
+}
+~~~
 
 # References
