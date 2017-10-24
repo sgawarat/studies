@@ -72,12 +72,24 @@ numberSections: false
 <!-- あとで読む -->
 - [ ] [@Heitz2017] [[slides](http://blog.selfshadow.com/publications/s2017-shading-course/heitz/s2017_pbs_ltc_lines_disks.pdf)]
     - 線光源と円光源をリアルタイムで扱う手法。
+- [ ] [@Lecocq2016]
+    - 多角形の面光源をリアルタイムで扱う手法。
 
 ### シャドウイング技術
 
 <!-- あとで読む -->
 - [ ] [@Lauritzen2010]
-    - Sample Distribution Shadow Map
+    - Sample Distribution Shadow Mapの提案。
+- [ ] [@Peters2015]
+    - Moment Shadow Mappingの提案。
+- [ ] [@Peters2016]
+    - Moment Shadow Mappingの応用。
+
+### ポストエフェクト
+
+<!-- あとで読む -->
+- [ ] [@Guertin2015]
+    - 非線形なモーションブラー。
 
 ### HDRレンダリング
 
@@ -90,11 +102,11 @@ numberSections: false
     - Q-Gamesが"Tomorrow Children"から得た、Voxel Cone Tracingの大規模な活用方法。
 - [x] [@McGuire2017] [[paper](https://casual-effects.com/research/McGuire2017LightField/McGuire2017LightField.pdf), [others](https://casual-effects.com/research/McGuire2017LightField/index.html)]
     - light field probeを用いたリアルタイムGI。
+- [x] [@Mara2016]
+    - Deep G-Buffer。
 <!-- あとで読む -->
 - [ ] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
     - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
-- [ ] [@Mara2016]
-    - Deep G-Buffer。
 
 ### レイトレージング
 
@@ -125,14 +137,14 @@ numberSections: false
 - [ ] [@Sousa2011]
     - "CryEngine 3"の全体。
 
-#### ジョブシステム
+### ジョブシステム
 
 - [x] [@Reinalter2015] [[blog](https://blog.molecular-matters.com/2015/08/24/job-system-2-0-lock-free-work-stealing-part-1-basics/)]
     - Lock-FreeなWork-Stealing Queueを使ったジョブシステムの設計。
 - [x] [@Gyrling2015] [[slides](http://www.gdcvault.com/play/1022187/Parallelizing-the-Naughty-Dog-Engine), [video](http://www.gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine)]
     - FiberベースのジョブシステムとFrame centricなメモリ管理。
 
-#### グラフィクスAPI
+### グラフィクスAPI
 
 - [x] [@Olson2016] [[slides](https://www.khronos.org/assets/uploads/developers/library/2016-vulkan-devday-uk/1-Vulkan_101.pdf)]
     - モバイル系メーカーによるVulkan APIの概要。
@@ -182,10 +194,17 @@ numberSections: false
 - [ ] [@Thomas2016]
     - DirectX12のプラクティス。
 
-#### 最適化
+### 最適化
 
 <!-- あとで読む -->
 - [ ] [@Drobot2014]
     - GCNアーキテクチャを対象とした低レベルな最適化。
+
+### データ表現
+
+<!-- あとで読む -->
+- [ ] [@Cigolle2014]
+    - GPUで単位ベクトルを表現する方法について調査。
+
 
 ### References
