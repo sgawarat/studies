@@ -252,6 +252,144 @@ numberSections: false
 
 # Resource Identifiers
 
+- リンク時依存性を持たないグローバルなりソース識別子。
+- 特定の時点でのリソースビューを素早く得るためにハンドルを提供する。
+- コンパイル時でインターフェースを制限するために型付けされる。
+<!--  -->
+- 識別子は異なるプロデューサーから特定のリソースを論理的に対処するために使われる。
+- リソースIDを使うため、プロデューサーはコンパイル時にお互いに依存する必要がないので、リソースメモリエイリアシングを実装することを可能にする。以前に示したように、ここでは、異なるIDがGPU実行タイムライン中で異なる時間に同じメモリを指している。
+- 静的初期化時に、関連するリソースビューを効率的に得るためにプロデューサーシステムで使うことができるインデックスにこれらの識別子を'ベイク'する。
+- 有意義なコンパイル時エラーチェックを提供し、関数のオーバーロードを可能にするためにこれらのIDは強く型付けもされる。
+
+# Resource Identifiers: examples
+
+```cpp
+DEFINE_ID_DS(CascadedShadowMap);
+DEFINE_ID_RT(LightingDiffuse);
+DEFINE_ID_SB(LightTiles);
+
+DEFINE_ID_FE(VisibilityWindowStart);
+
+DEFINE_ID_RC(SetupMaterialTable);
+DEFINE_ID_IC(AmbientLightingInputs);
+```
+
+<!-- p.33 -->
+
+- リソースIDの例。
+    - DS = 深度バッファ。
+    - RT = レンダターゲット。
+    - SB = 構造化バッファ。
+    - FE = 明示的なフェンスリソース。
+    - RC = レンダコールバック(他のプロデューサーから関数を呼び出すのに使える)。
+    - IC = 入力コールバック(いくつかの他の入力依存性を一緒にグループ化する)。
+
+
+# Producer system: interface
+
+```cpp
+class GfxProducer {
+public:
+    virtual void GetInputOutput(GfxScheduleContext& context);
+    virtual void Record(GfxRenderContext& context);
+};
+```
+
+- その中核では、プロデューサーのインターフェースはかなり単純であり、主なエントリポイントは2つしかない。
+    - 入力/出力の収集。
+    - コマンドの記録。
+
+# Producer System: Gather Resources
+
+- 以下を指定する。
+    - リソース依存性。
+    - 新しいリソース。
+    - 手動同期。
+    - リソース識別子エイリアシング。
+<!--  -->
+- `GatherResource()`内で、
+    - ユーザーはリソース依存性(と、読み書きや深度テストなどの必要とするアクセスタイプ)を指定する。
+    - また、ここで新しいリソースを指定する(初期ステートのパラメータを定義する)。
+    - 必要とする手動同期。
+    - リソース識別子のエイリアシング(本質的にはプロデューサーがスケジュールされた後に他のものにリソースIDを指すこと)。
+
+<!-- p.36 -->
+
+```cpp
+void TestProducer::GetInputOutput(GfxScheduleContext& context) {
+    context.Write(ID_DS(DepthBuffer));
+    context.WriteRead(ID_SB(MaterialTable));
+    context.Read(ID_RT(GBufferNormal));
+    context.Input(ID_IC(AmbientLightingState));
+
+    context.SignalAfter(ID_FE(ShadowWindow));
+    context.WaitFor(ID_FE(VisibilityWindow));
+
+    context.Alias(ID_RT(ShadowESRAM), ID_RT(Shadow));
+}
+```
+
+<!-- p.37 -->
+
+- 例。
+    - 上段:リソース依存性とアクセスタイプの指定。
+    - 中段:手動同期。
+    - 下段:リソース識別子のエイリアシング。
+
+
+<!-- p.38 -->
+
+```cpp
+void TestProducer::GetInputOutput(GfxScheduleContext& context) {
+    context.New(ID_RT(BloomBuf), width, height, GfxFormat::HDRColor, flags);
+    context.New(ID_SB(MaterialTable), sizeof(MaterialTableData), count, flags);
+    context.New(ID_IC(AmbientLightingState), &TestProducer::SetAmbientState);
+}
+
+void TestProducer::SetAmbientState(GfxInputCallbackContext& context) {
+    context.Read(ID_DS(GICascades));
+    context.Read(ID_DS(LocalCubeMaps));
+}
+```
+
+<!-- p.39 -->
+
+- 例。
+    - 新しいリソースの生成。
+        - 初期構成を渡す所。
+    - 入力コールバックの例。
+        - 同時のリソース数に依存するショートカットを提供できる所。
+
+# Producer System: Record
+
+- 各プロデューサーはユニークなリソースコンテキストが割り当てられる。
+- プロデューサーはコマンドリストで使うリソースビューを得るためにこのコンテキストにインデックス付けする。
+<!--  -->
+- 記録ステップ中は、リソースIDを用いてプロデューサー固有のリソースコンテキストを経由して要求したリソースにアクセスできる。
+- このリソースコンテキストはすべてのプロデューサーでユニークであり、このプロデューサーのコマンドリストがGPUで実行する時点で割り当てられたリソースビューを含む。
+
+<!-- p.41 -->
+
+```cpp
+void TestProducer::Record(GfxRecordContext& context) {
+    cmdList.SetRenderTarget(0, context.Get(ID_RT(LightingBuffer)));
+
+    cmdList.Set<PS>(0, context.GetSR(ID_RT(ClipDepth)));
+    cmdList.Set<PS>(1, context.GetSR(ID_SB(MatTableData)));
+
+    context.Call(ID_RC(TestCallback), context);
+}
+```
+
+<!-- p.42 -->
+
+- IDを用いてリソースビューを得る例。
+    - レンダターゲットビュー。
+    - シェーダリソースビュー。
+    - 他のプロデューサーへのコールバック(それが所有するコマンドのセットを発行するかもしれない)。
+
+# Producer system: Scheduling
+
 TODO
 
 # References
