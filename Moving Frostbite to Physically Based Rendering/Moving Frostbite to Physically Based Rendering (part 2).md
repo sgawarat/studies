@@ -228,11 +228,178 @@ Frostbiteはディスタントライトプロブをキャプチャするため�
 
 [^footnote38]: 脚注38:積分を正しく評価し、引き伸ばされた反射を復元するために事前にフィルタした重点サンプリング[@Krivanek2008]を使うか、事前統合と @Green2007 に示されるような等方的なローブの分解を使うかのいずれかが可能である。
 
-事前統合の次元性をさらに減らすため、ラフネス$\alpha$と0°の入射角でのFresnel値$f_0$による$\Theta = (f_0, \alpha)$へパラメータ数を減らす必要がある。先に述べたように、[@eq:46]は数値積分する必要がある。"事前にベイク"されたローカルライトプロブにおいて、この積分は、すべての計算がオフラインで行われるため、あらゆるパフォーマンスに関する懸念を持たずに行うことができる。しかし、オンデマンドなライトプロブ、連続的にリフレッシュされるローカルライトプロブ、アーティストによる高速な操作(ローカルライトプロブの配置、ディスタントライトプロブの回転)では、パフォーマンスが重要(critical)であり、良好な質/速度の比率を達成する必要がある。重点サンプリングは被積分関数の重要な部分での計算に注力することで集束を早めるために使うことができる。
+事前統合の次元性をさらに減らすため、ラフネス$\alpha$と0°の入射角でのFresnel値$f_0$による$\Theta = (f_0, \alpha)$へパラメータ数を減らす必要がある。先に述べたように、[@eq:46]は数値積分する必要がある。"事前にベイク"されたローカルライトプロブにおいて、この積分は、すべての計算がオフラインで行われるため、あらゆるパフォーマンスに関する懸念を持たずに行うことができる。しかし、オンデマンドなライトプロブ、連続的にリフレッシュされるローカルライトプロブ、アーティストによる高速な操作(ローカルライトプロブの配置、ディスタントライトプロブの回転)では、パフォーマンスが重要(critical)であり、良好な質/速度の比率を達成する必要がある。重点サンプリング[^footnote39]は被積分関数の重要な部分での計算に注力することで集束を早めるために使うことができる。
+
+[^footnote39]: 我々は事前統合でMISを使おうとしたが、確率テーブルの構築コストと各サンプルごとのバイナリサーチコストは収束の利得と比べて大きすぎた。
 
 $$
-TODO
+L(v) = \frac{1}{N} \sum_i^N \frac{f_r(\boldsymbol{l}_i, \boldsymbol{v}, \Theta) L(\boldsymbol{l}_i)}{p_r(\boldsymbol{l}_i, \boldsymbol{v}, \Theta)} \langle \boldsymbol{n} \cdot \boldsymbol{l}_i \rangle
 $$ {#eq:47}
+
+$p_r$はBRDFのPDFを表す。$\boldsymbol{l}_i$は$p_r$から生成されたサンプルである。@Karis2013 はマイクロファセットBRDFの場合には、[@eq:47]の積分はLDとDFGの2つの項の積に分けることで近似することができることを示した。$p_r = D(\boldsymbol{h}, \alpha) \langle \boldsymbol{n} \cdot \boldsymbol{h} \rangle J(\boldsymbol{h})$とハーフベクトルからライティングベクトルへの変換のヤコビアン$J(\boldsymbol{h}) = \frac{1}{4 \langle \boldsymbol{v} \cdot \boldsymbol{h} \rangle}$により、以下を得る。
+
+$$
+L(v) = \frac{1}{N} \sum_i^N \frac{f_r(\boldsymbol{l}, \boldsymbol{v}, \Theta) L(\boldsymbol{l}_i)}{p_r(\boldsymbol{l}, \boldsymbol{v}, \Theta)} \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle
+$$ {#eq:48}
+
+$$
+= \frac{1}{N} \sum_i^N \frac{D(\boldsymbol{h}, \alpha) F(\boldsymbol{v}, \boldsymbol{h}, f_0, f_{90}) G(\boldsymbol{l}, \boldsymbol{v}, \boldsymbol{h}, \alpha)}{4 \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle \langle \boldsymbol{n} \cdot \boldsymbol{v} \rangle} \frac{1}{p_r(\boldsymbol{l}, \boldsymbol{v}, \Theta)} L(\boldsymbol{l}) \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle
+$$ {#eq:49}
+
+$$
+= \frac{1}{N} \sum_i^N \frac{D(\boldsymbol{h}, \alpha) F(\boldsymbol{v}, \boldsymbol{h}, f_0, f_{90}) G(\boldsymbol{l}, \boldsymbol{v}, \boldsymbol{h}, \alpha)}{4 \langle \boldsymbol{n} \cdot \boldsymbol{v} \rangle} \frac{1}{p_r(\boldsymbol{l}, \boldsymbol{v}, \Theta)} L(\boldsymbol{l})
+$$ {#eq:50}
+
+$$
+= \frac{1}{N} \sum_i^N \frac{D(\boldsymbol{h}, \alpha) F(\boldsymbol{v}, \boldsymbol{h}, f_0, f_{90}) G(\boldsymbol{l}, \boldsymbol{v}, \boldsymbol{h}, \alpha)}{4 \langle \boldsymbol{n} \cdot \boldsymbol{v} \rangle} \frac{4 \langle \boldsymbol{v} \cdot \boldsymbol{h} \rangle}{D(\boldsymbol{h}, \alpha) \langle \boldsymbol{n} \cdot \boldsymbol{h} \rangle} L(\boldsymbol{l})
+$$ {#eq:51}
+
+$$
+= \frac{1}{N} \sum_i^N \frac{F(\boldsymbol{v}, \boldsymbol{h}, f_0, f_{90}) G(\boldsymbol{l}, \boldsymbol{v}, \boldsymbol{h}, \alpha)}{\langle \boldsymbol{n} \cdot \boldsymbol{v} \rangle \langle \boldsymbol{n} \cdot \boldsymbol{h} \rangle} \langle \boldsymbol{v} \cdot \boldsymbol{h} \rangle L(\boldsymbol{l})
+$$ {#eq:52}
+
+$$
+\approx \frac{1}{N} \sum_i^N \frac{F(\boldsymbol{v}, \boldsymbol{h}, f_0, f_{90}) G(\boldsymbol{l}, \boldsymbol{v}, \boldsymbol{h}, \alpha)}{\langle \boldsymbol{n} \cdot \boldsymbol{v} \rangle \langle \boldsymbol{n} \cdot \boldsymbol{h} \rangle} \langle \boldsymbol{v} \cdot \boldsymbol{h} \rangle \frac{1}{\sum_i^N \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle} \sum_i^N L(\boldsymbol{l}) \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle
+$$ {#eq:53}
+
+この分離はDFGとLDの2つの独立した項を導く。これらは個別に事前計算することができる。LD項は各ライトプロブごとに計算する必要があるが、DFGは一度だけ計算してすべてのライトプロブで再利用できる。[@lst:18]はDFG項を示す。ここでは、異なる重み付け$\frac{1}{\sum_i^N \langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle}$と同様にLD項の追加の$\langle \boldsymbol{n} \cdot \boldsymbol{l} \rangle$に注意したい。これらの経験的な項は、この積分の分割可能性の粗い仮定に悩まされている再構築されたライティング積分を改善できるようにKarisにより導入された。これらの項には数学的な導出が存在せず、定数$L(\boldsymbol{l})$に完全一致することが目標であった[^footnote40]。[@Karis2013]で示されるように、Fresnel項のSchlickの式を用いることで、
+
+[^footnote40]: 我々は分離を若干の改良を加えて数学的に定義してみた。しかし、理論がよくなったとしても、ビジュアル結果はKarisの分離で得たものより常に悪くなった。
+
+$$
+F(\boldsymbol{v}, \boldsymbol{h}, f_0, f_{90}) = f_0 + (f_{90} - f_0)(1 - \langle \boldsymbol{v} \cdot \boldsymbol{h})^5
+$$ {#eq:54}
+
+DFG項は見る角度$v$とラフネス$\alpha$にのみ依存する2D関数で表す事ができる。$f_0$と$f_{90}$は事前計算の外に出す。この2D関数は$DFG_1$と$DFG_2$の2つの項を格納する。
+
+$$
+DFG(\boldsymbol{v}, \boldsymbol{l}, f_0, f_{90}, \alpha) = \frac{1}{N} \sum_i^N \frac{(f_0 + (f_{90} - f_0)(1 - \langle \boldsymbol{v} \cdot \boldsymbol{h} \rangle)^5) G(\boldsymbol{l}, \boldsymbol{v}, \boldsymbol{h}, \alpha)}{\langle \boldsymbol{n} \cdot \boldsymbol{v} \rangle \langle \boldsymbol{n} \cdot \boldsymbol{h} \rangle} \langle \boldsymbol{v} \cdot \boldsymbol{h} \rangle
+$$ {#eq:55}
+
+$$
+= \frac{1}{N} \sum_i^N (f_0 + (f_{90} - f_0) F_C) G_{\text{Vis}} \text{ with } G_{\text{Vis}} = \frac{G(\boldsymbol{l}, \boldsymbol{v}, \boldsymbol{h}, \alpha)}{\langle \boldsymbol{n} \cdot \boldsymbol{v} \rangle \langle \boldsymbol{n} \cdot \boldsymbol{h} \rangle} \langle \boldsymbol{v} \cdot \boldsymbol{h} \rangle, F_C = (1 - \langle \boldsymbol{v} \cdot \boldsymbol{h} \rangle)^5
+$$ {#eq:56}
+
+$$
+\frac{1}{N} \sum_i^N f_0 G_{\text{Vis}} + f_{90} F_C G_{\text{Vis}} - f_0 F_C G_{\text{Vis}}
+$$ {#eq:57}
+
+$$
+f_0 \frac{1}{N} \sum_i^N (1 - F_C) G_{\text{Vis}} + \frac{1}{N} \sum_i^N f_{90} F_C G_{\text{Vis}}
+$$ {#eq:58}
+
+~~~ {.c .numberLines id="lst:18"}
+void importanceSampleCosDir(in float2 u, in float3 N, out float3 L, out float NdotL, out float pdf) {
+    // ローカルなreferencial
+    float3 upVector = abs(N.z) < 0.999 ? float3(0, 0, 1) : float3 (1, 0, 0);
+    float3 tangentX = normalize(cross(upVector, N));
+    float3 tangentY = cross(N, tangentX);
+
+    float u1 = u.x;
+    float u2 = u.y;
+
+    float r = sqrt(u1);
+    float phi = u2 * FB_PI * 2;
+
+    L = float3(r * cos(phi), r * sin(phi), sqrt(max (0.0f, 1.0f - u1)));
+    L = normalize(tangentX * L.y + tangentY * L.x + N * L.z);
+
+    NdotL = dot(L, N);
+    pdf = NdotL * FB_INV_PI;
+}
+
+float4 integrateDFGOnly(in float3 V, in float3 N, in float roughness) {
+    float NdotV = saturate(dot(N, V));
+    float4 acc = 0;
+    float accWeight = 0;
+
+    // 事前統合を計算する
+    Referential referential = createReferential(N);
+    for (uint i = 0; i < sampleCount; ++i) {
+        float2 u = getSample(i, sampleCount);
+        float3 L = 0;
+        float NdotH = 0;
+        float LdotH = 0;
+        float G = 0;
+
+        // 実装は[@Karis2013]を参照
+        importanceSampleGGX_G(u, V, N, referential, roughness, NdotH, LdotH, L, G);
+
+        // スペキュラGGXのDFG事前統合
+        float NdotL = saturate(dot(N, L));
+        if (NdotL > 0 && G > 0.0) {
+            float GVis = G * LdotH / (NdotH * NdotV);
+            float Fc = pow(1 - LdotH , 5.f);
+            acc.x += (1-Fc) * GVis;
+            acc.y += Fc * GVis;
+        }
+
+        // ディフューズDisneyの事前統合
+        u = frac(u + 0.5);
+        float pdf;
+        // pdfは他の項で打ち消されるため使われない
+        // (ディフューズBRDFから1/PIとLambertの法則からNdotL)
+        importanceSampleCosDir(u, N, L, NdotL, pdf);
+        if (NdotL > 0) {
+            float LdotH = saturate(dot(L, normalize(V + L));
+            float NdotV = saturate(dot(N, V));
+            acc.z += Fr_DisneyDiffuse(NdotV, NdotL, LdotH, sqrt(roughness));
+        }
+
+        accWeight += 1.0;
+    }
+
+    return acc * (1.0f / accWeight);
+}
+~~~
+: スペキュラGGXとディフューズDisneyBRDFの両方についての事前統合されたDFG関数。
+
+LD項は時刻変化のように入射ライティングが変化するたびに再計算される必要がある。これはLDが実行時に計算される必要があり、つまり、高速でロバストである必要があることを意味している。重点サンプリングを使うと収束が改善されるが、かなりのサンプルが必要になる。@Krivanek2008 によって導入された事前にフィルタした重点サンプリングは低確率のサンプルのための事前にフィルタされた値に頼ることでサンプル数を削減できる。これは収束を著しく改善する(小さなバイアスを導入するコストについては[@fig:56]を参照)[^footnote41]。[@lst:19]はLD項を示す。ハイコントラストな環境において、特に中または高ラフネス$\alpha$の値で、依然としてノイズが観測される可能性がある。これは、ハイコントラストなライトプロブ(本当に高い強度を持ついくつかのピクセル)を伴う(特にGGXのようなロングテールのNDFで)半球球上のBRDFローブの幅広いサポートに主に起因する。このノイズを取り除くには、サンプル数を増やすか、ピクセルごとにサンプルパターンを回転/ジッタリングしない相関のあるバイアスとこのノイズをトレードするかのいずれかを行う。これはゴーストのアーティファクトを引き起こすが、通常はノイズより目立たない。
+
+[^footnote41]: Frostbiteでは、インテグレーションに32個のサンプルを使う。
+
+![重点サンプリングを用いた事前畳み込み結果と事前フィルタされた重点サンプリングとの比較。両方の画像は同じサンプル数を使っている(テクセルあたり64サンプル)。](assets/Figure56.png){#fig:56}
+
+~~~ {.c .numberLines id="lst:19"}
+float3 integrateCubeLDOnly(in float3 V, in float3 N, in float roughness) {
+    float3 accBrdf = 0;
+    float accBrdfWeight = 0;
+    for (uint i = 0; i < sampleCount; ++i) {
+        float2 eta = getSample(i, sampleCount);
+        float3 L;
+        float3 H;
+        importanceSampleGGXDir(eta, V, N, roughness, H, L);
+        float NdotL = dot(N, L);
+        if (NdotL > 0) {
+            // 事前フィルタされた重点サンプリングを使う(つまり、分散を減らすために低確率のサンプルをフェッチするために低いMIPMAPレベルを使う)。
+            // (参照: GPU Gem 3)
+            //
+            // 法線方向で結果を事前統合するため、N == Vであり、NdotH == LdotHである。これがBRDFのpdfを単純化できる理由である。
+            // pdf = D_GGX_Divide_Pi(NdotH, roughness) * NdotH / (4 * LdotH);
+            //     = D_GGX_Divide_Pi(NdotH, roughness) / 4;
+            //
+            // MIPMAPレベルはキューブマップフィルタリングの問題を避けるために8x8より低い某かへクランプされる。
+            //
+            //   - OmegaS: サンプルに関する立体角。
+            //   - OmegaP: キューブマップのピクセルに関する立体角。
+            float NdotH = saturate(dot(N, H));
+            float LdotH = saturate(dot(L, H));
+            float pdf = D_GGX_Divide_Pi(NdotH, roughness) * NdotH / (4 * LdotH);
+            float omegaS = 1.0 / (sampleCount * pdf);
+            float omegaP = 4.0 * FB_PI / (6.0 * width * width);
+            float mipLevel = clamp (0.5 * log2(omegaS / omegaP), 0, mipCount);
+            float4 Li = IBLCube.SampleLevel(IBLSampler, L, mipLevel);
+
+            accBrdf += Li.rgb * NdotL;
+            accBrdfWeight += NdotL;
+        }
+    }
+    return accBrdf * (1.0f / accBrdfWeight);
+}
+~~~
+: 事前フィルタされた重点サンプリング関数。
+
+TODO
 
 ### () {id="sec:4.9.3"}
 
