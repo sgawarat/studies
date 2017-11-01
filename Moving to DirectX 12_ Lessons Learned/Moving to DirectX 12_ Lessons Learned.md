@@ -586,6 +586,132 @@ ShaderInputLayout DefaultLayout <UpdateFreq=LowToHigh>
 
 <!-- p.66 -->
 
+- (更新頻度で分離された)これらのバインドポイントの例。
+- DX12では、各レイアウトのバインドポイントエントリはデスクリプタテーブルのセットを定義する(例えば、必要なら、CBV/SRT/UAVのテーブルとSAMPLERのテーブル)。
+- サポートしていないプラットフォームのために必要なCPP側のコードを生成することで、APIをまたいで自動的に静的なサンプラを扱うこともサポートする。
+
+<!-- p.67 -->
+
+- 各シェーダバインディングモード(HLSL文字列/CPP)ごとにRootSignatureを生成する。
+- 以下のような詳細を隠す。
+    - 1.0/1.1のRootSignature。
+    - Tier制約/最適化(ヌルのCBV/UAV、テーブルのマージ処理、Pushパラメータ、など)。
+<!--  -->
+- レイアウトでは、SIGコンパイラは以下を行う。
+    - 必要な可視性フラグを持つ各ステージの組み合わせごとにRootSignatureのいくつかのバージョンを生成する。
+    - ドライバへの実行時ヒント出しのために適切な静的フラグを持つ1.1バージョンのRootSignatureを生成する。これにより、パラメータ管理を最適化できる。
+    - Tierの制約、ルートテーブル数を減らすため他の最適化を実装すること、Rootに直接パラメータを配置すること、を扱う。
+
+# Shader Input Groups
+
+```c
+Include Test2;
+ShaderInputGroup Test <BindTo=DefaultLayout::Frame>
+{
+    static const uint testValue = 2;
+    float4 value;
+
+    Texture2D<float4> tex0; <Default=Black2D>
+    RWTexture2D<float4> uav0;
+
+    SamplerState sampler; <StaticSampler=PointWrap>
+
+    Test2 subType;
+}
+```
+
+- HLSLライクなシンタックス。
+    - テクスチャ/バッファ。
+    - 一般的な定数型のすべて。
+    - サンプラ。
+    - ネストしたサブタイプ。
+- リッチなアノテーションセット。
+    - デフォルト値。
+    - 静的な割り当て。
+    - デバッグコードの自動生成。
+<!--  -->
+- "Shader Input Group"の定義は多くのHLSLシンタックスがあり、加えて、いくつかのアノテーションサポートがある。
+
+<!-- p.69 -->
+
+- 定数と、リソースとサンプルの完全なセットを指定できる。
+- 広いアノテーション範囲をサポートする。(例:固有のバインドポイント、リソースのデフォルト定義、デバッグコード生成、など)
+- より簡単に分離したパラメータグループを管理するために、ネストしたタイプを指定できる。
+
+# Shader Input Groups: CPP
+
+```c
+#include "sig/test.h"
+void GfxTestProducer::CompileParams(GfxDevice& device) {
+    sig::Test test;
+    test.SetValue(ubiVector4(1.0f, 2.0f, 3.0f, 4.0f));
+    test.SetTex0(testTexture);
+    test.SetUav0(testUAV);
+
+    m_CompiledTestParams = test.Compile(device);
+
+    // ...
+
+    cmdList.SetShaderInputGroup(m_CompiledPassParams);
+}
+```
+
+- SIGは不変ブロブにコンパイルされる。
+- コンパイル時に、デスクリプタをGPUにコピーする。
+- パラメータのバインディングはコピーを伴わず、単なるルートデスクリプタテーブルの設定ハンドルである。
+<!--  -->
+- 実行時に、自動生成されたセッターインターフェイスを使う。(これらは型情報やアノテーションに基づいた検証レイヤーを提供する。)
+
+<!-- p.71 -->
+
+- 必要なシェーダーパラメータを埋めるためにSetメソッドを使う。
+- これらをバインドできるようになる前に、これらを不変ブロブにコンパイルするよう要求する(この時点でデスクリプタのコピーを発行する)。
+    - 一度ブロブを持てば、デスクリプタテーブルのハンドルまわりを効率的に渡すだけで、複数回それを再利用できる。
+
+# Shader Input Groups: Shader
+
+```c
+#include "sig/test.hlsl"
+
+void main() {
+    uint2 index = (uint2)g_Test.GetValue().xy;
+    float4 value = testFunc(index, testFunc.GetSubType());
+    g_Test.GetUav0()[index] = value;
+}
+
+float4 testFunc(in int2 index, in Test2 test2) {
+    return test2.GetTex0()[index];
+}
+```
+
+- パラメータはGetメソッドを介してアクセスする。
+- パラメータグループは構造化された方法で渡されることができる。
+- 静的サンプラのような機能は透過的に扱われる。
+
+<!-- p.73 -->
+
+- シェーダインターフェイスの観点では、これもかなり単純である。
+    - リソースや定数にアクセスするために自動生成されたGetメソッドを使う。
+    - ネストしたSIGタイプの使用はグローバルパラメータに依存したり個別のパラメータの長く大きなリストをわたしたりせずに簡単に再利用できるシェーダコードヘッダを記述することが可能になる。
+    - バッファからパラメータの構造をロードするために自動生成したローダ関数をサポートする。これは描画インスタンシングのコードで使う。
+    - アノテーションに基づいて自動生成されたGPUデバッグトレーシングコードもある。
+
+# Shader input groups: Stats
+
+||平均値|メモ|
+|-|-|-|
+|読み込まれた静的デスクリプタ数|15000|アセットロード時に一度だけコピーされる|
+|Transientデスクリプタ数|5000|毎フレームコピーされる(mostly for pass SIGs)|
+|ユニークなSIGレイアウト|10||
+|ユニークなSIG定義|300||
+<!--  -->
+- このシステムに関係する統計データがある。
+    - ご覧の通り、ほとんどのシェーダ入力パラメータは静的である。(これらはその関連するデスクリプタや定数がアセットロード時に一度だけコピーされるマテリアルSIGに由来する。)
+    - ほとんどのTransientデスクリプタのコピー処理は個別のドローコールの間ではなく、プロデューサーの開始時にある。
+    - ユニークなSIGインスタンスは実際にデスクリプタテーブルの大きさに関してこれらの間で大まかに一致させることになる。なので、ほとんどが地形、水などのような非常に固有なレンダリングのためであり、ユニークなレイアウトはそう多くない。
+
+# Shader Input Groups: Summary
+
 TODO
 
 # References
