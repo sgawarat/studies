@@ -456,7 +456,93 @@ $$ {#eq:63}
 
 ランタイムでは、ローカルとディスタントの両方のライトプロブは環境から来る光を計算に入れるために評価される。ディフューズとスペキュラの両方の事前統合がビューに依存しない方法で行われるが、実際のディフューズ$f_d$とスペキュラ$f_r$項はビュー依存である。これはそれらのローブ方向がビューベクトル$\boldsymbol{v}$に依存していることを意味する。スペキュラの$f_r$項では、事前統合された値をフェッチするためにミラー反射を使う代わりに、我々は主要方向(つまり、[@sec:3.1]に見られる"オフスペキュラピーク")でBRDFを評価する。
 
-このズレをモデル化するため、TODO
+このズレをモデル化するため、我々は見る角度とマテリアルのラフネスに依存する最高の偏差値を調査した。完全な解析はこの文書の付属のMathematicaファイルとして利用できる。我々の提案したモデルは見る角度が小さいと誘電体マテリアルでは正しい振る舞いをキャプチャするには不十分である。これは実際のローブがある角度でのみ"出現"するためである。幸いにも、Fresnel値は見る角度によって緩やかに増加するため、この誤差はほとんど目立たず、この近似は十分なままである([@lst:21]参照)。いくつかの実験ののちに、スペキュラローブの支配的な方向のもっと単純な近似がオリジナルのベストフィットする近似よりよい結果をもたらすかについても調査した([@lst:22]参照)。手法の評価と比較の結果は[@fig:59]に示される。我々は相関ありのSmithのG項と相関なしのG項に対して支配的な方向の近似を行った。我々の単純な数式は両方でうまく動作しているように見える。
+
+~~~ {.c .numberLines id="lst:21"}
+// これはスペキュラピークの正確なフィッティングであるが、
+// 分離処理中の他の近似によりうまく動作しない。
+float3 getSpecularDominantDir(float3 N, float3 R, float  NdotV, float  roughness) {
+#if GSMITH_CORRELATED
+    float lerpFactor = pow(1 - NdotV, 10.8649) * (1 - 0.298475 * log(39.4115 - 39.0029 * roughness)) + 0.298475 * log(39.4115 - 39.0029 * roughness);
+#else
+    float lerpFactor = 0.298475f * NdotV * log (39.4115f - 39.0029f * roughness) + (0.385503f - 0.385503f * NdotV) * log(13.1567f - 12.2848f * roughness);
+#endif
+
+    // 結果はキューブマップでフェッチするので正規化されていない。
+    return lerp(N, R, lerpFactor);
+}
+~~~
+: ライトプロブを伴うスペキュラマイクロファセットのGGXベースのスペキュラ項の支配的な方向を計算する関数。
+
+~~~ {.c .numberLines id="lst:22"}
+// オフスペキュラピークの近似としてはもっと良い方法があるが、
+// 他の近似との兼ね合いでこれがベターであることを発見した。
+// Nは法線方向。
+// Rは鏡面反射方向。
+// この近似はSmithのGが相関をあってもなくてもうまく動作する。
+float3 getSpecularDominantDir(float3 N, float3 R, float roughness) {
+    float smoothness = saturate(1 - roughness);
+    float lerpFactor = smoothness * (sqrt(smoothness) + roughness);
+    // 結果はキューブマップでフェッチするので正規化されていない。
+    return lerp(N, R, lerpFactor);
+}
+~~~
+: ライトプロブを伴うスペキュラマイクロファセットのGGXベースのスペキュラ項の支配的な方向を計算する単純な関数。
+
+![上:リファレンスとローブの支配的な方向との比較。その差異は高ラフネス($\alpha_{\text{lin}} \ge 0.6$)で目立つ。下:正確さで並べた様々な手法での粗い表面の接写。リファレンス以外のすべての手法は事前統合のスキームを用いている。](assets/Figure59.png){#fig:59}
+
+純粋なランバート表面では、BRDFがビューに依存しないので方向のズレは起こらない。しかし、Disneyの自己反射ディフューズ項では、ローブの支配的な方向はビュー方向に依存する。支配的な方向は非線形なやり方でズレてしまう。スペキュラ項のときと同じ解析を適用すると、単純な線形モデルがこの挙動を比較的正確にキャプチャすることができることが判明した([@lst:23]参照)。Frostbiteでは、間接ディフューズライティングはGバッファ生成中に適用される。なので、支配的な方向を正確に扱うためにこのステップでこれを適用することが必要である。正確な支配的な方向を扱うことで得られる差異は微妙であり、我々はこれを採用しないことを決めた。更に、[@sec:3.3]で示すように、デカールは正しくサポートされない。
+
+~~~ {.c .numberLines id="lst:23"}
+// Nは法線方向。
+// Vはビュー方向。
+// NdotVはビューベクトルと法線とのなす角のコサイン。
+float3 getDiffuseDominantDir(float3 N, float3 V, float NdotV , float roughness) {
+    float a = 1.02341f * roughness - 1.51174f;
+    float b = -0.511705f * roughness + 0.755868f;
+    lerpFactor = saturate ((NdotV * a + b) * roughness);
+    // 結果はキューブマップでフェッチするので正規化されていない。
+    return lerp(N, V, lerpFactor);
+}
+~~~
+: ライトプロブを伴うDisneyの自己反射ディフューズ項の支配的な方向を計算する関数。
+
+スペキュラとディフューズの両方の項におけるディスタントライトプロブでのライティングを評価するためのコードを[@lst:24]に示す。
+
+~~~ {.c .numberLines id="lst:24"}
+float3 evaluateIBLDiffuse(...) {
+    float3 dominantN = getDiffuseDominantDir(N, V, NdotV, roughness);
+    float3 diffuseLighting = diffuseLD.Sample(sampler, dominantN);
+
+    float diffF = DFG.SampleLevel(sampler, float2(NdotV, roughness), 0).z;
+
+    return diffuseLighting * diffF;
+}
+
+float3 evaluateIBLSpecular(...) {
+    float3  dominantR = getSpecularDominantDir(N, R, NdotV , roughness);
+
+    // 関数を再構築する。
+    // L.D.(f0.Gv.(1 - Fc) + Gv.Fc).cosTheta / (4.NdotL.NdotV)
+    NdotV = max(NdotV, 0.5f / DFG_TEXTURE_SIZE);
+    float mipLevel = linearRoughnessToMipLevel(linearRoughness, mipCount);
+    float3 preLD = specularLD.SampleLevel(sampler, dominantR, mipLevel).rgb;
+
+    // 事前統合されたDFGをサンプルする。
+    //   Fc = (1 - H.L)^5
+    //   PreIntegratedDFG.r = Gv.(1 - Fc)
+    //   PreIntegratedDFG.g = Gv.Fc
+    float2 preDFG = DFG.SampleLevel(sampler, float2(NdotV, roughness), 0).xy;
+
+    //   LD.(f0.Gv.(1 - Fc) + Gv.Fc.f90)
+    return preLD * (f0 * preDFG.x + f90 * preDFG.y);
+}
+~~~
+: スペキュラとディフューズの両部分に対するディスタントライトプロブの評価コード。
+
+**エネルギー保存**: 先に述べたように、ライトプロブは一貫したライティングのためにマテリアルのスペキュラとディフューズの両方の部分で評価される。ある人はこの場合なら、特に両方の積分が半球上で行われる粗い表面の場合には、ライティングを2回適用しようかと考えられるかもしれない。しかし、DisneyディフューズBRDFに対する我々の修正のおかげで、マテリアルモデルのエネルギー保存則が保証されているので、入射エネルギーはエネルギーの追加なしにスペキュラとディフューズの項に正しい割合で影響を与える。
+
+**再投影**: 周辺環境の視差を計算に入れるために、ローカルライトプロブは取得したライティング情報を再投影するためにプロキシジオメトリを使う。Frostbiteでは、球と向きを持つ箱(oriented box)2つの再投影ボリュームタイプをサポートする。これらのボリュームは周囲のジオメトリにできるだけ近くなるよう近似するためにアーティストにより手動で配置されてセットアップされる。TODO
 
 ## (Shadow and occlusion) {id="sec:4.10"}
 
