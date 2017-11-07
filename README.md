@@ -69,27 +69,27 @@ numberSections: false
 
 - [x] [@Heitz2016] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_d09ndGVjNVJzZjA)]
     - 多角形の面光源をリアルタイムで扱う手法。
+- [x] [@Lecocq2016]
+    - @Arvo1995 のIrradiance Tensorsをもとに多角形の面光源をリアルタイムで扱う手法。
 <!-- あとで読む -->
 - [ ] [@Heitz2017] [[slides](http://blog.selfshadow.com/publications/s2017-shading-course/heitz/s2017_pbs_ltc_lines_disks.pdf)]
     - 線光源と円光源をリアルタイムで扱う手法。
-- [ ] [@Lecocq2016]
-    - 多角形の面光源をリアルタイムで扱う手法。
 
 ### シャドウイング技術
 
+- [ ] [@Peters2015]
+    - Moment Shadow Mappingの提案。
 <!-- あとで読む -->
 - [ ] [@Lauritzen2010]
     - Sample Distribution Shadow Mapの提案。
-- [ ] [@Peters2015]
-    - Moment Shadow Mappingの提案。
 - [ ] [@Peters2016]
     - Moment Shadow Mappingの応用。
 
 ### ポストエフェクト
 
+- [x] [@Guertin2015]
+    - ベジェ曲線を用いた非線形モーションブラー。
 <!-- あとで読む -->
-- [ ] [@Guertin2015]
-    - 非線形なモーションブラー。
 
 ### HDRレンダリング
 
@@ -121,13 +121,13 @@ numberSections: false
     - EAの"Frostbite"が採用した、FrameGraph(依存関係を定義するしくみ)とTransientリソース(フレーム内でリソースを共有するしくみ)。
 - [x] [@Wihlidal2016] [[slides](https://www.gdcvault.com/play/1023109/Optimizing-the-Graphics-Pipeline-With)]
     - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化。
+- [x] [@Rodrigues2017]
+    - Ubisoftの"Anvil Next"をDirecX12に移行したときの知見。
 <!--  あとで読む -->
 - [ ] [@Lagarde2014] [[notes](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf)]
     - EAが"Frostbite"を物理ベースにするときに採用した方法とその知見。
 - [ ] [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
-- [ ] [@Rodrigues2017]
-    - Ubisoftの"Anvil Next"をDirecX12に移行したときの知見。
 - [ ] [@Carpentier2017]
     - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
 - [ ] [@Sousa2013]
@@ -136,6 +136,8 @@ numberSections: false
     - Call of Duty: Infinite Warfareのレンダリングエンジン。
 - [ ] [@Sousa2011]
     - "CryEngine 3"の全体。
+- [ ] [@Haar2015]
+    - GPUによるカリングを取り入れたレンダリングパイプライン。
 
 ### ジョブシステム
 
