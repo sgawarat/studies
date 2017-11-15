@@ -61,9 +61,9 @@ numberSections: false
     - Forward Shading、Deferred Shading、Forward+それぞれに対する実装の解説とパフォーマンスの比較。
 - [x] [@Drobot2017]
     - "Call of Duty: IW"で用いたライト割り当ての改善方法。
+- [x] [@Garawany2016]
+    - "Uncharted 4"で用いたDeferred LightingとSpecular Occlusion。
 <!-- あとで読む -->
-- [ ] [@Garawany2016]
-    - "Uncharted 4"で用いたDeferred Lighting。
 
 ### ライティング技術
 
@@ -77,24 +77,39 @@ numberSections: false
 
 ### シャドウイング技術
 
-- [ ] [@Peters2015]
-    - Moment Shadow Mappingの提案。
+- [x] [@Peters2015]
+    - Moment Shadow Mapsの提案。
+- [x] [@Lauritzen2010]
+    - Sample Distribution Shadow Mapsの提案。
+- [x] [@Donnelly2006]
+    - Variance Shadow Mapsの提案。
 <!-- あとで読む -->
-- [ ] [@Lauritzen2010]
-    - Sample Distribution Shadow Mapの提案。
 - [ ] [@Peters2016]
-    - Moment Shadow Mappingの応用。
+    - Moment Shadow Mapsの応用。
+- [ ] [@Peters2017]
+    - Moment Shadow Mapsの拡張。
+- [ ] [@Jansen2010]
+    - Fourier Opacity Mapsの提案。
+- [ ] [@Yang2010]
+    - Variance Soft Shadow Mapsの提案。
 
 ### ポストエフェクト
 
 - [x] [@Guertin2015]
     - ベジェ曲線を用いた非線形モーションブラー。
 <!-- あとで読む -->
+- [ ] [@Gotanda2015]
+    - 現実に起こるカメラに関する効果のまとめ。
 
 ### HDRレンダリング
 
 - [x] [@Fry2017] [[slides](http://www.gdcvault.com/play/1024466/High-Dynamic-Range-Color-Grading)]
-    - HDRディスプレイを前提とした次世代のカラーグレーディングパイプライン。
+    - FrostbiteのHDRディスプレイを前提とした次世代のカラーグレーディングパイプライン。
+<!-- あとで読む -->
+- [ ] [@Lottes2016]
+    - AMDの次世代カラーグレーディング。
+- [ ] [@True2017]
+    - NVIDIAの次世代カラーグレーディング。
 
 ### グローバル・イルミネーション
 
@@ -138,6 +153,8 @@ numberSections: false
     - "CryEngine 3"の全体。
 - [ ] [@Haar2015]
     - GPUによるカリングを取り入れたレンダリングパイプライン。
+- [ ] [@Tatarchuk2017]
+    - グラフィクスエンジンから見るプログラミングモデルの進化。
 
 ### ジョブシステム
 
@@ -195,6 +212,8 @@ numberSections: false
     - 非同期コンピュートのAMDとNVIDIAのプラクティス。
 - [ ] [@Thomas2016]
     - DirectX12のプラクティス。
+
+### アーキテクチャ
 
 ### 最適化
 
