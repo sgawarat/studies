@@ -15,7 +15,7 @@ numberSections: false
     - センサー
 - レンズ
     - 光学レンズ
-    - 絞り[aperture]
+    - 開口[aperture]^["aperture"はレンズ開口部(の大きさ)を指す。「絞り」がこれを指して使われることもある。]
     - 鏡筒[barrel]
 
 # 露出[Exposure]
@@ -25,7 +25,7 @@ numberSections: false
         - 適正露出(明るさ)が必要。
             - 複数のファクターを制御する必要がある。
                 - 時間の値(シャッタースピード)
-                - F値(絞り)
+                - F値(開口)
                 - フィルムスピード(センサー感度)
 
 # EV値とAPEX[Exposure Value and APEX]
@@ -64,7 +64,7 @@ numberSections: false
 - このコースの主な部分。
     - カメラレンズは以下を持つ。
         - 複数の光学レンズ
-        - 絞り
+        - 開口
         - 鏡筒
         - モーター
 
@@ -76,12 +76,12 @@ numberSections: false
 # カメラレンズの要件[Camera Lens Requirements]
 
 - カメラレンズは以下を必要とする。
-    - 近接から無限遠まで可変のフォーカス距離[focus distance[^focus_distance]]
+    - 近接から無限遠まで可変のフォーカス距離[focus distance][^focus_distance]
     - 速い露出(小さいF値)
     - ズーム(任意)
     - 画像安定化[image stabilization] (任意)
 
-[^focus_distance]: "focus distance"と"focal length"の使い分け方が良く分からない。カメラの文脈での「焦点距離」を指す？
+[^focus_distance]: レンズから焦点を合わせたい物体までの距離。カメラ設定としての「焦点距離」とほぼ同じものを指す。
 
 <!-- p.12 -->
 
@@ -105,23 +105,21 @@ numberSections: false
 
 # ボケ[Bokeh]
 
-- 光学レンズと絞りによって生み出される。
-    - 絞りのメカニズムは異なるボケ形状を生み出す。
+- 光学レンズと開口によって生み出される。
+    - 開口のメカニズムは異なるボケ形状を生み出す。
     - 複数のレンズは異なる見た目のボケを生み出す様々な収差を産む。
 
-# 虹彩絞り[^diaphragm][Iris Diaphragm]
+# 虹彩絞り[Iris Diaphragm]
 
-[^diaphragm]: "diaphragm"は機構全体としての絞りを指し、"aperture"は絞りの開口部(の大きさ)を指す。本訳では別途明記しない限り「絞り」を"aperture"の訳語とする。
-
-- カメラは絞りのための虹彩絞り[iris diaphragm]を持つ。
+- カメラは開口のための虹彩絞り[iris diaphragm^["diaphragm"は機構全体としての絞りを指す。]]を持つ。
     - 一般的には露出を制御するために複数の羽根[blades]を持つ。
-    - 曲がった羽根がしばしば用いられる(円形絞り[circular aperture])。
+    - 曲がった羽根がしばしば用いられる(円形開口[circular aperture])。
         - より安価なシステムはまっすぐな羽根か固定の絞り[diaphragm]を用いる。
         - 曲がった羽根はより複雑な光学的な挙動を産む。
 
-# 円形絞り[Circular Aperture]
+# 円形開口[Circular Aperture]
 
-- 絞りの形状は…
+- 開口の形状は…
     - 開いているときはより円形になる。
     - 閉じると多角形の形状に近づく傾向にある。
 
@@ -133,7 +131,7 @@ numberSections: false
 
 <!-- p.18 -->
 
-- 円形絞りはより複雑なグレア効果を生み出す。
+- 円形開口はより複雑なグレア効果を生み出す。
 
 # 被写界深度[Depth of Field]
 
@@ -193,7 +191,7 @@ numberSections: false
 - 複数レンズやカメラレンズ内の屈折によって引き起こされる望ましくないアーティファクト。
     - 様々なゴーストの形状が観測される。
         - レンズ開口部[lens opening]
-        - 絞り
+        - 開口
         - 口径食
 
 # カメラメカニズムによる効果[Effects by Camera Mechanism]
@@ -204,7 +202,7 @@ numberSections: false
 |感度|x|||||x|||
 |ズーム|(x)|x|(x)|x|||x|x|
 |フォーカス|x|x|(x)|x|||x|x|
-|絞り|x|x|x||||x|x|
+|開口|x|x|x||||x|x|
 
 # 結論[Conclusion]
 
