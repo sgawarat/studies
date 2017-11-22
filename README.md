@@ -103,9 +103,11 @@ numberSections: false
     - 現実に起こるカメラに関する効果のまとめ。
 - [x] [@Kakimoto2015]
     - 幾何光学の基礎のおさらい。
-<!-- あとで読む -->
-- [ ] [@Kawase2015]
+- [x] [@Kawase2015]
     - カメラレンズに関するエフェクト。
+<!-- あとで読む -->
+- [ ] [@Gotanda2015b]
+    - ボケの基本的な実装。
 
 ### HDRレンダリング
 
@@ -125,11 +127,11 @@ numberSections: false
     - light field probeを用いたリアルタイムGI。
 - [x] [@Mara2016]
     - Deep G-Buffer。
+- [x] [@Loos2010]
+    - Volumetric Obscuranceの提案。
 <!-- あとで読む -->
 - [ ] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
     - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
-- [ ] [@Loos2010]
-    - Volumetric Obscuranceの提案。
 
 ### レイトレージング
 
@@ -234,6 +236,5 @@ numberSections: false
 <!-- あとで読む -->
 - [ ] [@Cigolle2014]
     - GPUで単位ベクトルを表現する方法について調査。
-
 
 ### References
