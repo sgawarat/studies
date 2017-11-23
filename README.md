@@ -105,9 +105,13 @@ numberSections: false
     - 幾何光学の基礎のおさらい。
 - [x] [@Kawase2015]
     - カメラレンズに関するエフェクト。
-<!-- あとで読む -->
-- [ ] [@Gotanda2015b]
+- [x] [@Gotanda2015b]
     - ボケの基本的な実装。
+<!-- あとで読む -->
+- [ ] [@Kawase2015b]
+    - ボケの実装の詳細。
+- [ ] [@Guertin2014]
+    - モーションブラーフィルタの提案。
 
 ### HDRレンダリング
 
@@ -132,6 +136,8 @@ numberSections: false
 <!-- あとで読む -->
 - [ ] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
     - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
+- [ ] [@McGuire2012]
+    - Scalable Ambient Obscuranceの提案。
 
 ### レイトレージング
 
