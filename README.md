@@ -107,11 +107,13 @@ numberSections: false
     - カメラレンズに関するエフェクト。
 - [x] [@Gotanda2015b]
     - ボケの基本的な実装。
+- [x] [@Kawase2015b]
+    - ペンシルマップを使ったボケの実装詳細。
 <!-- あとで読む -->
-- [ ] [@Kawase2015b]
-    - ボケの実装の詳細。
 - [ ] [@Guertin2014]
     - モーションブラーフィルタの提案。
+- [ ] [@Kakimoto2015b]
+    - 精密なボケ評価のための波面トレーシング
 
 ### HDRレンダリング
 
@@ -133,11 +135,11 @@ numberSections: false
     - Deep G-Buffer。
 - [x] [@Loos2010]
     - Volumetric Obscuranceの提案。
+- [x] [@McGuire2012]
+    - Scalable Ambient Obscuranceの提案。
 <!-- あとで読む -->
 - [ ] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
     - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
-- [ ] [@McGuire2012]
-    - Scalable Ambient Obscuranceの提案。
 
 ### レイトレージング
 
@@ -171,6 +173,8 @@ numberSections: false
     - GPUによるカリングを取り入れたレンダリングパイプライン。
 - [ ] [@Tatarchuk2017]
     - グラフィクスエンジンから見るプログラミングモデルの進化。
+- [ ] [@Vale2017]
+    - 可視性。
 
 ### ジョブシステム
 
@@ -231,8 +235,8 @@ numberSections: false
 
 ### 最適化
 
-- [ ] [@Gyrling2017]
-    - マルチコアのキャッシュコヒーレンシーについて。
+- [x] [@Gyrling2017]
+    - マルチコア環境におけるキャッシュシステムの動作から学ぶメモリバリアの概要。
 <!-- あとで読む -->
 - [ ] [@Drobot2014]
     - GCNアーキテクチャを対象とした低レベルな最適化。
