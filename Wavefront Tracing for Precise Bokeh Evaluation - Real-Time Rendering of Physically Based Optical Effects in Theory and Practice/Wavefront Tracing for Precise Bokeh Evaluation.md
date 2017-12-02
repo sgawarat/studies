@@ -88,6 +88,30 @@ Sturm[シュトルム]の円錐体(眼科学用語)
 
 # 例[EXAMPLES]
 
-TODO
+# 乱視の目の視点[A View with an Astigmatic Eye]
+
+- ボケ形状は円錐体トレーシングで計算される。
+- ボケレンダリングなしの画像
+- ボケレンダリング出力
+- 11cm 目からの距離 6cm
+
+# 設計における累進屈折力レンズ^[焦点が部分部分でシームレスに変化する遠近両用のレンズ]で補正した近視と遠視[Myopia and presbyopia corrected by a progressive lens in design]
+
+# 累進屈折力レンズ視点のレンダリング[Rendering of Progressive Lens View]
+
+# 頂点ディスプレースメントを伴う準リアルタイムボケレンダリング[Near Real-Time Bokeh Rendering with Vertex Displacement]
+
+- ビューボリューム内の事前計算されたボケ分布を使う。
+- 頂点シェーダで実装
+    - その点でボケ楕円[ellipse]内に頂点を変位する。
+- サンプルしたディスプレースメントで画像をブレンドする。
+- ピクセルシェーダ実装は多分可能
+
+# 終わりに[Conclusion]
+
+- 波面トレーシングは正確に光の広がりを解析するためのツールである。
+- 円錐体トレーシングは円形開口から導かれるボケサイズを評価する。
+    - メガネレンズ設計の検証に応用される。
+    - ゲームやコンテンツのコミュニティではまだ使われていない。
 
 # 参考文献[References]
