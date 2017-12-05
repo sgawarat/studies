@@ -252,6 +252,100 @@ return lerp(cM, clamp(cAcc, cMin, cMax), saturate(rcp(lerp(k1, kh, wk))));
 
 # 被写界深度 \\ レンズのレビュー[DEPTH OF FIELD \\ LENS REVIEW]
 
+- ピンホール"レンズ"
+    - レンズのないカメラ
+    - 光は像平面に当たる前に単一の小さな開口を通らなければならない。
+    - 典型的なリアルタイムレンダリング
+- 薄レンズ
+    - カメラレンズは有限の大きさを持つ。
+    - 光は像平面に当たるまでにレンズを通って屈折する。
+    - $F$ = 焦点距離
+    - $P$ = フォーカスが当たっている平面[plane in focus]
+    - $I$ = 像距離
+
+# 被写界深度 \\ レンズのレビュー (2)[DEPTH OF FIELD \\ LENS REVIEW (2)]
+
+- 薄レンズの式は以下の関係をもたらす。
+    - $F$ = 焦点距離(光が集まり始める所)
+    - $P$ = フォーカスが当たっている平面(カメラのフォーカス距離)
+    - $I$ = 像距離(像がピントが合って投影される所)
+
+$$
+\frac{1}{P} + \frac{1}{I} = \frac{1}{F}
+$$
+
+- 錯乱円[@Potmesil1982]
+    - $f$ = F値
+    - $D$ = 物体距離
+    - $A$ = 開口の直径
+
+$$
+CoC = \left| \frac{FD}{D-F} - \frac{FP}{P-F} \right| \frac{D-F}{fD} \\
+f = \frac{F}{A}
+$$
+
+- 単純化すると
+    - 注: $f$と$F$はカメラ設定からの既知の変数である。
+    - シェーダでは単一のMAD命令に落とし込む。
+
+$$
+CoC = \left| A \frac{F(P-D)}{D(P-F)}\right|
+$$
+
+- カメラのFOV:
+    - 一般的なフィルムフォーマット(または、センサー)、35mm/70mm
+    - 代わりにFOVから焦点距離を導き出せる。
+
+$$
+\theta = 2\text{arctan} \frac{width_{film}}{2F}, F = \frac{0.5width_{film}}{\tan(\theta/2)}
+$$
+
+# 被写界深度 \\ サンプリング[DEPTH OF FIELD \\ SAMPLING]
+
+- 同心円マッピング[@Shirley1997]は一様サンプル分布に対して使われる。
+    - 単位四角形を単位円にマップする。
+    - 四角形は$(a, b) [-1, 1]^2$にマップされ、$a=b$と$a=-b$の直線で4つの領域に分割される。
+    - 第1領域は以下で求められる。
+
+$$
+r = a \\
+\theta = \frac{PIb}{4a}
+$$
+
+- サンプルをN角形に変形することによる絞りシミュレーション
+    - 修正した通常の多角形の式を経由して
+
+$$
+f = \frac{f_{stops} - f_{stops_min}}{f_{stops_max} - f_{stops_min}} \\
+\theta = \theta + f\theta_{shutter_max} \\
+r_{ngon} = r \left( \frac{\cos(\frac{PI}{n})}{\cos(\theta - \frac{2PI}{n}\text{floor}(\frac{n\theta + PI}{2PI}))} \right)^f
+$$
+
+# 被写界深度 \\ サンプリング: 2回目の反復[DEPTH OF FIELD \\ SAMPLING: 2ND ITERATION]
+
+- 最終的な形状をfloodfillするため、[@McIntosh2012]と同じように、二値の和集合[boolean union]で合成する。
+
+# 被写界深度 \\ 分割可能なフィルタパス[DEPTH OF FIELD \\ SEPARABLE FILTER PASSES]
+
+# 被写界深度 \\ リファレンス vs 分割可能なフィルタ[DEPTH OF FIELD \\ REFERENCE VS SEPARABLE FILTER]
+
+# 被写界深度 \\ 動作中の絞りシミュレーション[DEPTH OF FIELD \\ DIAPHRAGM SIMULATION IN ACTION]
+
+# 被写界深度 \\ タイル最大/最小CoC[DEPTH OF FIELD \\ TILE MIN/MAX COC]
+
+- タイル最大/最小CoC
+    - CoCターゲットをk回だけダウンスケールする(kはタイル数)。
+    - 遠方場[far field]のための最小フラグメントと近接場[near field]のための最大フラグメントを取る。
+    - R8G8のストレージ
+- 近接/遠方場を同じパスで処理するために使う。
+    - 両場のタイル最大/最小CoCを用いる動的分岐
+    - 遠/近の間のコストのバランスを取る。
+    - 近接場でのscatter as gather近似でも使われる。
+- 他のポストプロセスを伴うコストを折りたたむ[fold]ことができる。
+    - ブルームのためのHDRシーンのダウンスケールを最初のダウンスケールコストに畳み込まれ、近接/遠方場のHDR入力をR11G11B10Fにパックする --- オールインワンパス。
+
+# 被写界深度 \\ 遠方＋近接場処理[DEPTH OF FIELD \\ FAR + NEAR FIELD PROCESSING]
+
 TODO
 
 # 参考文献[References]
