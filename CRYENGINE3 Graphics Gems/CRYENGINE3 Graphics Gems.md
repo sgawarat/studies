@@ -346,6 +346,141 @@ $$
 
 # 被写界深度 \\ 遠方＋近接場処理[DEPTH OF FIELD \\ FAR + NEAR FIELD PROCESSING]
 
-TODO
+- 両場は半分の解像度の入力を使う。
+    - 注意: ダウンスケールはバイリニアフィルタリングにより誤差のもとになる。
+    - ダウンスケールにカスタムのバイリニア(バイラテラル)フィルタを使う。
+- 遠方場
+    - カーネルサイズをスケールして、遠方CoCでサンプルを重み付けする[@Scheuermann2004]。
+    - 遠方CoCでレイヤを事前乗算する[@Gotanda2009]。
+        - バイリニア/分割可能フィルタからのブリーディングアーティファクトを軽減する。
+- 近接場
+    - scatter as gather近似
+    - カーネルサイズをスケールして、近接CoCに対するタイル最大CoCでフラグメントを重み付けする。
+    - 近接CoCで事前乗算する。
+        - 近接場のフラグメントをブラーしたいだけ(安価な部分的な遮蔽の近似)。
+
+# 被写界深度 \\ 最後の合成[DEPTH OF FIELD \\ FINAL COMPOSITE]
+
+- 遠方場: バイラテラルフィルタを経由してアップスケールする。
+    - ハーフ解像度CoCから4タップ取って、フル解像度のCoCと比較する。
+    - クオリティのためにバイキュービックフィルタを使って重み付けされる[@Sigg2005]。
+    - 遠方場CoCはブレンディングに使われる。
+- 近接場: 気にせずアップスケールする。
+    - ハーフ解像度の近接場CoCがブレンディングに使われる。
+    - できるだけにじませる[bleed]ことができる。
+    - バイキュービックフィルタを使うことも。
+- ブレンディングに注意
+    - 線形ブレンディングはよく見えない(signal frequency soup)。
+        - Crysisシリーズを含め、色んなゲームで見られる(puts hat of shame)。
+    - 単純な対処法: 代わりに非線形のブレンドファクタを使う。
+
+# モーションブラー[MOTION BLUR]
+
+# モーションブラー \\ シャッタースピードとF値のレビュー[MOTION BLUR \\ SHUTTER SPEED AND F-STOPS REVIEW]
+
+- モーションブラーの量はカメラのシャッタースピードとF値の使い方に関連する。
+    - 露出が長い(シャッターが遅い)と、より多くの光を受け取る(そして、モーションブラー量が多くなる)。逆もまた然り。
+    - F値が小さいと、露出が速くなる(そして、モーションブラーが少なくなる)。逆もまた然り。
+
+# モーションブラー \\ 最新技術の概要[MOTION BLUR \\ STATE OF THE ART OVERVIEW]
+
+- ジオメトリ拡張[expansion]による散乱[@Green2003; @Sawada2007]。
+    - 追加のジオメトリパス＋ジオメトリシェーダの使用が必須。
+
+# モーションブラー \\ 最新技術の概要 (2)[MOTION BLUR \\ STATE OF THE ART OVERVIEW (2)]
+
+- scatter as gather[@Sousa2008; @Gotanda2009; @Sousa2011; @McGuire2012]
+    - 例、速度の膨張[dilation]、速度ブラー、タイル最大速度。シングルvsマルチパス合成。深度/頂点/オブジェクトIDマスキング。シングルパスDOF＋MB。
+
+# モーションブラー \\ もっともらしいモーションブラーのための再構築フィルタ [@McGuire2012][MOTION BLUR \\ RECONSTRUCTION FILTER FOR PLAUSIBLE MB [MCGUIRE12]]
+
+- タイル最大速度[Tile Max Velocity]とタイル近傍最大速度[Tile Neighbor Max Velocity]
+    - 速度バッファをk倍ダウンスケールする(kはタイル数)。
+    - 各ステップで速度の最大長を取る。
+- モーションブラーパス
+    - 早期脱出のためのタイル近傍最大速度
+    - 中心速度タップとしてのタイル最大速度
+    - 各反復ステップで、フル解像度の$\|V\|$と深度に対して重み付けする。
+
+# モーションブラー \\ 改善された再構築フィルタ[MOTION BLUR \\ AN IMPROVED RECONSTRUCTION FILTER]
+
+- パフォーマンスの品質
+    - 内部ループの重み計算を単純化してベクトル化する(最終的にいくつかのMAD命令になる)。
+    - 大きい[fat]バッファのサンプリングはGCNハードウェアでバイリニアを伴うとレートが半分になる。(ポイントフィルタリングはフルレートだが、エイリアシングによりよく見えない。)
+    - 入力: シーンでR11G11B10F、$\|V\|$と8ビット深度をR8R8ターゲットに焼き込む。
+    - 分割可能、2パスにする[@Sousa2008]。
+
+# モーションブラー \\ 改善された再構築フィルタ (2)[MOTION BLUR \\ AN IMPROVED RECONSTRUCTION FILTER (2)]
+
+```hlsl
+float2 DepthCmp(float2 z0, float2 z1, float2 fSoftZ) {
+    return saturate((1.0f + z0 * fSoftZ) - z1 * fSoftZ);
+}
+
+float4 VelCmp(float lensq_xy, float2 vxy) {
+    return saturate((1.0f - lensq_xy.xxxx * rcp(vxy.xyxy)) + float4(0.0f, 0.0f, 0.95f, 0.95f));
+}
+
+const float2 tc = min_tc + blur_step * s;
+const float lensq_xy = abs(min_len_xy + len_xy_step * s);
+const float2 vy = tex2Dlod(tex1, float4(tc.xy, 0, 0));  // x = ||v||, y = depth
+
+const float2 cmp_z = DepthCmp(float2(vx.y, vy.y), float2(vy.y, vx.y), 1);
+const float4 cmp_v = VelCmp(lensq_xy, float2(vy.x, lensq_vx));
+const float w = (dot(cmp_z.xy, cmp_v.xy) + (cmp_v.z * cmp_v.w) * 2);
+
+acc.rgb += tex2Dlod(tex0, float4(tc.xy, 0, 0)) * w;
+```
+
+# モーションブラー \\ 改善された再構築フィルタ (3)[MOTION BLUR \\ AN IMPROVED RECONSTRUCTION FILTER (3)]
+
+- Gバッファにオブジェクトの速度を出力する(必要な場合のみ)。
+    - 別の義お娶りパスを避ける。
+    - リジッド[rigid]ジオメトリ: オブジェクト距離 < 距離しきい値
+    - 変形できる[deformable]ジオメトリ: 移動量 > 移動しきい値の場合
+    - 移動するジオメトリは最後にレンダリングされる。
+    - R8G8フォーマット
+- カメラ速度で合成する。
+    - 速度はガンマ2.0空間でエンコードされる。
+    - 精度はまだ十分ではないが、実践ではそれほど目立たない。
+
+- エンコード
+
+$$
+v_{enc} = \sqrt{|v_{xy}|} * \text{sgn}(v_{xy}) * (127.0 / 255.0) + 0.5
+$$
+
+- デコード
+
+$$
+v_{enc} = (v_{enc} - 127.0 / 255.0) / 255.0
+v = (v_{enc} * v_{enc}) * \text{sgn}(v_{enc})
+$$
+
+# モーションブラー \\ MBとDOFのどちらが先？[MOTION BLUR \\ MB OR DOF FIRST?]
+
+- 現実世界では、MB/DOFは同時に起こる。
+    - 夢の実装: 大きな$N^2$カーネル＋バッチ化されたDOF/MB
+    - または、MBクアッド伸縮[stretching]に基づくスプライト
+    - フル解像度！10億タップ！FP16！複数レイヤ！:)
+- だけど、パフォーマンスは依然として重要である(コンソール)。
+    - MB前にDOF[DOF->MB]は、合焦で起こるMBのとき、より小さい誤差を引き起こす。
+        - これはMBがジオメトリデータに依存したscatter as gather処理であるため
+        - その後の他の同じような処理は誤差を引き起こす。そして、逆もまた然り。
+        - DOF後にMB[DOF->MB]からの誤差はより目立ちにくい。
+    - 逆順[order swap]だと他のポストエフェクトと折りたたむのが難しくなる。
+        - 追加のオーバーヘッド
+
+# 最後の備考[FINAL REMARKS]
+
+- 実践的MSAAの詳細
+    - すること、しないこと
+- SMAA 1TX: 更にロバストなテンポラルAA
+    - 4つの追加のテクスチャ処理といくつかのALU
+- もっともらしく高性能な[performant]DOF再構築フィルタ
+    - 分割可能で柔軟性のあるフィルタ、どんなボケカーネル形状も可能
+    - 1stパス: 0.426ms、2ndパス: 0.094ms。再構築フィルタで合計: 0.52ms。(1080p+AMD7970)
+- もっともらしいモーションブラーのための改善された再構築フィルタ
+    - 分割可能、1stパス: 0.236ms、2ndパス: 0.236ms。再構築フィルタで合計: 0.472ms。(1080p+AMD7970)
 
 # 参考文献[References]
