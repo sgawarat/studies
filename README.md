@@ -83,7 +83,7 @@ numberSections: false
     - Sample Distribution Shadow Mapsの提案。
 - [x] [@Donnelly2006]
     - Variance Shadow Mapsの提案。
-- [ ] [@Yang2010]
+- [x] [@Yang2010]
     - Variance Soft Shadow Mapsの提案。
 <!-- あとで読む -->
 - [ ] [@Peters2016]
@@ -109,11 +109,16 @@ numberSections: false
     - ボケの基本的な実装。
 - [x] [@Kawase2015b]
     - ペンシルマップを使ったボケの実装詳細。
-<!-- あとで読む -->
-- [ ] [@Guertin2014]
+- [x] [@Guertin2014]
     - モーションブラーフィルタの提案。
-- [ ] [@Kakimoto2015b]
+- [x] [@Kakimoto2015b]
     - 精密なボケ評価のための波面トレーシング
+<!-- いま読む -->
+- [ ] [@McGuire2012b]
+    - モーションブラーフィルタの提案。
+- [ ] [@Kakimoto2015c]
+    - 波動光学ベースのグレア生成テクニック
+<!-- あとで読む -->
 
 ### HDRレンダリング
 
@@ -156,15 +161,17 @@ numberSections: false
     - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化。
 - [x] [@Rodrigues2017]
     - Ubisoftの"Anvil Next"をDirecX12に移行したときの知見。
-<!--  あとで読む -->
-- [ ] [@Lagarde2014] [[notes](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf)]
+- [x] [@Lagarde2014] [[notes](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf)]
     - EAが"Frostbite"を物理ベースにするときに採用した方法とその知見。
+- [x] [@Vale2017]
+    - Decima Engineの可視性。
+- [x] [@Sousa2013]
+    - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど。
+<!--  あとで読む -->
 - [ ] [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
 - [ ] [@Carpentier2017]
     - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
-- [ ] [@Sousa2013]
-    - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど。
 - [ ] [@Drobot2017b]
     - Call of Duty: Infinite Warfareのレンダリングエンジン。
 - [ ] [@Sousa2011]
@@ -173,8 +180,6 @@ numberSections: false
     - GPUによるカリングを取り入れたレンダリングパイプライン。
 - [ ] [@Tatarchuk2017]
     - グラフィクスエンジンから見るプログラミングモデルの進化。
-- [ ] [@Vale2017]
-    - 可視性。
 
 ### ジョブシステム
 
