@@ -85,7 +85,7 @@ numberSections: false
 
 # 回折のモデル[A Model for Diffraction]
 
-- 開口$S$
+- 絞り$S$
 - $\lambda$:波長
 - $U_f(x_f, y_f)$:点$(x_f, y_f)$における複合波[complex wave]の振幅
 
@@ -101,7 +101,7 @@ $$
 - $A$: 入射光の振幅
 - $F[\cdot]$: Fourier変換オペレータ
 - $R$: 十分に大きな距離
-    - 開口サイズ$5\text{mm}^2$と$\lambda = 500\text{nm}$で$R \gg 50m$
+    - 絞りサイズ$5\text{mm}^2$と$\lambda = 500\text{nm}$で$R \gg 50m$
 
 # レンズシステムでのFraunhoferの近似[Fraunhofer Approximation in a Lens System]
 
@@ -135,11 +135,11 @@ $$
     - 入力障害物[obstacle]画像$t(x_o, y_o)P(x_o, y_o)$を選ぶ。
     - 出力グレア画像
 
-# 特例: 円形開口
+# 特例: 円形絞り
 
 - FFTではなく'エアリーディスク'用の解析的式を使う。
     - $\theta$: 画角
-    - $r$: 開口の半径
+    - $r$: 絞りの半径
     - $J_1(\cdot)$: 第1種Bessel関数
     - $k \equiv 2\pi / \lambda$
 
@@ -147,7 +147,7 @@ $$
 I(\theta) = \frac{\pi r^2 A^2}{\lambda^2 f^2} \left( \frac{2J_1(kr \sin\theta)}{kr \sin\theta} \right)^2
 $$
 
-- 矩形開口には、他の式を使うことができる。
+- 矩形絞りには、他の式を使うことができる。
 
 # 実装と例[AN IMPLEMENTATION AND EXAMPLES]
 
