@@ -6,9 +6,9 @@ numberSections: false
 # はじめに[Introduction]
 
 - 基本的なアイデアと理論[@Kawase2008]
-    - 円形開口のみ
+    - 円形絞りのみ
 - 実践的な実装と最適化[@Kawase2012]
-    - 任意の開口形状の種類
+    - 任意の絞り形状の種類
 
 # ペンシルマップの生成[Creating the Pencil Map]
 
@@ -75,14 +75,14 @@ numberSections: false
 
 ![上:非球面ダブレットレンズ(別種)。中:アポクロマティックレンズ。下:完璧なレンズ(実在しない)。](assets/23.png)
 
-# 任意の開口形状への応用[Application to Arbitrary Aperture Shapes]
+# 任意の絞り形状への応用[Application to Arbitrary Aperture Shapes]
 
-# 様々な開口形状[Various Aperture Shapes]
+# 様々な絞り形状[Various Aperture Shapes]
 
-- 開口形状は重要な芸術的ファクタである。
+- 絞り形状は重要な芸術的ファクタである。
     - 一般的に、5から9枚の絞り羽根[diaphragm blades]
     - 円形[rounded]からN角形に変化する。
-- どうやってペンシルを多角形の開口形状にマップするか？
+- どうやってペンシルを多角形の絞り形状にマップするか？
     - 3Dテクスチャ？
         - 大きすぎるし、実践的ではない。
 
@@ -98,7 +98,7 @@ numberSections: false
 
 <!-- p.28 -->
 
-- LUTは開口の形状を決定する。
+- LUTは絞りの形状を決定する。
     - ペンシルマップに依存しない
     - 絞り羽根の曲がった形状を再生成できる。
         - 様々な絞り条件のためのLUT一式を準備する。
@@ -144,8 +144,8 @@ numberSections: false
 
 - 開く/閉じる
     - 変形
-        - 円形開口
-        - 多角形開口
+        - 円形絞り
+        - 多角形絞り
     - 回転
     - 光学口径食
         - 猫目効果
