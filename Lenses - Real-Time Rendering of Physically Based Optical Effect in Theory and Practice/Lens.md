@@ -202,12 +202,12 @@ numberSections: false
 
 ![](assets/32.png)
 
-- 開口サイズ[aperture size]
+- 絞りサイズ[aperture size]
 - ピンぼけ量[out-of-focus amount]
 - はっきり見える[strongly visible]
-    - 大きな開口で若干のピンぼけ
+    - 大きな絞りで若干のピンぼけ
 - あまり見えない[less visible]
-    - 小さい開口で大きなピンぼけ
+    - 小さい絞りで大きなピンぼけ
 
 # 残存収差とボケの特徴[Residual Aberrations and Bokeh Characteristics]
 
@@ -235,7 +235,7 @@ numberSections: false
 - より複雑な収差
 - さまざまなボケ特徴
 - 異なるフォーカス呼吸
-- 可変な最大開口
+- 可変な最大絞り
 - 光学の口径食
 - などなど
 
@@ -345,18 +345,18 @@ numberSections: false
     - 像距離は50%に縮小される。
     - FOVは広くなる。
 
-# 可変開口ズームレンズ[Variable Aperture Zoom Lenses]
+# 可変絞りズームレンズ[Variable Aperture Zoom Lenses]
 
 - 広い(12mm)
-    - 最大開口はf/2.8
+    - 最大絞りはf/2.8
 - 狭い(60mm)
-    - 最大開口はf/4.0
+    - 最大絞りはf/4.0
 
 # 有効口径$D$[Effective Aperture Diameter 'D']
 
 - "入射瞳[entrance pupil]"の直径
-    - 前方から見えるような開口の虚像[virtual image]
-    - 物理的な開口の直径ではない。
+    - 前方から見えるような絞りの虚像[virtual image]
+    - 物理的な絞りの直径ではない。
 
 ![](assets/49.png)
 
@@ -367,36 +367,36 @@ numberSections: false
 
 # ズームレンズのタイプ[Zoom Lens Types]
 
-- 固定開口のズームレンズ
+- 固定絞りのズームレンズ
     - 最小F値はズーム範囲全体を通して一定。
     - 有効口径は焦点距離に比例する($D = f / F$)。
-- 可変開口のズームレンズ
+- 可変絞りのズームレンズ
     - 最小F値は、FOVが狭くなるたび、大きくなる。
     - 有効口径は焦点距離に比例しない。
 
-"最小F値"は"最大開口"を意味することに注意。
+"最小F値"は"最大絞り"を意味することに注意。
 
 # ズームレンズ製品の例[Examples of Zoom Lens Products]
 
 - OLYMPUS D.ZUIKO (4/3")
     – 14-42mm F3.5-5.6
     – 12-60mm F2.8-4.0
-    – 35-100mm F2.0  固定開口
+    – 35-100mm F2.0  固定絞り
 - CANON EF-S (APS-C)
-    – 17-55mm F2.8  固定開口
+    – 17-55mm F2.8  固定絞り
     – 18-135mm F3.5-5.6
     – 55-250mm F4.0-5.6
 - DX NIKKOR (APS-C)
-    – 17-55mm F2.8  固定開口
+    – 17-55mm F2.8  固定絞り
     – 18-140mm F3.5-5.6
     – 55-200mm F4.0-5.6
 - CANON EF (35mm)
-    – 24-70mm F2.8  固定開口
-    – 70-200mm F2.8  固定開口
+    – 24-70mm F2.8  固定絞り
+    – 70-200mm F2.8  固定絞り
     – 100-400mm F4.5-5.6
 - FX NIKKOR (35mm)
-– 24-70mm F2.8  固定開口
-– 70-200mm F2.8  固定開口
+– 24-70mm F2.8  固定絞り
+– 70-200mm F2.8  固定絞り
 – 80-400mm F4.5-5.6
 
 # 実際のレンズの傾向[Tendency of Actual Lenses]
@@ -428,6 +428,6 @@ numberSections: false
     - フォーカス呼吸の抑制
 - おおくの現象は単レンズルールに従わない。
     - 異なるメカニズムによる異なるフォーカス呼吸
-    - 異なるメカニズムによる異なるズームの開口変化
+    - 異なるメカニズムによる異なるズームの絞り変化
 
 # 参考文献[References]
