@@ -1,5 +1,6 @@
 ---
 title: GPU-Driven Rendering Pipelines [@Haar2015]
+bibliography: bibliography.bib
 numberSections: false
 ---
 # GPU駆動レンダリングとは？[GPU-Driven Rendering?]
@@ -180,7 +181,7 @@ numberSections: false
 
 # 仮想ディファードテクスチャリング[Virtual Deferred Textureing]
 
-- **古いアイデア**: テクセルの代わりにUVをGバッファに格納する[@Auf2007]。
+- **古いアイデア**: テクセルの代わりにUVをGバッファに格納する[@Aufderheide2007]。
 - **重要な機能**: VTページキャッシュアトラスは現時点で可視であるすべてのテクスチャデータを含む。
 - **8Kx8K** のテクスチャアトラスへの16＋16ビットのUVは **8x8** のサブピクセル精度を与える。
 
@@ -237,6 +238,77 @@ $$
 
 # 二段階オクルージョンカリング[Two-Phase Occlusion Culling]
 
-TODO
+- ローポリのプロキシジオメトリを使う追加のオクルージョンパスを行わない。
+- 正確なWYSIWYG^[見たままが得られる[What You See Is What You Get]]オクルージョン
+- 深度バッファデータに基づく
+- 深度ピラミッドはHTILE最大/最小バッファから生成される。
+- O(1)のオクルージョンテスト(gather4)
+
+<!-- p.52 -->
+
+- **第1段階**
+    - 最後のフレームの深度ピラミッドを用いてオブジェクトとクラスタをカリングする。
+    - 可視オブジェクトをレンダリングする。
+- **第2段階**
+    - 深度ピラミッドをリフレッシュする。
+    - カリングされたオブジェクトとクラスタをテストする。
+    - 誤ってカリングされたもの[false negatives]をレンダリングする。
+
+# ベンチマーク[Benchmark]
+
+- "Torture"の単体テストシーン
+    - **250,000** の個別の動くオブジェクト
+    - **1GB** のメッシュデータ(10K超のメッシュ)
+    - **8Kx8K** のテクスチャキャッシュアトラス
+- DirectX11コードパス
+    - 64頂点クラスタ(ストリップ)
+    - `ExecuteIndirect`/`MultiDrawIndirect`なし
+- `DrawInstancedIndirect`の呼び出しが2つだけ
+
+# ベンチマーク結果[Benchmark Results]
+
+|GPU時間|第1段階|第2段階|合計|
+|-|-|-|-|
+|オブジェクトカリング|0.28ms|0.26ms|0.54ms|
+|クラスタカリング|0.09ms|0.04ms|0.13ms|
+|描画(Gバッファ)|1.60ms|0.01ms以下|1.60ms|
+|ピラミッド生成|||0.06ms|
+|合計|||2.3ms|
+: Xbox One、1080p。
+
+CPU時間: 0.2ms (JaguarのシングルCPUコア)
+
+# 仮想シャドウマッピング[Virtual Shadow Mapping]
+
+- 128Kx128Kの仮想テクスチャマップ
+- 256x256のテクセルページ
+- 深度バッファから必要なシャドウページを特定する[@Fernando2001]。
+- GPU駆動パイプラインでシャドウページをカリングする。
+- 一度にすべてのページをレンダリングする。
+
+# VTSMのクオリティとパフォーマンス[VTSM Quality and Performance]
+
+- すべてのエリアでshadow-to-screen解像度が1対1に近い。
+- **計測結果**: 複合的な"まばらな[sparse]"シーンでは、SDSM[@Lauritzen2011]より最大3.5倍速い。
+- 単純なシーンでは、仮想SMはSDSMやCSMより若干遅い。
+
+# GPU駆動レンダリング＋DX12[GPU-Driven Rendering + DX12]
+
+- 新しいDX12(PC)の機能
+    - `ExecuteIndirect`
+    - 非同期コンピュート
+    - 頂点シェーダのレンダターゲットのインデックス(ジオメトリシェーダの迂回)
+    - リソース管理
+    - 明示的なマルチアダプタ
+    - タイルリソース＋バインドレス
+    - **保守的ラスタライザ＋ROV**
+- 他のAPIの機能
+    - カスタムMSAAパターン
+    - GPU側ディスパッチ
+    - SIMDレーンswizzle
+    - 順序付きアトミック
+    - ピクセルシェーダへの`SV_Barycentric`
+    - 開示されたCSAA/EQAAサンプル
+    - テンプレート付きシェーディング言語
 
 # 参考文献[References]
