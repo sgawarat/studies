@@ -115,11 +115,11 @@ numberSections: false
     - 精密なボケ評価のための波面トレーシング
 - [x] [@Kakimoto2015c]
     - 波動光学ベースのグレア生成テクニック
+- [x] [@Kawase2015c]
+    - 光学エフェクトシステムの設計
 <!-- いま読む -->
 - [ ] [@McGuire2012b]
     - モーションブラーフィルタの提案。
-- [ ] [@Kawase2015c]
-    - 光学エフェクトシステムの設計
 <!-- あとで読む -->
 
 ### HDRレンダリング
@@ -131,6 +131,26 @@ numberSections: false
     - AMDの次世代カラーグレーディング。
 - [ ] [@True2017]
     - NVIDIAの次世代カラーグレーディング。
+
+### アンチエイリアシング
+
+<!-- あとで読む -->
+- [ ] [@Yang2011]
+    - DLAA
+- [ ] [@Reshetov2011]
+    - MLAA
+- [ ] [@Jimenez2011]
+    - Jimenez式MLAA＆SMAA
+- [ ] [@McGuire2011]
+    - SRAA
+- [ ] [@Lottes2011]
+    - FXAA
+- [ ] [@Malan2011]
+    - DEAA
+- [ ] [@Persson2011]
+    - GBAA
+- [ ] [@Andreev2011]
+    - DLAA
 
 ### グローバル・イルミネーション
 
