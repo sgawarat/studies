@@ -120,6 +120,8 @@ numberSections: false
 <!-- いま読む -->
 - [ ] [@McGuire2012b]
     - モーションブラーフィルタの提案。
+- [ ] [@Gotanda2015c]
+    - 光学エフェクトシステムの設計
 <!-- あとで読む -->
 
 ### HDRレンダリング
@@ -189,6 +191,8 @@ numberSections: false
     - Decima Engineの可視性。
 - [x] [@Sousa2013]
     - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど。
+- [x] [@Haar2015]
+    - GPU駆動カリングパイプラインと仮想テクスチャ。
 <!--  あとで読む -->
 - [ ] [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
@@ -198,8 +202,6 @@ numberSections: false
     - Call of Duty: Infinite Warfareのレンダリングエンジン。
 - [ ] [@Sousa2011]
     - "CryEngine 3"の全体。
-- [ ] [@Haar2015]
-    - GPUによるカリングを取り入れたレンダリングパイプライン。
 - [ ] [@Tatarchuk2017]
     - グラフィクスエンジンから見るプログラミングモデルの進化。
 
