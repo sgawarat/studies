@@ -136,9 +136,9 @@ numberSections: false
 
 ### アンチエイリアシング
 
-<!-- あとで読む -->
-- [ ] [@Yang2011]
+- [x] [@Yang2011]
     - DLAA
+<!-- あとで読む -->
 - [ ] [@Reshetov2011]
     - MLAA
 - [ ] [@Jimenez2011]
