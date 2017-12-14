@@ -311,12 +311,200 @@ $$ {#eq:1}
 ここで、スケールハイトは標高でフォグ密度がどれだけ減少するかを述べるためのパラメータである。
 
 **組み合わせ**:
-我々のアプローチでは、事前計算された大気散乱モデルから高さフォグモデルへスカイライトとサンライトの情報を提供した。
+我々のアプローチでは、事前計算された大気散乱モデルから高さフォグモデルへ天空光[skylight]と太陽光[sunlight]の情報を提供した。
 
 以上で基本的な概要を終了する。
 次のスライドでは、この組み合わせに注目しようと思う。
 
 <!-- p.21 -->
+
+地球外から[extraterrestrial]の太陽光
+↓
+事前計算された大気散乱モデル
+$L_{inscatter}^{(LUT)}$ → $L_{background}$
+$L_{sun}^{(LUT)}$ → $L_{sun}$
+$L_{sky}^{(LUT)}$ → $L_{amb}$
+↓
+高さフォグモデル
+$$
+L = L_{background} \alpha(y) + (L_{sun} + L_{amb})(1 - \alpha(y))
+$$
+
+我々が仮定する組み合わせはボリュームレンダリング方程式の階層的な近似である。
+
+まず、太陽光があると仮定しよう。
+
+この地球外からの太陽光は地球に降り注ぎ、空気と相互作用する。
+我々の事前計算されたモデルは複数散乱の情報を生成し、LUTの$L_{inscatter}$、$L_{sun}$、$L_{sky}$として格納する。
+
+高さフォグモデルは事前計算されたLUTから背景放射[background radiation]、太陽光、天空光を受け取る。
+
+適切に事前計算ツールを開発するならば、この種のLUTを達成することは自明のタスクのように思われる。
+しかし、この問題は、特に一様でないフォグに対して、高さフォグのような解を得られるか否かである。
+
+続くスライドでは、事前計算されたモデルと高さフォグモデルを詳細に説明しようと思う。
+
+# 高さフォグ: 事前計算[Height Fog: Precomputation]
+
+- 事前計算された大気散乱[@Bruneton2008; @Elek2009]
+    - 最適化[@Hillaire2016]
+        - in-scatterカラーエンコーディング[@Bruneton2008]
+        - $\theta_{sv}$^[光源方向と視線方向とのなす角]依存性を無視する[@Elek2009]。
+        - 改善されたLUTパラメータ化[@Yusov2013]
+- 我々のLUT
+    - $L_{inscatter}^{(LUT)}(\theta_s, \theta_v, y, t)$
+        - $\theta_s$: 上方向と光源方向とのなす角
+        - $\theta_v$: 上方向と視線方向とのなす角
+        - $y$: 視点の高さ
+        - $t$: 2つの散乱係数設定間の補間率
+    - $L_{sun}^{(LUT)}(\theta_s, y, t)$: 代表的な位置$r(x, y, z)$に到達する太陽光
+    - $L_{sky}^{(LUT)}(\theta_s, y, t)$: 代表的な位置$r(x, y, z)$に到達する天空光
+
+我々の事前計算された大気散乱モデルは特別なことは何もないが、LUTは典型的なモデルと異なる。
+我々の実装は主にいくつかの最適化[@Hillaire2016]を伴う @Bruneton2008 と @Elek2009 のモデルに基づく。
+事前計算アルゴリズムの詳細については、このスライドに示された参考文献を参照してください。
+
+典型的な事前計算された大気モデルはin-scatterと透過率のLUTを持つ。
+しかし、我々は、太陽光と天空光の情報を解析的高さフォグモデルに直接与えたいので、透過率LUTを太陽光と天空光のLUTに置き換える。
+
+ところで、2種の天候をLUTに事前計算した。
+ここで、"2種の天候"とは2つの異なる散乱設定を意味する。
+これは、ベースとして快晴と濃霧の気象条件があれば、実行時の事前計算なしに様々な気象条件を説明できることを発見したためである。
+
+<!-- p.23 -->
+
+- 我々のLUT(一例)
+    - $L_{inscatter}^{(LUT)}(\theta_s, \theta_v, y, t)$: (8, 64, 8, 4)、128KB
+    - $L_{sun}^{(LUT)}(\theta_s, y, t)$: (64, 1, 4)、4KB
+    - $L_{sky}^{(LUT)}(\theta_s, y, t)$: (64, 1, 4)、4KB
+
+これが我々のLUTの一例である。
+これらのサイズは地面上やその近くにいるゲーム用に最適化されている。
+
+3つのLUTとして散乱情報を持っている。
+次のスライドでは、これらのLUTが高さフォグモデルでどのように使われるかを見ていこう。
+
+# 高さフォグ: 解析的モデル[Height fog: Analytic model]
+
+- 背景放射(空)[@Elek2009]
+    - $i \in {\text{Rayleigh}, \text{Mie}}$
+    - $p_i$: 位相関数$[-]$
+
+$$
+L_{background} = \sum_i p_i(\theta_sv)L_{inscatter}^{(LUT)i}
+$$
+
+- 高さフォグ
+    - $\beta_{si}$: 散乱係数$[m^{-1}]$
+    - $\beta_{ai}$: 吸収係数$[m^{-1}]$
+    - $\beta_{ti}$: 消散[extinction]係数$[m^{-1}]$
+        - ($\beta_{ti} = \beta_{si} + \beta_{ai}$)
+    - $H$: スケールハイト$[m]$
+    - $s$: カメラまでの距離$[m]$
+
+$$
+L = L_{background} \alpha + (L_{sun} + L_{amb})(1 - \alpha) \\
+L_{sun} = \frac{\sum_i \beta_{si} p_i(\theta_sv)}{\sum_i \beta_{ti}} L_{sun}^{(LUT)} \\
+L_{amb} = \frac{\sum_i \beta_{si}}{\sum_i \beta_{ti}} L_{sky}^{(LUT)} \\
+\alpha = \exp \left( -\frac{\int_i \beta_{ti} He^{-\frac{y(0)}{H}}}{y(s) - y(0)} \left( 1 - e^{-\frac{1}{H}(y(s) - y(0))} \right) s \right)
+$$
+
+高さフォグモデルに入る前に、空について一言。
+背景放射、すなわち空はin-scatterのLUTと位相関数でできている。
+これは @Elek2009 のモデルと同じである。
+
+それじゃあ、解析的高さフォグモデルを見ていこう。
+このモデルは背景と太陽光＋アンビエントを$\alpha$でブレンドするという形を取る。
+$L_{background}$は背景放射、すなわち空を意味する。
+$L_{sun}$は太陽光の単一散乱要素を述べる。
+そして、$L_{amb}$は空からの一定の環境光の要素である。
+$\alpha$は背景とのブレンド因子である。標高によるフォグ密度の減少はここで説明される。
+一見すると、このアルファブレンディング構造はゲームのために調整されたモデルのように見える。
+しかし、ボリュームレンダリング方程式からこれを直接導出することができる。
+このモデルの導出に興味があるなら、このセッション後に声をかけてください。
+
+<!-- p.25 -->
+
+```hlsl
+/*
+    高さフォグのin-scatterと透過率を計算する。
+        使い方:
+        float3 background;
+        ...
+        float inscatter, transmittance;
+        HeightFog(.., inscatter, transmittance);
+        background = background * transmittance + inscatter;
+*/
+void HeightFog(
+    HeightFogParam inParam,          // フォグのパラメータ
+    float          inDistance,       // 距離 [m]
+    float          inCameraPosY,     // カメラ位置の標高 [m]
+    float          inWorldPosY,      // ワールド位置の標高 [m]
+    float          inSoV,            // dot(sun_dir, view_dir) [-]
+    out float3     outInscatter,     // in-scatter [-]
+    out float3     outTransmittance) // 透過率 [-]
+{
+    const float3 beta_t = inParam.mBetaRs + (inParam.mBetaMs + inParam.mBetaMa);
+
+    // 透過率
+    float t = max(1e-2, (inCameraPosY - inWorldPosY) / inParam.mScaleHeight);
+    t = (1.0 - exp(-t)) / t * exp(-inWorldPosY / inParam.mScaleHeight);
+    float3 transmittance = exp(-inDistance * t * beta_t);
+
+    // Inscatter
+    float3 single_r = inParam.mAlbedoR * inParam.mBetaRs * Rayleigh(inSoV);
+    float3 single_m = inParam.mAlbedoM * inParam.mBetaMs * Mie(inSoV, inParam.mMieAsymmetry);
+    float3 inscatter = inParam.mSunColor * (single_r + single_m);
+    inscatter += inParam.mAmbColor * (inParam.mBetaRs + inParam.mBetaMs);
+
+    outInscatter = inscatter * (1.0 - transmittance);
+    outTransmittance = transmittance;
+}
+
+float Rayleigh(float mu) {
+    return 3.0 / 4.0 * 1.0 / (4.0 * PI) * (1.0 + mu * mu);
+}
+
+float Mie(float mu, float g) {
+    // Henyey-Greensteinの位相関数
+    return (1.0 - g * g) / ((4.0 * PI) * pow(1.0 + g * g - 2.0 * g * mu, 1.5));
+}
+
+struct HeightFogParam {
+    float3 mBetaRs;        // Rayleigh散乱の散乱係数 [1/m]
+    float  mBetaMs;        // Mie散乱の散乱係数 [1/m]
+    float  mBetaMa;        // Mie散乱の吸収係数 [1/m]
+    float  mMieAsymmetry;  // Mie散乱の非対称性[asymmetry]因子 [-]
+    float  mScaleHeight;   // スケールハイト [-]
+    float3 mAlbedoR;       // Rayleigh散乱色の制御パラメータ [-]
+    float3 mAlbedoM;       // Mie散乱色の制御パラメータ [-]
+    float3 mSunColor;      // [-]
+    float3 mAmbColor;      // [-]
+}
+```
+
+これが高さフォグモデルのサンプルコードである。
+
+# 高さフォグ: 結果[Height fog: Results]
+
+これがその結果である。
+左端から順に説明していこうと思う。
+左端は最終結果である。
+次は背景放射である。
+次は$\alpha$を乗算した背景放射である。透過率$\alpha$が日没の色を引き起こしているかを確認できる。
+次は太陽光の要素である。
+右端はアンビエントの要素である。
+
+右の3つを合わせると、左の結果になる。
+
+<!-- p.27 -->
+
+これはDecima Engineによるサンプルシーンである。
+アーティスティックな大気の導入に伴う晴れから曇りにかけての空気遠近を確認できる。
+
+この結果を以て、単一の高さフォグモデルで現実的な空気遠近とアーティスティックな高さフォグを達成する。
+
+# 1080pでのAA[AA in 1080p]
 
 TODO
 
