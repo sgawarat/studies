@@ -138,9 +138,9 @@ numberSections: false
 
 - [x] [@Yang2011]
     - DLAA
-<!-- あとで読む -->
-- [ ] [@Reshetov2011]
+- [x] [@Reshetov2011]
     - MLAA
+<!-- あとで読む -->
 - [ ] [@Jimenez2011]
     - Jimenez式MLAA＆SMAA
 - [ ] [@McGuire2011]
