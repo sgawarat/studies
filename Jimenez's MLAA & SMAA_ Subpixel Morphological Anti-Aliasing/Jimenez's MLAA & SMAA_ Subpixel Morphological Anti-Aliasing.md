@@ -161,6 +161,136 @@ MLAAの最も高価な要素である、線の終端の検索とと交差する�
 
 # 新しい問題！[New Problem!]
 
+- 今や3つのフルスクリーンバスを必要とする。
+- 解決法: ステンシルバッファを使う！
+
+しかし、3つのフルスクリーンパスを必要とする、という新しい問題が生まれた。
+
+しかしながら、その解決法は簡単である。
+
+ステンシルバッファを用いて第1パスで処理が必要なピクセルをマスクする。
+
+# ワークフロー[Workflow]
+
+では、高レベルのアイデアは終わりにして、我々の実装の詳細に入っていこう。
+
+ここでは、我々のテクニックの全体像[big picture]がある。
+
+これは3パスで構成する。
+
+<!-- p.27 -->
+
+第1パスでは、エッジ検出を行い、エッジテクスチャを得る。
+
+<!-- p.28 -->
+
+第2パスでは、各エッジを処理し、再ベクトル化を計算し、対応する面積を得る。
+
+<!-- p.29 -->
+
+第3およぴ最終パスでは、第2パスからの面積を用いて4近傍で各ピクセルをブレンドする。
+
+エッジ検出ステップをスキップして、より面白い実装がある第2パスに進もうと思う。
+
+# エッジ検出 第1パス[Edge Detection 1st Pass]
+
+- **色**: (ITU-R勧告 BT.709)
+    - $Y' = 0.2126 \cdot R' + 0.7152 \cdot G' + 0.0722 \cdot B'$
+- **深度**: より安価でより明確なエッジを持つが、あらゆるオブジェクト尺度では動作しない可能性がある。
+- **インスタンスID/深度＋法線**: この情報が使える場合に最適
+
+第1パスから始めよう。
+
+エッジ検出は最終画像のクオリティに対する重要な工程てある。
+
+各未検出エッジは最終画像でエイリアスしたままであるので、すべての知覚できるエッジを検出することは重要である。
+
+良好なエッジ検出は時間的な安定性を高めるとすると、このステップでのロバスト性もまた望ましい。
+
+複数の選択肢がある。どれが最適かは特定のシナリオに強く依存するだろう。
+
+<!-- p.31 -->
+
+色は、常に利用可能であるため、最も普遍的でより簡単な解決法と見なされる可能性がある。
+
+色による処理は、いくつかのシナリオでクオリティを改善する、シェーディングエイリアシングのシームレスハンドリングを追加で提供する。
+
+欠点として、モデルに現れるテキストやその他の高周波な特徴で若干のブラーをもたらすかもしれない。
+
+<!-- p.32 -->
+
+幾何学的なエッジのより良い推定器であるため、深度、法線、または、オブジェクトIDも使うことができ、最大画像鮮鋭度を維持することができる。
+
+Peteが後に示すように、すべてのオブジェクトの尺度を適切に管理することが本当に難しいので、深度のみを使うことはトリッキーである。
+
+<!-- p.33 -->
+
+深度およびインスタンスIDを法線と組み合わせることは、本当に明確で完璧なエッジを生み出すので、一般にとても良い結果をもたらし、画像鮮鋭度のほとんどを保存するために管理する。
+
+しかし、エッジ検出パスは、追加の処理が必要になるとすると、より高価である。
+
+ときどき、これらもまた色では起こらないアーティファクトを引き起こすが、これの説明はこのトークの範疇ではない。
+
+<!-- p.34 -->
+
+- 色バージョン
+
+```hlsl
+float4 ColorEdgeDetectionPS(float4 position : SV_POSITION, float2 texcoord : TEXCOORD0) : SV_TARGET {
+    float3 weights = float3(0.2126, 0.7152, 0.0722);
+
+    // 輝度計算はガンマ補正済みの色を必要とするので、'colorTex'はsRGBでないテクスチャとすべき。
+    float L = dot(colorTex.SampleLevel(PointSampler, texcoord, 0).rgb, weights);
+    float Lleft   = dot(colorTex.SampleLevel(PointSampler, texcoord, 0, -int2(1, 0)).rgb, weights);
+    float Ltop    = dot(colorTex.SampleLevel(PointSampler, texcoord, 0, -int2(0, 1)).rgb, weights);
+    float Lright  = dot(colorTex.SampleLevel(PointSampler, texcoord, 0,  int2(1, 0)).rgb, weights);
+    float Lbottom = dot(colorTex.SampleLevel(PointSampler, texcoord, 0,  int2(0, 1)).rgb, weights);
+
+    float4 delta = abs(L.xxxx - float4(Lleft, Ltop, Lright, Lbottom));
+    float4 edges = step(threshold.xxxx, delta);
+
+    if (dot(edges, 1.0) == 0.0)
+        discard;
+
+    return edges;
+}
+```
+
+ここでは、色の入力データを用いる、エッジ検出の最も単純な形式を確認できる。
+
+5回のメモリアクセスといくつかの算術命令を用いる。
+
+Gather4が使えるプラットフォームでは…
+
+<!-- p.35 -->
+
+```hlsl
+float4 ColorEdgeDetectionPS(float4 position : SV_POSITION, float2 texcoord : TEXCOORD0) : SV_TARGET {
+    float3 weights = float3(0.2126, 0.7152, 0.0722);
+
+    // 輝度計算はガンマ補正済みの色を必要とするので、'colorTex'はsRGBでないテクスチャとすべき。
+    float topLeft     = lumaTex.Gather(LinearSampler, texcoord + PIXEL_SIZE * float2(-0.5, -0.5), 0);
+    float bottomRight = lumaTex.Gather(LinearSampler, texcoord + PIXEL_SIZE * float2( 0.5,  0.5), 0);
+    float L = topLeft.g;
+    float Lleft = topLeft.r;
+    float Ltop = topLeft.b;
+    float Lright = bottomRight.b;
+    float Lbottom = bottomRight.r;
+
+    float4 delta = abs(L.xxxx - float4(Lleft, Ltop, Lright, Lbottom));
+    float4 edges = step(threshold.xxxx, delta);
+
+    if (dot(edges, 1.0) == 0.0)
+        discard;
+
+    return edges;
+}
+```
+
+…輝度が事前計算されるとすれば、アクセス数を3回に減らし、すべての内積を取り除くことができる。
+
+# ブレンディング重み計算 第2パス[Blending Weights Calculation 2nd Pass]
+
 TODO
 
 # 参考文献[References]
