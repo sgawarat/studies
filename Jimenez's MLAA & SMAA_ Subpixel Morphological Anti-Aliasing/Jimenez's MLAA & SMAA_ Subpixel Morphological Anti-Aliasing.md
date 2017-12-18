@@ -291,6 +291,211 @@ float4 ColorEdgeDetectionPS(float4 position : SV_POSITION, float2 texcoord : TEX
 
 # ブレンディング重み計算 第2パス[Blending Weights Calculation 2nd Pass]
 
+- 3つの部分で構成する。
+    - 現在の線の終端への距離$d_{left}$と$d_{right}$を検索する。
+    - 交差するエッジ$e_{left}$と$e_{right}$をフェッチする。
+    - $d$と$e$を用いて、このピクセルのカパレッジ$a$を計算する。
+
+この第2パスでは、再ベクトル化した線の下の面積を計算したい。
+
+このパスでは、線の終端を検索し、交差するエッジをフェッチし、このピクセルのカバレッジ面積を計算するためにこの情報を使わなければならない。
+
+# 距離の検索[Searching for Distances]
+
+- バイリニアフィルタリングを利用することで行われる。
+
+終端の検索はメモリ集約的なタスクである。
+
+帯域幅の使用率を改善するため、バイリニアフィルタリングがほとんどのプラットフォームでタダであるという事実を活用する。
+
+この画像には、エッジバッファの値を表す点の色と一緒に、青でマークしたエッジがある。
+
+So starting from here, we are going to jump two pixels at time, between them...
+
+<!-- p.38 -->
+
+このひし形[rhombus]は最初のフェッチを表す。
+
+バイリニアフィルタリングは1を返すので、両ピクセルにはエッジがある。
+
+<!-- p.39 -->
+
+ここも同じ…
+
+<!-- p.40 -->
+
+このフェッチでは、エッジの片方が有効でないことを意味する0.5を得るので、検索が終了した。
+
+この方法でバイリニアフィルタリングを用いることにより、検索を2倍に高速化することができるので、パフォーマンスが低下しない本当に長い距離の検索に到達することが可能になる。
+
+<!-- p.41 -->
+
+- 検索のコード例
+
+```hlsl
+float SearchXLeft(float2 texcoord) {
+    texcoord -= float2(1.5, 0.0) * PIXEL_SIZE;
+    float e = 0.0;
+
+    // エッジ間をサンプルするために0.5だけオフセットする。すなわち、横一列の2つをフェッチする。
+    for (int i = 0; i < maxSearchSteps; i++) {
+        e = edgesTex.SampleLevel(LinearSampler, texcoord, 0).g;
+
+        // バイリニアのアクセス精度の問題を軽減するために0.9と比較する。
+        [flatten] if (e < 0.9) break;
+        texcoord -= float2(2.0, 0.0) * PIXEL_SIZE;
+    }
+
+    // 終端を見つけられずにループを脱出した場合、-2 * maxSearchStepsを返したい。
+    return max(-2.0 * i - 2.0 * e, -2.0 * maxSearchSteps);
+}
+```
+
+ここには、左への検索を扱う単純なコードがある。
+
+どのように一度に2つのピクセルを飛び越えるか、
+
+そして、どのようにフェッチが1でない何か他の値を返すときにストップするか、を確認できる。
+
+# 交差するエッジのフェッチ[Fetching crossing edges]
+
+線の終端への距離が分かったら、それを使って交差するエッジを得る。
+
+交差するエッジをフェッチするナイーブなアプローチは4つのエッジのクエリを暗に示すだろう。
+
+<!-- p.43 -->
+
+- 再び、バイリニアフィルタリングを利用することで行われる。
+
+代わりに、より効率的なアプローチは、距離の検索と同様に、一度に両方のエッジをフェッチするのにバイリニアフィルタリングを使うことである。
+
+だが、少し問題がある。
+
+戻り値が0.5のとき、この場合を扱うのか、または、もう一方の場合を扱うのか？
+
+<!-- p.44 -->
+
+- 解決法: 座標をオフセットする！
+
+その解決法はクエリを0.25だけオフセットすることである。これは、それぞれの場合で戻り値が異なるので、これらを区別することが可能となる。
+
+# カバレッジの計算[Calculating the coverage]
+
+- 以下を回避するために事前計算したテクスチャを使う。
+    - 動的分岐
+    - 高価な面積計算
+
+カバレッジ計算での重要な貢献は、16の異なるパターンを扱う代わりに、分岐コードを回避する4Dテクスチャでこれらを事前計算することである。
+
+<!-- p.46 -->
+
+このテクスキャへのアクセスは次のようになる。
+
+まず、パターンのタイプまたはブロックが選択される…
+
+<!-- p.47 -->
+
+…交差するエッジ情報を用いることで。
+
+<!-- p.48 -->
+
+そして、線の終端への距離を用いることで適切な面積が選択される。
+
+<!-- p.49 -->
+
+なぜ事前計算した面積テクスチャが2チャンネルを持つか、を考えているかもしれない。
+
+答えはかなり簡単で、2チャンネルあると、ブレンド方向の曖昧さをなくすことが可能になるためである。
+
+赤の値は下のピクセルを上のものとブレンドすることを意味する。
+
+一方、緑の値はその逆である。
+
+# 面積テクスチャの利点[Area Texture Advantages]
+
+- 対称的なパターンの扱い
+- 非対称な再ベクトル化　→　パターンの微調整
+
+事前計算した面積も用いることには複数の利点がある。
+
+そこには、すべてのパターンが同じ方法で扱われる、すなわち、単純なテクスチャアクセスであるという事実を含む。
+
+一方で、テクスチャそれ自体がカスタマイズできるので、あるパターンを微調整することができる。
+
+<!-- p.51 -->
+
+これらの再ベクトル化は通常アーティファクトをもたらすので、これらのパターンをフィルタリングするのを回避する。
+
+その他の再ベクトル化をカスタマイズして、単純なZパターンとして扱った。
+
+この微調整は、必要に応じて高品質なアンチエイリアシングを提供しつつ、できる限り綺麗なままの画像を維持するのに役立つ。
+
+# ブレンディング重み計算 第2パス[Blending Weights Calculation 2nd Pass]
+
+- シェーダコード(I)
+
+```hlsl
+float4 BlendingWeightCalculationPS(float4 position : SV_POSITION, float2 texcoord : TEXCOORD0) : SV_TARGET {
+    float4 weights = 0.0;
+
+    float2 e = edgesTex.SmapleLevel(PointSampler, texcoord, 0).rg;
+
+    [branch]
+    if (e.g) {  // 北のエッジ
+        // 左と右への距離を検索する。
+        float2 d = float2(SearchXLeft(texcoord), SearchXRight(texcoord));
+
+        // 交差するエッジをフェッチする。edgel^[edge + pixel?]の間をサンプルする代わりに、どの値がそれぞれのedgelを持つかを見分けられるように、-0.25の地点をサンプルする。
+        float4 coords = mad(float4(d.x, -0.25, d.y + 1.0, -0.25), PIXEL_SIZE.xyxy, texcoord.xyxy);
+        float e1 = edgesTex.SampleLevel(LinearSampler, coords.xy, 0).r;
+        float e2 = edgesTex.SampleLevel(LinearSampler, coords.zw, 0).r;
+
+        // このパターンがどう見えているかが分かったので、今や実際の面積を得る時である。
+        weights.rg = Area(abs(d), e1, e2);
+    }
+```
+
+ここには、パス全体のコードがある。
+
+まず、線の終端を検索して、
+
+そして、交差するエッジをフェッチして、
+
+最後に、カバレッジ面積を求める。
+
+<!-- p.53 -->
+
+- シェーダコード(II)
+
+```hlsl
+    [branch]
+    if (e.r) {  // 西のエッジ
+        // 上と下への距離を検索する。
+        float2 d = float2(SearchYUp(texcoord), SearchYDown(texcoord));
+
+        // (またまた)交差するエッジをフェッチする。
+        float4 coords = mad(float4(-0.25, d.x, -0.25, d.y + 1.0), PIXEL_SIZE.xyxy, texcoord.xyxy);
+        float e1 = edgesTex.SampleLevel(LinearSampler, coords.xy, 0).g;
+        float e2 = edgesTex.SampleLevel(LinearSampler, coords.zw, 0).g;
+
+        // この方向の面積を得る。
+        weights.ba = Area(abs(d), e1, e2);
+    }
+
+    return wieghts;
+}
+```
+
+これは、見ての通り、かなり似通った垂直のケースのコードを示す。
+
+# 近傍ブレンディング 第3パス[Neighborhood Blending 3rd Pass]
+
+- 前のパスで計算した面積を用いて近傍をブレンドする。
+
+$$
+c_{new} = (1 - a) \cdot c_{old} + a \cdot c_{opp}
+$$
+
 TODO
 
 # 参考文献[References]
