@@ -496,6 +496,125 @@ $$
 c_{new} = (1 - a) \cdot c_{old} + a \cdot c_{opp}
 $$
 
+最後に、前フレームで計算した面積を用いてエッジのピクセルをブレンドしたい。
+
+例えば、ピクセル$c_{old}$の場合では、下のエッジからの面積を取得した。
+
+必要とされるブレンディングは1Dバイリニアフィルタリングに似ている。
+
+<!-- p.55 -->
+
+- バイリニアフィルタリングを活用する(またまた)。
+
+バイリニアフィルタリングを再び活用する。これを使ってブレンディング式を実装する。
+
+<!-- p.56 -->
+
+- シェーダコード(I)
+
+```hlsl
+float4 NeighborhoodBlendingPS(float4 position : SV_POSITION, float2 texcoord : TEXCOORD0) : SV_TARGET {
+    // 現在のピクセルのブレンディング重みをフェッチする。
+    float4 topLeft = blendTex.SampleLevel(PointSampler, texcoord, 0);
+    float bottom = blendTex.SampleLevel(PointSampler, texcoord, 0, int2(0, 1)).g;
+    float right = blendTex.SampleLevel(PointSampler, texcoord, 0, int2(1, 0)).a;
+    float4 a = float4(topLeft.r, bottom, topLeft.b, right);
+
+    // 最大4つの線がピクセルと交差できる(各エッジにつき1つ)。各線の重みがaの3乗となる重み付き平均を計算する。これはブレンディングに有利に働き、実践でうまく動作する。
+    float4 w = a * a * a;
+}
+```
+
+ここでは、4つの可能性のある線の面積をフェッチする方法が確認できる。
+
+<!-- p.57 -->
+
+- シェーダコード(II)
+
+```hlsl
+    // 0.0より大きい値を持つブレンディング重みがあるか？
+    float sum = dot(w, 1.0);
+    [branch]
+    if(sum > 0.0) {
+        float4 o = a * PIXEL_SIZE.yyxx;
+        float4 color = 0.0;
+
+        // このピクセルと交差する可能性がある4つの線の寄与を追加する。
+        color = mad(colorTex.SampleLevel(LinearSampler, texcoord + float2( 0.0, -o.r), 0), w.r, color);
+        color = mad(colorTex.SampleLevel(LinearSampler, texcoord + float2( 0.0,  o.g), 0), w.g, color);
+        color = mad(colorTex.SampleLevel(LinearSampler, texcoord + float2(-o.b, 0.0), 0), w.b, color);
+        color = mad(colorTex.SampleLevel(LinearSampler, texcoord + float2( o.a, 0.0), 0), w.a, color);
+
+        // 結果の色を正規化して、終わり！
+        return color / sum;
+    } else {
+        return colorTex.SampleLevel(LinearSampler, texcorrd, 0);
+    }
+}
+```
+
+そして、ここでは、近傍とブレンドして、ピクセルと交差する可能性がある4つの線の結果を平均化する。
+
+# sRGBと線形ブレンディング[SRGB and linear blending]
+
+- ブレンディングは線形空間で行われるべき。
+
+最も正確な結果のため、このブレンディングは線形空間で行われるべきである。
+
+ガンマと線形の間の差異が微妙だがはっきりと確認できる。
+
+sRGBバッファとDirectX10を使うと、ブレンディングが線形空間で行われることを保証するだろう。
+
+<!-- p.60 -->
+
+この結果を見るには我々のページを訪問するのをおすすめするが、とはいえ、その一部を示そうと思う。
+
+ここには、最初のものがある。
+
+<!-- p.61 -->
+
+ここで、色エッジ検出の正確さを認識できる。
+
+<!-- p.63 -->
+
+そしてここには、Unigineによる興味深い画像がある。
+
+見ての通り、色エッジ検出を用いるときにいくつかのテクスチャの詳細が失われる。
+
+<!-- p.66 -->
+
+一方で、深度ベースのエッジ検出を用いるときは…
+
+テクスチャの詳細は完全に保たれている。
+
+<!-- p.68 -->
+
+しかし、小さな深度デルタを持ついくつかの区域ではアンチエイリアスされないだろう。
+
+両方の最適な世界を組み合わせる方法は後にTobiasがカバーするだろう。
+
+# パフォーマンス[Performance]
+
+GeForce GTX 470において、**0.28ms @ 720**
+Gather4を用いない場合、**0.37ms @ 720**
+
+||||
+|-|-|-|
+|Assasin's Creed|0.368|0.10|
+|   |   |   |
+|Grand Average|0.2944|0.08|
+: スクリーンキャプチャによる計測
+
+これはすべて良く、本当に高速で、正常に動作し、このテクニックはすでにいくつかのゲームで使われている。
+
+しかし、更に良いニュースがある。あるものについての技術報告書を公開したばかりである。
+
+<!-- p.70 -->
+
+それは我々がサブピクセルモーフォロジカルアンチエイリアシングと呼ぶものである。
+
+# SMAA: サブピクセルモーフォロジカルアンチエイリアシング[SMAA: Subpixel Morphological Antialiasing]
+
 TODO
 
 # 参考文献[References]
