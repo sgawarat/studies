@@ -140,11 +140,11 @@ numberSections: false
     - DLAA
 - [x] [@Reshetov2011]
     - MLAA
-<!-- あとで読む -->
-- [ ] [@Jimenez2011]
+- [x] [@Jimenez2011]
     - Jimenez式MLAA＆SMAA
-- [ ] [@McGuire2011]
+- [x] [@McGuire2011]
     - SRAA
+<!-- あとで読む -->
 - [ ] [@Lottes2011]
     - FXAA
 - [ ] [@Malan2011]
@@ -193,11 +193,11 @@ numberSections: false
     - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど。
 - [x] [@Haar2015]
     - GPU駆動カリングパイプラインと仮想テクスチャ。
+- [x] [@Carpentier2017]
+    - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
 <!--  あとで読む -->
 - [ ] [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
-- [ ] [@Carpentier2017]
-    - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
 - [ ] [@Drobot2017b]
     - Call of Duty: Infinite Warfareのレンダリングエンジン。
 - [ ] [@Sousa2011]
