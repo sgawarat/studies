@@ -866,18 +866,137 @@ FXAAを適用するため、また、前フレームからチェッカーボー�
 - バイリニアルックアップをサポートする。
 - ネイティブ解像度のUVをクランプ、回転、平行移動する。
     - タングラムUVを得るため
-    - 残りはハードウェアwrappが行う。
+    - 残りはハードウェアラッピング[wrap around]が行う。
 
 この回転したバッファを我々が'タングラム'と呼ぶものに変換できる。このようないわゆるパズルゲームの一種なので、我々はこれをタングラムと呼ぶ。
 
 回転したバッファをパーツにカットし、このようにこれらをあちこちに移動することができる。
 これの良いところは完璧にロスがなく、2160pのチェッカーボードデータがコンパクトな2160x2160テクスチャに再びパックさせることが可能になるという点である。
-そして、これらのパーツを配置した正確な方法のために、サンプリング中に追加のロジックやシェーダ命令を使わずに、ビルトインのテクスチャラップハードウェアを用いてアンラップすることができる。
+そして、これらのパーツを配置した正確な方法のために、サンプリング中に追加のロジックやシェーダ命令を使わずに、ビルトインのテクスチャラッピングハードウェアを用いてアンラップすることができる。
 
 サンプリング中に唯一必要なことはネイティブ解像度UVを45度回転して、フレームごとに固定のオフセット値でこれらをオフセットすることである。
 
 <!-- p.61 -->
 
-TODO
+このタングラムに実際にはいくつかの詰物があることに気づいたかもしれない。
+それはこの正確な入れ替えの副次的効果であり、ラッピングが正しく動作するようにするのに必要とされる。
+しかし、結果として、タングラムは通常のチェッカーボードバッファより12%多くメモリを消費する。
+
+とはいえ、詰物をサンプルする訳はないので、帯域幅をまったく消費しない。
+
+<!-- p.62 -->
+
+- 3つの回転したクアッドを用いてレンダリングされる。
+    - 正しいピクセルに'ポイントサンプリング'スナップする。
+    - もうひとつのフルスクリーンパスを組み合わせる。
+        - 潜在的にタダにする。
+
+詰物エリアに書き込む必要もない。
+実際に、タングラムは正確に位置取りされたクアッドのみを用いてレンダリングできる。
+この方法で、すべてのチェッカーボードピクセルはタングラム内のひとつの位置に正確にレンダリングされる。
+
+パイプラインに依存して、既存のフルスクリーンパス内からこの処理を適用することさえできるかもしれないので、このタングラム変換は実質的にタダとなる。
+
+<!-- p.63 -->
+
+- まとめ
+    - チェッカーボード解像度でレンダリング、ポストプロセスする(1920x2160、知覚的な10.10.10.2)。
+    - (YCoCg)タングラムに変換する(2160x2160)。
+        - 次のパスのためのYCoCg: ひとつの`gatherRed`に4つの輝度サンプル
+    - 通常のFXAAを適用する。
+        - タングラムのために、対角線からジャギーを除去する。
+    - 現在のタングラムと再投影された履歴タングラムをブレンドして、2160pに出力する。
+
+この話の終わりに、我々のチェッカーボードレンダリングアプローチをまとめよう。
+
+- まずネイティブ解像度ヒントを一切使わずにチェッカーボード解像度でレンダリングする。その時点ですべてのポストエフェクトを適用し、トーンマッピングを行い、sRGBかPQのいずれかに出力をエンコードし、10ビットフォーマットに結果を格納する。
+- タングラムに変換し、YCoCg色空間に格納する。
+- YCoCgタングラムは新しいタングラムを出力するFXAAパスでサンプルされる。YCoCgを使う理由はFXAAがほとんどの処理を輝度データで行うためであり、これはテクスチャギャザーあたり4つの輝度値をサンプルできるようにする。
+- FXAAパスの出力はピンポンされるバッファに格納され、解決するために現フレームと前フレームを受け取る。
+
+<!-- p.64 -->
+
+最終パスとして、現フレームと前フレームを取り、RGBに変換して、標準的な基準に基づいてリジェクトや再投影する。
+履歴がリジェクトされる場合、現フレームのみをサンプルするので、効果的にピクセルあたり2サンプルを得る。
+そして、履歴が受け入れられる場合、前の値と今の値を50対50でブレンドし、効果的にピクセルあたり4サンプルを得る。
+概念的には、最後の部分が1080pでのTAAソリューションにかなり似ているが、鮮鋭さは持たない。
+
+これが2ms未満でチェッカーボードモードで解決する方法である。
+
+# 付録: 球エリアライト[Appendix: Spherical Area Lighting]
+
+球GGXエリアライトのコード例
+
+```hlsl
+float GetGGXFromNDotHSquared(n_dot_h_squared, float alpha) {
+    float alpha_squared = alpha * alpha;
+    float partial_denom = n_dot_h_squared * (alpha_squared - 1.0) + 1.0;
+    return alpha_squared / (PI * partial_denom * partial_denom);
+}
+
+float3 EvaluateSphericalAreaGGX(float n_dot_l, float n_dot_v, float v_dot_l, float l_dot_h, float_light_radius, float light_center_distance, float alpha, float3 fresnel0) {
+    float radius_tan = max(0.001, light_radius / light_center_distance - alpha * 0.25);  // ライト半径は粗いマテリアルで小さくなる
+    float n_dot_h_squared = GetNoHSquared(radius_tan, n_dot_l, n_dot_v, v_dot_l);
+    float density = GetGGXFromNDotHSquared(n_dot_h_squared, alpha);
+    float visibility = GetGGXVisibility(n_dot_v, n_dot_l, alpha);  // 'visibility'はGGXの幾何項ほ4 * n_dot_v * n_dot_lで割ったもの
+    float3 fresnel = GetFresnel(l_dot_h, fresnel0);  // Schlickの近似式を使う
+    float3 brdf = density * visibility * fresnel;
+
+    // Karisのアプローチと我々のアプローチの両方は、正規化がおおよそであるため、真にエネルギーを保存していない。
+    // 正確さを改善しようと様々な正規化の方程式を実験している。これはそのうちのひとつである。
+    float alpha_squared_l_dot_h = alpha * alpha * (l_dot_h + 0.001);
+    float normalization = alpha_squared_l_dot_h / (alpha_squared_l_dot_h + 0.25 * light_radius * (3.0 * alpha + light_radius));
+
+    // エリアライトの大きさで正規化してN dot LをかけたBRDFを返す。N dot Lはその形状やエリアライトの大きさで調整されていない。
+    // 終端で0を得る単純な方法としてこれを行い、潜在的なシャドウアクネ[shadow acne]を軽減する。
+    return normalization * brdf * saturate(n_dot_l);
+}
+```
+
+# 付録: チェッカーボードレンダリング[Appendix: Checkerboard Rendering]
+
+バイリニアサンプリングの使用に基づいてタングラムをサンプルするコード例
+
+```hlsl
+// ネイティブ解像度の出力ピクセルのUVを取得し、異なるタングラム部分/詰物エリアとブレンドしないようにするために最も外側[outer most]のピクセルを繰り返す。
+// ボーダーの距離は多少の安全な近傍サンプリングが可能になるように選ばれるが、この詳細は実装固有である。
+int2 native_pos = (int2)(uv * float2(native_width, native_height));
+native_pos.x = clamp(native_pos.x, 1.0, native_width - 3.0);
+native_pos.y = min(native_pos.y, native_height - 3.0);
+
+float is_odd_frame = ...;  // 奇数フレームで1、偶数フレームで0
+
+// タングラムUVを取得し、タングラム内の最も近い2つのコーナーサンプルの中間を正確に指す。
+float2 tangram_uv = float2(-1.0 + is_odd_frame + native_pos.x - native_pos.y, 2.0 + is_odd_frame + native_pos.x + native_pos.y) * (0.5 / native_height);
+
+// 単純な解決を行う。
+float4 tangram_color = tex2Dlod(tangram_texture, bilinear_sampler, tangram_uv, 0.0);
+```
+
+チェッカーボードからタングラムへのレンダリングの頂点シェーダを生成するコード例
+
+```cpp
+struct Vertex {
+    Vec3 mPos;
+    Vec2 mUV;
+    Vertex(const Vec3& pos, const Vec2i uv) : mPos(pos), mUV(uv) {}
+};
+
+void GetVerticesForTangramRendering(int native_width, int native_height, bool is_even_frame, Vertex* out_vertices) {
+    ASSERT(native_width == (native_height * 16) / 9);
+    float half_width = 0.5f * (float)native_width;
+    float half_height = 0.5f * (float)native_height;
+
+    // 3つの45度回転したクアッドを準備して、一度に各チェッカーボードピクセルをカバーするように配置する。
+    for (int i = 0; i < 3; ++i) {
+        float x = (float)native_width * (i == 2 ? 1.0f : 0.0f) + (is_even_frame ? -0.5f : 0.0f);
+        float y = (float)native_height * (i == 1 ? -1.0f : 0.0f) + (is_even_frame ? 0.0f : 0.5f);
+        out_vertices[4 * i + 0] = Vertex(Vec3(x, y, 1.0f), Vec2(0.0f, 0.0f));
+        out_vertices[4 * i + 1] = Vertex(Vec3(half_width + x, half_height + y, 1.0f), Vec2(1.0f, 0.0f));
+        out_vertices[4 * i + 2] = Vertex(Vec3(half_width - half_height + x, half_width + half_height + y, 1.0f), Vec2(1.0f, 1.0f));
+        out_vertices[4 * i + 3] = Vertex(Vec3(-half_height + x, half_height + y, 1.0f), Vec2(0.0f, 1.0f));
+    }
+}
+```
 
 # 参考文献[References]
