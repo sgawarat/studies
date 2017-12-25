@@ -1,0 +1,101 @@
+---
+title: Secrets of CryENGINE 3 Graphics Technology
+numberSections: false
+---
+# 物理ベースレンダリング[Physically Based Rendering]
+
+- 線形補正HDRレンダリング[@Gritz2008; @Reinhard2010]
+- 最小Gバッファ: 深度と法線
+    - 不透明度、デカール、def. decals、地形[terrain]レイヤー
+- ディファードライティング
+    - アンビエント、環境光プロブ
+    - GI、SSDO、RLR、ライト
+    - 物理ベースシェーディング
+- 不透明/透明パス
+- HDR/LDR後処理
+
+# Gバッファ/Lバッファ/シーンターゲット[G-Buffer/L-Buffers/Scene Targets]
+
+- スリムなGバッファ
+    - A8B8G8R8のワールド空間のBF^[backface?]法線＋光沢度[glossiness]
+    - リードバックD24S8深度＋屋内の表面をタグ付けするためのステンシルビット
+- ディフューズとスペキュラバッファ用の2つのA2B10G10R10F_EDRAM
+    - X360: A2B10G10R10に解決される[@Cook2008]。
+    - PS3: 2つのA8B8G8R8はRGBMにエンコードされる。
+        - エンコード ⇔ 使えるHWブレンディングがない。ワークアラウンド: dstRTから読み書きする。
+    - PC: 2つのA16B16G16R16F(最も一般的なフォーマット)
+- シーンターゲット用のA2B10G10R10F_EDRAM
+    - PS3: 不透明ではA8B8G8R8 RGBM、透明ではFP16にエンコードされる。
+    - PC A16B16G16R16F
+
+# Zバッファ深度の注意[Z-Buffer Depth Caveats]
+
+- 双曲線の[hyperbolic]分布
+    - シェーダで使う前に線形に変換を必要とする。
+
+```hlsl
+// 定数
+g_ProjRatio.xy = float2(zfar / (zfar - znear), znear / (znear - zfar));
+
+// HLSL関数
+float GetLinearDepth(float fDevDepth) {
+    return g_ProjRatio.y / (fDevDepth - g_ProjRatio.x);
+}
+```
+
+- 問題: 一人称視点オブジェクト
+    - 深度バッファは一人称視点オブジェクトをシーンの残りとオーバーラップしないようにするために使われる。
+    - 異なるFOVとニア/ファー面(アート固有の選択)
+    - 実際のオーバーラッピングを抑制するための異なる深度範囲
+    - ⇒ ディファードテクニックはそのようなオブジェクトに対して100%正常に動作しない。
+
+# 一人称視点オブジェクトの対処[Addressing First Person View Objects]
+
+- 我々の最終解:
+    - 深度再構築関数を修正する。
+    - ハードウェア深度を線形に変換する。
+    - 一人称視点オブジェクトに対する異なる深度スケール
+    - 深度に基づく選択
+
+```hlsl
+float GetLinearDepth(float fDevDepth) {
+    float bNearDepth = step(fDevDepth, g_PS_DepthRangeThreashold);
+    float2 ProjRatio.xy = lerp(g_PS_ProjRatio.xy, g_PS_NearestScaled.xy, bNearDepth);
+    return ProjRatio.y / (fDevDepth - ProjRatio.x);
+}
+```
+
+# 深度から位置の再構築[Reconstructing Position from Depth]
+
+- アイデア: スクリーン空間Sから対象の同次空間W(シャドウ空間かワールド空間)へ直接的にVPOSを線形に変換する。
+
+```hlsl
+float4 HPos = (vStoWBasisZ + (vStoWBasisX * VPos.x) + (vStoWBasisY * VPos.y)) * fSceneDepth;
+HPos += vCamPos.xyzw;
+```
+
+- スクリーンクリップ空間から同次行列に直接変換する。
+- VPOSはディファードライトボリュームをレンダリングするための最も単純な方法である。
+- s3Dのための調整を分割する。
+
+# カバレッジバッファ[Coverage Buffer]
+
+- Crysis2ではほとんど屋外
+    - おおよそ70%
+    - そのような所ではポータルやPVSは効率的でない。
+- 主なオクルージョンカリングシステムとしてのカバレッジバッファ
+    - 本質的には低解像度の深度バッファ
+    - 可視性Zテスト用の物体のAABB/OBBの粗いCPUラスタライゼーション
+- 十分に詳細なカバレッジバッファをCPUで準備するのは遅すぎる。
+    - 巨大な計算コスト
+    - カバレッジバッファにすべての詳細を得るため、完全なレンダリングパイプラインをソフトウェアに複製しなければならない。
+
+<!-- p.10 -->
+
+- 前フレームのGPU深度バッファをCPUにリードバックする。
+    - GバッファのあとにGPUでZバッファをダウンスケールする(maxフィルタ)。
+    - 分割したCPUスレッドでバウンディングボックスをラスタライズすることによりカリングが行われる。
+
+<!-- p.11 -->
+
+TODO
