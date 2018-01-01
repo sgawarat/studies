@@ -515,6 +515,86 @@ right = tex2D(backBuf, baseUV - float2(parallaxL, 0));
 
 # HDR＆線形補正[HDR & Linear Correctness]
 
-TODO
+- HDR[@Reinhard2010]
+    - 精度、範囲
+    - 物理ベースポストプロセス
+- 線形補正[@Gritz2008]
+    - すべての計算が厳密に同じ空間で
+
+# VPOSワープ基底の計算[Computing VPOS warp basis]
+
+```hlsl
+float fProjectionRatio = fViewWidth / fViewHeight;  // アスペクト比
+
+//すべての値はカメラ空間にある。
+float fFar = cam.GetFarPlane();
+float fNear = cam.GetNearPlane();
+float fWorldHeightDiv2 = fNear * cry_tanf(cam.GetFov() * 0.5f);
+float fWorldWidthDiv2 = fWorldHeightDiv2 * fProjectionRatio;
+float k = fFar / fNear;
+Vec3 vStereoShift = camMatrix.GetColumn0().GetNormalized() * cam.GetAsymL();
+
+//行列の向きを適用する。
+Vec3 vZ = (camMatrix.GetColumn1() * fNear + vStereoShift) * k; // vZの大きさはカメラ位置からニア面への距離
+Vec3 vX = camMatrix.GetColumn0() * fWorldWidthDiv2 * k;
+Vec3 vY = camMatrix.GetColumn2() * fWorldHeightDiv2 * k;
+vZ = vZ - vX;
+vX *= (2.0f / fViewWidth);
+vZ = vZ + vY;
+vY *= -(2.0f / fViewHeight);
+
+// 基底をいずれかのローカル空間に変換する。(ここではシャドウ空間)
+vWBasisX = mShadowTexGen * Vec4(vX, 0.0f);
+vWBasisY = mShadowTexGen * Vec4(vY, 0.0f);
+vWBasisZ = mShadowTexGen * Vec4(vZ, 0.0f);
+vCamPos =  mShadowTexGen * Vec4(cam.GetPosition(), 1.0f);
+```
+
+# 再構築の幾何的な意味合い[Geometrical Meaning of Reconstruction]
+
+# シャドウアクネ[Shadow Acne]
+
+- 2つの主要因
+    - 低いシャドウマップのテクセル密度
+    - 深度バッファの精度
+- アクネに対処するさまざまなシナリオ
+    - 太陽光シャドウ: 傾斜縮尺[slope-scaled]の深度バイアス付きで前面をレンダリングする。
+    - 点ライトシャドウ: 背面レンダリングが屋内のシーンでより良く動作する。
+    - 遠いLOD用分散シャドウ --- シャドウマップに両面をレンダリングする。
+- 深度バッファの精度に対処するためのディファードシャドウパス中に一定の深度バイアス
+
+# 光のにじみの最小化[Minimizing Light Bleeding]
+
+- コンソールでは各ライトがシャドウをキャストする余裕は作れない。
+- ボックス/ボリュームをクリップする。
+    - ステンシルカリングを用いてライトブリーディングを取り除くためのライティングアーティスト用ツール
+    - 各ディファードライトは完全に生成されるシャドウマップを持つ必要はない。
+    - アーティストは任意の凸状ボリュームを生成するかデフォルトのプリミティブを用いることができる。
+
+# ディファードデカール[Deferred Decals]
+
+- フォワードデカールはかなりの問題がある。
+    - 追加のメモリ、メモリフラグメンテーションを引き起こすメッシュの再割り当て、動的メッシュ生成のためのCPU時間、など
+- ディファードデカールで解決！[@Krassnigg2010]
+    - ディファードライトにかなり似ていて、デカールのボックスボリュームとしてレンダリングする。
+    - ディフューズレイヤーの分割＋法線マップバッファのブレンディング
+    - ディフューズテクスチャのフェッチとシェーディング用減衰率の計算
+    - ここではライティング/シェーディングを計算しない。
+    - 静的なジオメトリのみに適用される。
+
+<!-- p.72 -->
+
+- 問題
+    - デカールが法線マップを持つ場合に、タンジェント空間の結果が通常のデカールと不釣り合いになる。
+    - ディファードデカールのリーク
+
+<!-- p.73 -->
+
+- リークに対する解決法
+    - 調整可能なデカールボリュームとデカール減衰関数
+    - シーン法線とデカールタンジェント空間法線の間の内積
+        - デカールが法線マップ自身を用いる場合に問題になる。
+        - X360: EDRAMにレンダリングして、常に解決済みシーン法線テクスチャに分割コピーを持つ。
+        - PS3: 凸状ボリュームのラスタライゼーション中に対象の読み/書きをレンダリングする。
 
 # 参考文献[References]
