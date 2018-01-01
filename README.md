@@ -153,6 +153,8 @@ numberSections: false
     - GBAA
 - [ ] [@Andreev2011]
     - DLAA
+- [ ] [@Jimenez2012]
+    - SMAA
 
 ### グローバル・イルミネーション
 
@@ -275,5 +277,10 @@ numberSections: false
 <!-- あとで読む -->
 - [ ] [@Cigolle2014]
     - GPUで単位ベクトルを表現する方法について調査。
+
+### メモリ割り当て
+
+- [@Schneider2006]
+    - Streamflow
 
 ### References
