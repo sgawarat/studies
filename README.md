@@ -144,11 +144,11 @@ numberSections: false
     - Jimenez式MLAA＆SMAA
 - [x] [@McGuire2011]
     - SRAA
-<!-- あとで読む -->
-- [ ] [@Lottes2011]
+- [x] [@Lottes2011]
     - FXAA
-- [ ] [@Malan2011]
+- [x] [@Malan2011]
     - DEAA
+<!-- あとで読む -->
 - [ ] [@Persson2011]
     - GBAA
 - [ ] [@Andreev2011]
@@ -195,13 +195,13 @@ numberSections: false
     - GPU駆動カリングパイプラインと仮想テクスチャ。
 - [x] [@Carpentier2017]
     - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
+- [x] [@Sousa2011]
+    - "CryEngine 3"の全体。
 <!--  あとで読む -->
 - [ ] [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
 - [ ] [@Drobot2017b]
     - Call of Duty: Infinite Warfareのレンダリングエンジン。
-- [ ] [@Sousa2011]
-    - "CryEngine 3"の全体。
 - [ ] [@Tatarchuk2017]
     - グラフィクスエンジンから見るプログラミングモデルの進化。
 
