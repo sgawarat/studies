@@ -183,6 +183,8 @@ numberSections: false
     - EAの"Frostbite"が採用した、FrameGraph(依存関係を定義するしくみ)とTransientリソース(フレーム内でリソースを共有するしくみ)。
 - [x] [@Wihlidal2016] [[slides](https://www.gdcvault.com/play/1023109/Optimizing-the-Graphics-Pipeline-With)]
     - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化。
+- [x] [@Drobot2017b]
+    - Call of Duty: Infinite Warfareのレンダリングエンジン。
 - [x] [@Rodrigues2017]
     - Ubisoftの"Anvil Next"をDirecX12に移行したときの知見。
 - [x] [@Lagarde2014] [[notes](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf)]
@@ -200,8 +202,6 @@ numberSections: false
 <!--  あとで読む -->
 - [ ] [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
-- [ ] [@Drobot2017b]
-    - Call of Duty: Infinite Warfareのレンダリングエンジン。
 - [ ] [@Tatarchuk2017]
     - グラフィクスエンジンから見るプログラミングモデルの進化。
 
