@@ -148,9 +148,11 @@ numberSections: false
     - FXAA
 - [x] [@Malan2011]
     - DEAA
-<!-- あとで読む -->
-- [ ] [@Persson2011]
+- [x] [@Persson2011]
     - GBAA
+<!-- あとで読む -->
+- [ ] [@Sousa2011b]
+    - CryENGINE 3 のAA
 - [ ] [@Andreev2011]
     - DLAA
 - [ ] [@Jimenez2012]
