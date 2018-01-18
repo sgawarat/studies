@@ -150,11 +150,11 @@ numberSections: false
     - DEAA
 - [x] [@Persson2011]
     - GBAA
-<!-- あとで読む -->
-- [ ] [@Sousa2011b]
+- [x] [@Sousa2011b]
     - CryENGINE 3 のAA
-- [ ] [@Andreev2011]
+- [x] [@Andreev2011]
     - DLAA
+<!-- あとで読む -->
 - [ ] [@Jimenez2012]
     - SMAA
 
