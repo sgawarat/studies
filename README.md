@@ -154,6 +154,8 @@ numberSections: false
     - CryENGINE 3 のAA
 - [x] [@Andreev2011]
     - DLAA
+- [x] [@Jimenez2017]
+    - ポストプロセスAAの変遷
 <!-- あとで読む -->
 - [ ] [@Jimenez2012]
     - SMAA
@@ -170,9 +172,9 @@ numberSections: false
     - Volumetric Obscuranceの提案。
 - [x] [@McGuire2012]
     - Scalable Ambient Obscuranceの提案。
-<!-- あとで読む -->
-- [ ] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
+- [x] [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
     - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
+<!-- あとで読む -->
 
 ### レイトレージング
 
@@ -203,9 +205,10 @@ numberSections: false
     - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
 - [x] [@Sousa2011]
     - "CryEngine 3"の全体。
-<!--  あとで読む -->
+<!-- いま読む -->
 - [ ] [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
+<!--  あとで読む -->
 - [ ] [@Tatarchuk2017]
     - グラフィクスエンジンから見るプログラミングモデルの進化。
 
@@ -282,7 +285,8 @@ numberSections: false
 
 ### メモリ割り当て
 
-- [@Schneider2006]
+- [x] [@Schneider2006]
     - Streamflow
+<!-- あとで読む -->
 
 ### References
