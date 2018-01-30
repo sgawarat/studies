@@ -1,5 +1,6 @@
 ---
 title: Improved Moment Shadow Maps for Translucent Occluders, Soft Shadows and Single Scattering [@Peters2017]
+bibliography: bibliography.bib
 ---
 # はじめに[Introduction]
 
@@ -37,7 +38,7 @@ Z(\boldsymbol{z} < z_f) := \sum_{l = 0}^{n - 1} w_l \cdot
 \text{ where } \boldsymbol{z}(z) := z
 $$
 
-　Variance Shadow Maps[@Lauritzen2006]は$\boldsymbol{b}(z) := (1, z, z^2)^T$を用いる。1つ目の要素は$\varepsilon_Z(\boldsymbol{b_0}) = 1$なので格納する必要がなく、残りの2つで$Z$の平均と分散を計算して、Cantelliの不等式^[単一テールの場合でのチェビシェフの不等式の一般化 --- [Wikipedia](https://en.wikipedia.org/wiki/Cantelli%27s_inequality)]で再構築できる。
+　Variance Shadow Maps[@Donnelly2006]は$\boldsymbol{b}(z) := (1, z, z^2)^T$を用いる。1つ目の要素は$\varepsilon_Z(\boldsymbol{b_0}) = 1$なので格納する必要がなく、残りの2つで$Z$の平均と分散を計算して、Cantelliの不等式^[単一テールの場合でのチェビシェフの不等式の一般化 --- [Wikipedia](https://en.wikipedia.org/wiki/Cantelli%27s_inequality)]で再構築できる。
 
 $$
 \mu := b_1, \sigma^2 := b_2 - b_1^2, Z(\boldsymbol{z} < z_f) \ge 1 - \frac{\sigma^2}{\sigma^2 + (z_f - \mu)^2} \text{ if } z_f \ge \mu
@@ -182,6 +183,34 @@ $$
 
 ## 結果と議論[Results and Discussion]
 
-## 半透明遮蔽物のシャドウ[Shadow for Translucent Occluders]
+# 半透明遮蔽物のシャドウ[Shadow for Translucent Occluders]
+
+## 関連研究[Related Work]
+
+　半透明な遮蔽物が存在するとき、ライトから表面への透過率は複雑な方法で深度に依存することがある。これは区分線形関数で表されるが、そのフィルタリングは自明ではない[@Salvi2010]。他のアプローチではPercentage-Closer Filteringを用いたり、半透明率に比例してフラグメントを無作為に破棄したりする[@Enderton2010; @McGuire2011]。
+　Fourier Opacity Mapping[@Jansen2010]は、Convolution Shadow Maps[@Annen2007]のアイデアを導入して、ソートせずに足し合わせ[be accumulated additively]られる吸収関数(透過率の対数)をフーリエ級数で表現する。Translucent Shadow Maps[@Delalandre2011]は似たようなアプローチを取るが、ソートを必要とする透過率関数を表現する。Phenomeonlogical Scattering[@McGuire2016]はVariance Shadow Mapを通じて透過率を表現するが、フラグメントを確率的に破棄することでソートを回避する。このテクニックはヒューリスティックなコースティクスも追加する。
+
+## 半透明遮蔽物に対するMoment Shadow Maps[Moment Shadow Maps for Translucent Occluders]
+
+　我々のアプローチはMoment Shadow Mapが透過率を表現すると言う点でTranslucent Shadow Mapsに似ている。吸収関数の表現には全吸収[total absorption]$b_0$のための追加のチャネルを必要とするだろう。さらに、不透明遮蔽物が無限の吸収に対応するとして、不透明と半透明の遮蔽物に対する単一のMoment Shadow Mapを用いたいと考えている。
+　この選択の欠点はMoment Shadow MapにレンダリングするときにOrder-Independent Transparencyのための手法を必要とすることである。我々はこれが我々の貢献と無関係[orthogonal]であると考えており、既存の手法(例えば、Stochastic Transparency[@Enderton2010])は上手く動作するはずである。実験ではソートされたジオメトリに依存している。
+　不透明度$\alpha_0, \dots , \alpha_{n_s - 1} \in [0, 1]$を持つ深度$z_0 < z_1 < \dots < z_{n_s - 1}$における光線に沿った$n \in \mathbb{N}$個の表面があるとする。深度$z_f \in \mathbb{R}$へと透過した光量は関連する透過率係数の積$\prod_{k=0,z_k<z_f}^{n_s-1} (1-\alpha_k)$である。この透過率は、深度$z_j$において、残りの光の割合$\alpha_j$がブロックされるので、以下の深度分布によって正確にモデル化される。
+
+$$
+Z := \sum_{j=0}^{n_s-1} \left( \prod_{k=0}^{j-1} 1-\alpha_k \right) \alpha_j \delta_{z_j}
+$$
+
+ブレンディングのover operator^[いわゆるアルファブレンディング。$\alpha c_{src} + (1 - \alpha) c_{dest}$]を用いてMoment Shadow Mapに後から前へこれらの表面をレンダリングすると仮定する。Moment Shadow Mapは適宜クリアするので、$z_{n_s - 1} = \alpha_{n_s - 1} = 1$と仮定するのは安全である。最終的に、モーメントのベクトルは以下のようになる。
+
+$$
+b := \sum_{j=0}^{n_s-1} \left( \prod_{k=0}^{j-1} 1 - \alpha_k \right) alpha_j \boldsymbol{b}(z_j) = \varepsilon_Z(\boldsymbol{b})
+$$
+
+近似の誤差はアルゴリズム1を通してモーメントからシャドウ強度を再構築する間にのみ引き起こされる。注意点として、$b_0$はブレンドし合ったすべての表面のアルファの合計に対応しており、$\alpha_{n_s - 1} = 1$であることから$b_0 = 1$であると分かっているので、依然として$b_0$は格納する必要はない。
+　over operatorが必要とされるので、半透明遮蔽物はMoment Shadow Mapに直接レンダリングしなければならない。さらに、現代のグラフィクスAPIの制約から、ブレンディングで用いる不透明度はRGBAテクスチャに書き込まれる値から独立することはできないので、代わりに各チャネルが16ビットのRGテクスチャを2つ用いる。レンダリングはMRTのハードウェアサポートを用いるため、パフォーマンス低下は軽度である。もちろん、疎な量子化変換を用いることも有効である。
+
+# Moment Soft Shadow Mapping
 
 TODO
+
+# 参考文献[References]
