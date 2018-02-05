@@ -38,13 +38,13 @@ Z(\boldsymbol{z} < z_f) := \sum_{l = 0}^{n - 1} w_l \cdot
 \text{ where } \boldsymbol{z}(z) := z
 $$
 
-　Variance Shadow Maps[@Donnelly2006]は$\boldsymbol{b}(z) := (1, z, z^2)^T$を用いる。1つ目の要素は$\varepsilon_Z(\boldsymbol{b_0}) = 1$なので格納する必要がなく、残りの2つで$Z$の平均と分散を計算して、Cantelliの不等式^[単一テールの場合でのチェビシェフの不等式の一般化 --- [Wikipedia](https://en.wikipedia.org/wiki/Cantelli%27s_inequality)]で再構築できる。
+　Variance Shadow Maps[@Donnelly2006]は$\boldsymbol{b}(z) := (1, z, z^2)^\mathsf{T}$を用いる。1つ目の要素は$\varepsilon_Z(\boldsymbol{b_0}) = 1$なので格納する必要がなく、残りの2つで$Z$の平均と分散を計算して、Cantelliの不等式^[単一テールの場合でのチェビシェフの不等式の一般化 --- [Wikipedia](https://en.wikipedia.org/wiki/Cantelli%27s_inequality)]で再構築できる。
 
 $$
 \mu := b_1, \sigma^2 := b_2 - b_1^2, Z(\boldsymbol{z} < z_f) \ge 1 - \frac{\sigma^2}{\sigma^2 + (z_f - \mu)^2} \text{ if } z_f \ge \mu
 $$
 
-同様に、Exponential Shadow Maps[@Salvi2008; @Annen2008b]は$\boldsymbol{b}(z) := (1, \exp(c_{esm} \cdot z))^T$(ここで、$c_{esm} \gg 1$)を用いて、Markovの不等式で再構築する。
+同様に、Exponential Shadow Maps[@Salvi2008; @Annen2008b]は$\boldsymbol{b}(z) := (1, \exp(c_{esm} \cdot z))^\mathsf{T}$(ここで、$c_{esm} \gg 1$)を用いて、Markovの不等式で再構築する。
 
 $$
 Z(\boldsymbol{z} < z_f) \ge 1 - \frac{b_1}{\exp(c_{esm} \cdot z_f)}
@@ -53,7 +53,7 @@ $$
 Convolution Shadow Maps[@Annen2007]は$\boldsymbol{b}$の関数にフーリエ基底関数を設定し、打ち切られたフーリエ級数を用いる。Exponential Variance Shadow Maps[@Lauritzen2008]はパラメータ$c_{evsm}^+, c_{evsm}^- > 0$を固定し、2つの指数関数的に曲げられた[warped]深度にVariance Shadow Mappingを適用する。すなわち、以下を用いる。
 
 $$
-\boldsymbol{b}(z) = (1, \exp(c_{evsm}^+ \cdot z), \exp(c_{evsm}^+ \cdot z)^2, -\exp(c_{evsm}^- \cdot z), \exp(c_{evsm}^- \cdot z)^2)^T
+\boldsymbol{b}(z) = (1, \exp(c_{evsm}^+ \cdot z), \exp(c_{evsm}^+ \cdot z)^2, -\exp(c_{evsm}^- \cdot z), \exp(c_{evsm}^- \cdot z)^2)^\mathsf{T}
 $$
 
 ### Moment Shadow Mapping {id="sec:2.2.1"}
@@ -61,7 +61,7 @@ $$
 　Moment Shadow Mapping[@Peters2015]は以下を用いる。
 
 $$
-\boldsymbol{b}(z) = (z^j)_ {j = 0}^m = (1, z, z^2, z^3, z^4)^T
+\boldsymbol{b}(z) = (z^j)_ {j = 0}^m = (1, z, z^2, z^3, z^4)^\mathsf{T}
 $$
 
 モーメント数$m \in \mathbb{N}$は任意の偶数を取ることができる。
@@ -78,11 +78,11 @@ $$ {#eq:1}
 - アルゴリズム1 --- [@eq:1]を解く
 - 入力: モーメント$b \in \mathbb{R}^{m+1}$、フラグメントの深度$z_f \in \mathbb{R}$
 - 出力: [@eq:1]での表現を最小化する深度分布$S$
-    1. $B(b) := (b_{j+k})_ {j,k=0}^{\frac{m}{2}} = \left( \begin{array} \\ b_0 & b_1 & \cdots & b_{\frac{m}{2}} \\ b_1 & b_2 & \cdots & b_{\frac{m}{2}+1} \\ \vdots & \vdots & \ddots & \vdots \\ b_{\frac{m}{2}} & b_{\frac{m}{2}+1} & \cdots & b_m  \end{array} \right) \in \mathbb{R}^{(\frac{m}{2}+1)\times(\frac{m}{2}+1)}$をセットする。
-    2. $q \in \mathbb{R}^{\frac{m}{2}+1}$に対する$B(b) \cdot q = (1, z_f^1, \dots, z_f^{\frac{m}{2}})^T$を解く。
+    1. $B(b) := (b_{j+k})_ {j,k=0}^{\frac{m}{2}} = \left( \begin{array}{c} b_0 & b_1 & \cdots & b_{\frac{m}{2}} \\ b_1 & b_2 & \cdots & b_{\frac{m}{2}+1} \\ \vdots & \vdots & \ddots & \vdots \\ b_{\frac{m}{2}} & b_{\frac{m}{2}+1} & \cdots & b_m  \end{array} \right) \in \mathbb{R}^{(\frac{m}{2}+1)\times(\frac{m}{2}+1)}$をセットする。
+    2. $q \in \mathbb{R}^{\frac{m}{2}+1}$に対する$B(b) \cdot q = (1, z_f^1, \dots, z_f^{\frac{m}{2}})^\mathsf{T}$を解く。
     3. $z$に対する多項式$\sum_{j=0}^{\frac{m}{2}} q_j \cdot z^j = 0$を解き、$z_1, \dots , z_{\frac{m}{2}} \in \mathbb{R}$による個別の解を示す。
-    4. $z_0 := z_f$と$A := (z_l^j)_ {j,l=0}^{\frac{m}{2}} = \left( \begin{array} \\ z_0^0 & \cdots & z_{\frac{m}{2}}^0 \\ \vdots & \ddots & \vdots \\ z_0^{\frac{m}{2}} & \cdots & z_{\frac{m}{2}}^{\frac{m}{2}} \end{array} \right) \in \mathbb{R}^{(\frac{m}{2}+1)\times(\frac{m}{2}+1)}$をセットする。
-    5. $w \in \mathbb{R}^{\frac{m}{2}+1}$に対する$A \cdot w = (b_0, b_1, \dots, b_{\frac{m}{2}})^T$を解く。
+    4. $z_0 := z_f$と$A := (z_l^j)_ {j,l=0}^{\frac{m}{2}} = \left( \begin{array}{c} z_0^0 & \cdots & z_{\frac{m}{2}}^0 \\ \vdots & \ddots & \vdots \\ z_0^{\frac{m}{2}} & \cdots & z_{\frac{m}{2}}^{\frac{m}{2}} \end{array} \right) \in \mathbb{R}^{(\frac{m}{2}+1)\times(\frac{m}{2}+1)}$をセットする。
+    5. $w \in \mathbb{R}^{\frac{m}{2}+1}$に対する$A \cdot w = (b_0, b_1, \dots, b_{\frac{m}{2}})^\mathsf{T}$を解く。
     6. $\sum_{l=0}^{\frac{m}{2}} w_l \cdot \delta_{z_l}$を返す。
 
 　4つのモーメントにそれぞれ16ビットを単に充てるとすると丸め誤差が強く出てしまうので、出力データ型の表現できる範囲を侵さないで行列式を最大化する数値的な最適化となるようなアフィン変換を施してから16ビット浮動小数点数に格納する。
@@ -93,10 +93,10 @@ $$ {#eq:1}
 　この定義を支持する理由はモーメントでの線形変換の効果に基づいている。$x \ne 0$である$x, y \in \mathbb{R}$が深度値の線形変換$x \cdot z + y$を記述すると、以下のモーメントに対する線形変換を導く。
 
 $$
-\varepsilon_Z((x \cdot \boldsymbol{z} + y)^j) = \varepsilon_Z \left( \sum_{k=0}^j \left( \begin{array} \\
+\varepsilon_Z((x \cdot \boldsymbol{z} + y)^j) = \varepsilon_Z \left( \sum_{k=0}^j \left( \begin{array}{c}
 j \\
 k
-\end{array} \right) \cdot (x \cdot \boldsymbol{z})^k \cdot y^{j - k} \right) = \sum_{k=0}^j \left( \begin{array} \\
+\end{array} \right) \cdot (x \cdot \boldsymbol{z})^k \cdot y^{j - k} \right) = \sum_{k=0}^j \left( \begin{array}{c}
 j \\
 k
 \end{array} \right) \cdot x^k \cdot y^{j-k} \cdot b_k
@@ -112,29 +112,29 @@ $$
 明らかに、この行列式の大きさは$y = 0$のときに最大であり、$x$の変化に対して不変である。
 　[@eq:2]の変換は特殊な量子化変換のように働く。その行列式を最大化することはMoment Shadow Mapに格納されるデータのエントロピーに良い影響を持つ。故に、深度区間$[-1, 1]$の選択が確かに最適である。$m = 4$の場合、$[0, 1]$から$[-1, 1]$に変えると行列式は1024になる。これはおよそ$\log_2 1024 = 10$ビットのエントロピーの増加に対応する。
 
-## 疎な量子化変換[Sparse Quantization Transform]
+## 疎な量子化変換[Sparse Quantization Transform] {id="sec:2.4"}
 
 　16ビットの固定小数点チャネルによるMoment Shadow Mapを用いる場合、格納することで発生する丸め誤差はアルゴリズム1に起因する丸め誤差をはるかに上回る。量子化変換を用いることで、この丸め誤差を最高効率で最小化する。故に、符号付き深度を用いても精度は改善しないが、最適化を行うことができるようになる。
 　オリジナルの量子化変換の適用コストは著しく、これはMoment Shadow Mapのテクセルごとやシェードされたフラグメントごとに密な4x4行列によるベクトルの乗算を必要とするが、$[-1, 1]$での深度値に起因するモーメントを直接格納するのと比べて、この変換はエントロピーを4.28ビット増加させる。
 　我々は変換の最適化における探索空間をエントロピー的に大きく減らすことなく実質的に制限することができることを発見した。特に、以下の変換はエントロピーを4.21ビット増加させる。
 
 $$
-\Theta_4^* \left( \begin{array} \\
+\Theta_4^* \left( \begin{array}{c}
 b_1 \\
 b_2 \\
 b_3 \\
 b_4
-\end{array} \right) := \left( \begin{array} \\
+\end{array} \right) := \left( \begin{array}{c}
 \frac{3}{2} & 0 & -2 & 0 \\
 0 & 4 & 0 & -4 \\
 \frac{\sqrt{3}}{2} & 0 & -\frac{2\sqrt{3}}{9} & 0 \\
 0 & \frac{1}{2} & 0 & \frac{1}{2}
-\end{array} \right) \cdot \left( \begin{array} \\
+\end{array} \right) \cdot \left( \begin{array}{c}
 b_1 \\
 b_2 \\
 b_3 \\
 b_4
-\end{array} \right) + \left( \begin{array} \\
+\end{array} \right) + \left( \begin{array}{c}
 \frac{1}{2} \\
 0 \\
 \frac{1}{2} \\
@@ -144,12 +144,12 @@ $$ {#eq:3}
 
 故に、結果の品質は実践的には変化しないが、成分の半数が0であるので、この変換の適用は大まかに2倍速くなる。
 
-## ワーストケースに対するバイアス[Biasing for the Worst Case]
+## ワーストケースに対するバイアス[Biasing for the Worst Case] {id="sec:2.5"}
 
 　オリジナルのスキームは以下によってモーメントのベクトル$b \in \mathbb{R}^5$を置き換える。
 
 $$
-b' := (1 - \alpha_b) \cdot b + \alpha_b \cdot b^* \text{ where } b^* := (1, 0, 1, 0, 1)^T \in \mathbb{R}^5
+b' := (1 - \alpha_b) \cdot b + \alpha_b \cdot b^* \text{ where } b^* := (1, 0, 1, 0, 1)^\mathsf{T} \in \mathbb{R}^5
 $$
 
 このスキームは平均的なケースで最良の結果をもたらすために導入された[@Peters2015]。
@@ -169,14 +169,14 @@ $$
 　すべてのケースでロバストに振る舞うバイアスを導入するため、ワーストケースにおける最大効率、すなわち、有効な領域$\text{conv } \boldsymbol{b}(\mathbb{R})$の境界への最大の距離を持つモーメントのベクトル$b^* \in \text{conv } \boldsymbol{b}([-1, 1])$を求める。量子化変換を用いない場合、最適化結果は以下になる。
 
 $$
-b^* = (1, 0, 0.375, 0, 0.375)^T
+b^* = (1, 0, 0.375, 0, 0.375)^\mathsf{T}
 $$
 
 モーメントを単精度の浮動小数点数で格納すると、モーメントバイアスが$\alpha_b = 3\cdot10^{-7}$あれば十分であることを発見した。
 　[@eq:3]の量子化変換を用いるとき、変換されたモーメントに強い丸め誤差が載るため、$\Theta_4^* $を適用してから計算を行うべきである。この場合、最適化結果は以下になる。
 
 $$
-b^* = (1, 0, 0.628, 0, 0.628)^T
+b^* = (1, 0, 0.628, 0, 0.628)^\mathsf{T}
 $$
 
 このとき、テクセルあたり64ビットを用いると、モーメントバイアスが$\alpha_b = 6 \cdot 10^{-5}$あれば確実にアーティファクトを排除することを観測した。
@@ -344,10 +344,133 @@ $$
 　中間のケースで最適な近似品質を維持しつつ両方のアーティファクトを回避するため、$\beta$を視線の方向$\omega_p$に依存するようセットする。この重み$\beta$は$\omega_p = -\omega_l$のときに$0$になり、$\omega_p = \omega_l$のときに$1$になり、epipole近くでは緩やかに変化すると思われる。我々の実験では、以下の選択が滑らかでもっともらしい結果をもたらしつつ、上で述べたアーティファクトを確実に除去することを発見した。
 
 $$
-\beta = \frac{1 + \omega_l^T \cdot \omega_p}{2}
+\beta = \frac{1 + \omega_l^\mathsf{T} \cdot \omega_p}{2}
 $$
 
 ## 6モーメントを持つ事前フィルタされた単一散乱[Prefiltered Single Scattering with Six Moments]
+
+### ルートの計算[Computation of Roots]
+
+　4x4線形システム$B(b) \cdot q = (z^0, \dots, z^3)^\mathsf{T}$をコレスキー分解を用いて解くことは依然として上手く動作する。次に、三次方程式$\sum_{j=0}^3 q_j \cdot z^j = 0$を$z$に対して解く必要がある。様々な反復的および閉形式の解を実験した後、@Blinn2007 により提案される閉形式の解の一種に決めた。
+　その論文に示されるアルゴリズムは、打ち消しを回避するための最大最小の大きさのルートの計算のための2つの異なる分岐を用いる。我々のアプリケーションでは、このオーバーヘッドが不必要であることが判明した。3つのルートすべてを計算するのに2の分岐の内の1つを用いると、アーティファクトフリーな結果を生み出す。他の閉形式の解は$|q_3| \ll 1$でアーティファクトに悩まされ、反復的な解は計算オーバーヘッドが高かった。試みた解の中で、Blinnの仕事に基づくものがもっとも高速である。
+
+### 境界の計算[Computation of Bounds]
+
+　最終段階では単一散乱の強さに比例する平均可視性を近似する。これはモーメント制約に従う重み$w_0, \dots, w_3$の線形結合である。
+
+$$
+\left( \begin{array}{c}
+1 & 1 & 1 & 1 \\
+z_0 & z_1 & z_2 & z_3 \\
+z_0^2 & z_1^2 & z_2^2 & z_3^2 \\
+z_0^3 & z_1^3 & z_2^3 & z_3^3
+\end{array} \right) \cdot \left( \begin{array}{c}
+w_0 \\
+w_1 \\
+w_2 \\
+w_3
+\end{array} \right) = \left( \begin{array}{c}
+b_0 \\
+b_1 \\
+b_2 \\
+b_3
+\end{array} \right)
+$$
+
+線形結合での重みは以下のようになる。
+
+$$
+v_0 := \beta \text{ and } \forall l \in \{1,2,3\} : v_l := \begin{cases}
+0 & \text{if } z_f > z_l \\
+1 & \text{if } z_f \le z_l
+\end{cases}
+$$
+
+内積として書くと以下のようになる。
+
+$$
+\left( \begin{array}{c}
+w_0 \\
+w_1 \\
+w_2 \\
+w_3
+\end{array} \right)^\mathsf{T} \cdot \left( \begin{array}{c}
+v_0 \\
+v_1 \\
+v_2 \\
+v_3
+\end{array} \right) = \left( \begin{array}{c}
+b_0 \\
+b_1 \\
+b_2 \\
+b_3
+\end{array} \right)^\mathsf{T} \cdot \underbrace{ \left( \begin{array}{c}
+1 & z_0 & z_0^2 & z_0^3 \\
+1 & z_1 & z_1^2 & z_1^3 \\
+1 & z_2 & z_2^2 & z_2^3 \\
+1 & z_3 & z_3^2 & z_3^3
+\end{array} \right)^{-1} \cdot \left( \begin{array}{c}
+v_0 \\
+v_1 \\
+v_2 \\
+v_3
+\end{array} \right) }_{=: u}
+$$
+
+　この最後の数式の行列はVandermonde行列であるので、ベクトル$u \in \mathbb{R}^4$は$l \in \{0,1,2,3\}となる$z = z_l$に対する$v_l$を取る$補間多項式$\sum_{j=0}^3 u_j \cdot z^j$の係数を保持する。差商[divided differences]を用いてそのニュートン形式[Newton form]を構築し、その後、多項式の標準基底[canonical basis]に変換し直す[@Greenbaum2012、p.180から]。これは効率的に、我々の目的で十分ロバストに動作する。
+
+### 量子化とバイアス付け[Quantization and Biasing]
+
+　複雑な深度分布があることで、すべての計算を完璧に正確に行っても完全に再構成できない。故に、単一散乱に対してそれほど極端ではない強いバイアスの効果が期待され、低精度のMoment Shadow Mapを用いることは魅力的である。
+　再び、丸め誤差はMoment Shadow Mapに格納される前にモーメントに適用されるアフィン変換の方法によって減らされるべきである。[@sec:2.4]にある通り、これを定めるために数値的な最適化を用いる。我々は一般的な変換や偶奇番目でモーメントを別々に処理する変換を実験した。見つかった最良の変換は後者のカテゴリに属す。これは以下で与えられ、格納されるデータのエントロピーをテクセルあたり12.5ビット増加させる。
+
+$$
+\Theta_6^* \left( \begin{array}{c}
+    b_1 \\
+    b_2 \\
+    b_3 \\
+    b_4 \\
+    b_5 \\
+    b_6
+\end{array} \right) = \left( \begin{array}{c}
+    \left( \begin{array}{c}
+        2.5 & -1.8749986 & 1.26583039 \\
+        -10 & 4.20757543 & -1.47644883 \\
+        8 & -1.83257679 & 0.71061660
+    \end{array} \right)^\mathsf{T} \cdot \left( \begin{array}{c}
+        b_1 \\
+        b_3 \\
+        b_5
+    \end{array} \right) + \left( \begin{array}{c}
+        0.5 \\
+        0.5 \\
+        0.5
+    \end{array} \right) \\
+    \left( \begin{array}{rrr}
+        4 & 9 & 0.57759806 \\
+        -4 & -24 & 4.61936648 \\
+        0 & 16 & -3.07953907
+    \end{array} \right)^\mathsf{T} \cdot \left( \begin{array}{c}
+        b_2 \\
+        b_4 \\
+        b_6
+    \end{array} \right) + \left( \begin{array}{r}
+        0 \\
+        0 \\
+        0.018888946
+    \end{array} \right)
+\end{array} \right)
+$$
+
+　最適なバイアスは4モーメントの場合と同じように決定される([@sec:2.5]を参照)。そのバイアスするモーメントのベクトルは以下となる。
+
+$$
+b^* := (1, 0, 0.5566, 0, 0.489, 0, 0.47869382)^\mathsf{T}
+$$
+
+　我々のDirect3D 11の実装におけるモーメントのストレージは、10ビットの固定小数点数を格納する各3チャネルを持つ2つのテクスチャ(テクセルあたり64ビット、$\alpha_b = 4 \cdot 10^{-3}$)、16ビットの固定小数点数を格納する2チャネルと4チャネルのもの(テクセルあたり96ビット、$\alpha_b = 8 \cdot 10^{-5}$)、単精度floatを格納する3チャネルのもの2つ(テクセルあたり192ビット、$\alpha_b = 5 \cdot 10^{-6}$)のいずれかを用いる。
+
+# 結果と議論[Results and Discussion]
 
 TODO
 
