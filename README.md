@@ -8,12 +8,6 @@ numberSections: false
 
 - [@Enderton2010]
     - OIT
-- [@McGuire2017b]
-    - OIT
-- [@Peters2017]
-    - Moment Shadow Mapsの拡張。
-- [@Cozzi2017d]
-    - CUDAのパフォーマンス
 
 ## あとで読む
 
@@ -41,14 +35,6 @@ numberSections: false
     - GCNアーキテクチャを対象とした低レベルな最適化。
 - [@Cigolle2014]
     - GPUで単位ベクトルを表現する方法について調査。
-- [@Cozzi2017e]
-    - CUDAのアトミック
-- [@Cozzi2017f]
-    - グラフィクスパイプライン
-- [@Cozzi2017g]
-    - Deferred Shading
-- [@Cozzi2017h]
-    - Forward+とClustered Shading
 
 ## 注目人物
 
@@ -69,96 +55,11 @@ numberSections: false
 - Tiago Sousa
     - id softwareの人。
     - CryENGINE3の開発にも参加している。
+- Morgan McGuire [[blog](https://casual-effects.com/)]
+    - Williams大学の准教授、NVIDIAの名誉研究員(?)[Distinguished Research Scientist]、他
+    - AO、AA、OIT、GIなどの研究
 
 ## 文献目録
-
-### マイクロファセット理論
-
-- [@Walter2007] [[paper](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf)]
-    - GGXの原著。
-- [@Heitz2014] [[paper](http://jcgt.org/published/0003/02/03/paper.pdf)]
-    - マイクロファセット理論におけるG項の考察。
-
-### マイクロフレーク理論
-
-- [@Heitz2016b] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_cFVlUkFhWXdleEU)]
-    - Smithモデルを用いた複数回散乱を持つマイクロファセットBSDFのモデル化。
-- [@Heitz2015] [[paper](https://drive.google.com/file/d/0BzvWIdpUpRx_dXJIMk9rdEdrd00/view), [sup1](https://drive.google.com/file/d/0BzvWIdpUpRx_djVyMG9jMnltdTg/view), [sup2](https://www.cs.cornell.edu/projects/diffusion-sg10/anisotropic_web.pdf)]
-    - GGXをマイクロフレーク理論に応用したSGGX分布の提案。
-
-### 物理ベースレンダリング
-
-- [@Burley2012] [[slides](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_slides_v2.pdf), [notes](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf)]
-    - 測定データから見るマイクロファセット理論の分析と映像分野での採用事例。
-- [@Hoffman2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/hoffman/s2015_pbs_physics_math_slides.pdf), [video](https://www.youtube.com/watch?v=j-A0mwsJRmk)]
-    - 2015年最新の物理ベースシェーディング手法のまとめ。
-- [@Hoffman2016] [[slides](http://blog.selfshadow.com/publications/s2016-shading-course/hoffman/s2016_pbs_recent_advances_v2.pdf), [video](https://www.youtube.com/watch?v=zs0oYjwjNEo)]
-    - 2016年最新の物理ベースシェーディング手法のまとめ。
-
-### シェーディング技術
-
-- [@Olsson2012] [[paper](http://efficientshading.com/wp-content/uploads/clustered_shading_preprint.pdf)]
-    - Clastered Shadingの原著。
-- [@Burns2013] [[paper](http://jcgt.org/published/0002/02/04/)]
-    - Visibility Bufferの原著。
-- [@Olsson2014] [[slides](http://efficientshading.com/wordpress/wp-content/uploads/sa_2014_intro.pdf)]
-    - Forward ShadingからTiled Shadingまでのメジャーどころを総ざらい。
-- [@Oosten2015] [[blog](https://www.3dgep.com/forward-plus/)]
-    - Forward Shading、Deferred Shading、Forward+それぞれに対する実装の解説とパフォーマンスの比較。
-- [@Drobot2017]
-    - "Call of Duty: IW"で用いたライト割り当ての改善方法。
-- [@Garawany2016]
-    - "Uncharted 4"で用いたDeferred LightingとSpecular Occlusion。
-
-### ライティング技術
-
-- [@Heitz2016] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_d09ndGVjNVJzZjA)]
-    - 多角形の面光源をリアルタイムで扱う手法。
-- [@Lecocq2016]
-    - @Arvo1995 のIrradiance Tensorsをもとに多角形の面光源をリアルタイムで扱う手法。
-
-### シャドウイング技術
-
-- [@Peters2015]
-    - Moment Shadow Mapsの提案。
-- [@Lauritzen2010]
-    - Sample Distribution Shadow Mapsの提案。
-- [@Donnelly2006]
-    - Variance Shadow Mapsの提案。
-- [@Yang2010]
-    - Variance Soft Shadow Mapsの提案。
-
-### 光学エフェクト
-
-- [@Guertin2015]
-    - ベジェ曲線を用いた非線形モーションブラー。
-- [@Gotanda2015]
-    - 現実に起こるカメラに関する効果のまとめ。
-- [@Kakimoto2015]
-    - 幾何光学の基礎のおさらい。
-- [@Kawase2015]
-    - カメラレンズに関するエフェクト。
-- [@Gotanda2015b]
-    - ボケの基本的な実装。
-- [@Kawase2015b]
-    - ペンシルマップを使ったボケの実装詳細。
-- [@Guertin2014]
-    - モーションブラーフィルタの提案。
-- [@Kakimoto2015b]
-    - 精密なボケ評価のための波面トレーシング
-- [@Kakimoto2015c]
-    - 波動光学ベースのグレア生成テクニック
-- [@Kawase2015c]
-    - 光学エフェクトシステムの設計
-- [@Gotanda2015c]
-    - 光学エフェクトシステムの設計
-- [@McGuire2012b]
-    - モーションブラーフィルタの提案。
-
-### HDRレンダリング
-
-- [@Fry2017] [[slides](http://www.gdcvault.com/play/1024466/High-Dynamic-Range-Color-Grading)]
-    - FrostbiteのHDRディスプレイを前提とした次世代のカラーグレーディングパイプライン。
 
 ### アンチエイリアシング
 
@@ -200,44 +101,25 @@ numberSections: false
 - [@Neubelt2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/rad/s2015_pbs_rad_slides.pdf)]
     - Ready At Dawn Studiosが"The Order: 1886"から得た、焼き込み系GIと太陽光ライティングの知見。
 
-### レイトレージング
 
-- [@Zsolnai-Feher2015] [[slides](https://www.cg.tuwien.ac.at/courses/Rendering/VU.SS2017.html), [video](https://www.youtube.com/watch?v=pjc1QAI6zS0)]
-    - レイトレーシング技術の概要。
-- [@McGuire2014] [[paper](http://jcgt.org/published/0003/04/04/paper.pdf), [others](http://jcgt.org/published/0003/04/04/)]
-    - スクリーンスペースで効率的にレイトレースするアルゴリズム。
+### GPUアーキテクチャ
 
-### レンダリングエンジン
-
-- [@ODonnell2017] [[slides](http://www.gdcvault.com/play/1024612/FrameGraph-Extensible-Rendering-Architecture-in)]
-    - EAの"Frostbite"が採用した、FrameGraph(依存関係を定義するしくみ)とTransientリソース(フレーム内でリソースを共有するしくみ)。
-- [@Wihlidal2016] [[slides](https://www.gdcvault.com/play/1023109/Optimizing-the-Graphics-Pipeline-With)]
-    - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化。
-- [@Drobot2017b]
-    - Call of Duty: Infinite Warfareのレンダリングエンジン。
-- [@Rodrigues2017]
-    - Ubisoftの"Anvil Next"をDirecX12に移行したときの知見。
-- [@Lagarde2014] [[notes](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf)]
-    - EAが"Frostbite"を物理ベースにするときに採用した方法とその知見。
-- [@Vale2017]
-    - Decima Engineの可視性。
-- [@Sousa2013]
-    - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど。
-- [@Haar2015]
-    - GPU駆動カリングパイプラインと仮想テクスチャ。
-- [@Carpentier2017]
-    - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
-- [@Sousa2011]
-    - "CryEngine 3"の全体。
-- [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
-    - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
-
-### ジョブシステム
-
-- [@Reinalter2015] [[blog](https://blog.molecular-matters.com/2015/08/24/job-system-2-0-lock-free-work-stealing-part-1-basics/)]
-    - Lock-FreeなWork-Stealing Queueを使ったジョブシステムの設計。
-- [@Gyrling2015] [[slides](http://www.gdcvault.com/play/1022187/Parallelizing-the-Naughty-Dog-Engine), [video](http://www.gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine)]
-    - FiberベースのジョブシステムとFrame centricなメモリ管理。
+- [@Cozzi2017]
+    - GPUアーキテクチャの概要
+- [@Cozzi2017b]
+    - 並列アルゴリズムの基礎
+- [@Cozzi2017c]
+    - 並列アルゴリズムの応用
+- [@Cozzi2017d]
+    - CUDAのパフォーマンス
+- [@Cozzi2017e]
+    - CUDAのアトミック
+- [@Cozzi2017f]
+    - グラフィクスパイプライン
+- [@Cozzi2017g]
+    - Deferred Shading
+- [@Cozzi2017h]
+    - Forward+とClustered Shading
 
 ### グラフィクスAPI
 
@@ -282,26 +164,148 @@ numberSections: false
 - [@Themaister2017]
     - フレームグラフベースレンダラの実装とそこからの知見。
 
-### 最適化
+### HDRレンダリング
 
-- [@Gyrling2017]
-    - マルチコア環境におけるキャッシュシステムの動作から学ぶメモリバリアの概要。
+- [@Fry2017] [[slides](http://www.gdcvault.com/play/1024466/High-Dynamic-Range-Color-Grading)]
+    - FrostbiteのHDRディスプレイを前提とした次世代のカラーグレーディングパイプライン。
 
-### データ表現
+### ジョブシステム
 
+- [@Reinalter2015] [[blog](https://blog.molecular-matters.com/2015/08/24/job-system-2-0-lock-free-work-stealing-part-1-basics/)]
+    - Lock-FreeなWork-Stealing Queueを使ったジョブシステムの設計。
+- [@Gyrling2015] [[slides](http://www.gdcvault.com/play/1022187/Parallelizing-the-Naughty-Dog-Engine), [video](http://www.gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine)]
+    - FiberベースのジョブシステムとFrame centricなメモリ管理。
+
+### ライティング技術
+
+- [@Heitz2016] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_d09ndGVjNVJzZjA)]
+    - 多角形の面光源をリアルタイムで扱う手法。
+- [@Lecocq2016]
+    - @Arvo1995 のIrradiance Tensorsをもとに多角形の面光源をリアルタイムで扱う手法。
 
 ### メモリ割り当て
 
 - [@Schneider2006]
     - Streamflow
 
-### GPUアーキテクチャ
+### マイクロファセット理論
 
-- [@Cozzi2017]
-    - GPUアーキテクチャの概要
-- [@Cozzi2017b]
-    - 並列アルゴリズムの基礎
-- [@Cozzi2017c]
-    - 並列アルゴリズムの応用
+- [@Walter2007] [[paper](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf)]
+    - GGXの原著。
+- [@Heitz2014] [[paper](http://jcgt.org/published/0003/02/03/paper.pdf)]
+    - マイクロファセット理論におけるG項の考察。
+
+### マイクロフレーク理論
+
+- [@Heitz2016b] [[paper](https://drive.google.com/open?id=0BzvWIdpUpRx_cFVlUkFhWXdleEU)]
+    - Smithモデルを用いた複数回散乱を持つマイクロファセットBSDFのモデル化。
+- [@Heitz2015] [[paper](https://drive.google.com/file/d/0BzvWIdpUpRx_dXJIMk9rdEdrd00/view), [sup1](https://drive.google.com/file/d/0BzvWIdpUpRx_djVyMG9jMnltdTg/view), [sup2](https://www.cs.cornell.edu/projects/diffusion-sg10/anisotropic_web.pdf)]
+    - GGXをマイクロフレーク理論に応用したSGGX分布の提案。
+
+### 光学エフェクト
+
+- [@Guertin2015]
+    - ベジェ曲線を用いた非線形モーションブラー。
+- [@Gotanda2015]
+    - 現実に起こるカメラに関する効果のまとめ。
+- [@Kakimoto2015]
+    - 幾何光学の基礎のおさらい。
+- [@Kawase2015]
+    - カメラレンズに関するエフェクト。
+- [@Gotanda2015b]
+    - ボケの基本的な実装。
+- [@Kawase2015b]
+    - ペンシルマップを使ったボケの実装詳細。
+- [@Guertin2014]
+    - モーションブラーフィルタの提案。
+- [@Kakimoto2015b]
+    - 精密なボケ評価のための波面トレーシング
+- [@Kakimoto2015c]
+    - 波動光学ベースのグレア生成テクニック
+- [@Kawase2015c]
+    - 光学エフェクトシステムの設計
+- [@Gotanda2015c]
+    - 光学エフェクトシステムの設計
+- [@McGuire2012b]
+    - モーションブラーフィルタの提案。
+
+### 最適化
+
+- [@Gyrling2017]
+    - マルチコア環境におけるキャッシュシステムの動作から学ぶメモリバリアの概要。
+
+### OIT
+
+- [@McGuire2017b]
+    - 統合的なOITフレームワーク
+
+### 物理ベースレンダリング
+
+- [@Burley2012] [[slides](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_slides_v2.pdf), [notes](http://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf)]
+    - 測定データから見るマイクロファセット理論の分析と映像分野での採用事例。
+- [@Hoffman2015] [[slides](http://blog.selfshadow.com/publications/s2015-shading-course/hoffman/s2015_pbs_physics_math_slides.pdf), [video](https://www.youtube.com/watch?v=j-A0mwsJRmk)]
+    - 2015年最新の物理ベースシェーディング手法のまとめ。
+- [@Hoffman2016] [[slides](http://blog.selfshadow.com/publications/s2016-shading-course/hoffman/s2016_pbs_recent_advances_v2.pdf), [video](https://www.youtube.com/watch?v=zs0oYjwjNEo)]
+    - 2016年最新の物理ベースシェーディング手法のまとめ。
+
+### レイトレージング
+
+- [@Zsolnai-Feher2015] [[slides](https://www.cg.tuwien.ac.at/courses/Rendering/VU.SS2017.html), [video](https://www.youtube.com/watch?v=pjc1QAI6zS0)]
+    - レイトレーシング技術の概要。
+- [@McGuire2014] [[paper](http://jcgt.org/published/0003/04/04/paper.pdf), [others](http://jcgt.org/published/0003/04/04/)]
+    - スクリーンスペースで効率的にレイトレースするアルゴリズム。
+
+### レンダリングエンジン
+
+- [@ODonnell2017] [[slides](http://www.gdcvault.com/play/1024612/FrameGraph-Extensible-Rendering-Architecture-in)]
+    - EAの"Frostbite"が採用した、FrameGraph(依存関係を定義するしくみ)とTransientリソース(フレーム内でリソースを共有するしくみ)。
+- [@Wihlidal2016] [[slides](https://www.gdcvault.com/play/1023109/Optimizing-the-Graphics-Pipeline-With)]
+    - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化。
+- [@Drobot2017b]
+    - Call of Duty: Infinite Warfareのレンダリングエンジン。
+- [@Rodrigues2017]
+    - Ubisoftの"Anvil Next"をDirecX12に移行したときの知見。
+- [@Lagarde2014] [[notes](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf)]
+    - EAが"Frostbite"を物理ベースにするときに採用した方法とその知見。
+- [@Vale2017]
+    - Decima Engineの可視性。
+- [@Sousa2013]
+    - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど。
+- [@Haar2015]
+    - GPU駆動カリングパイプラインと仮想テクスチャ。
+- [@Carpentier2017]
+    - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング。
+- [@Sousa2011]
+    - "CryEngine 3"の全体。
+- [@Sousa2016] [[slides](http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf)]
+    - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム。
+
+### シェーディング技術
+
+- [@Olsson2012] [[paper](http://efficientshading.com/wp-content/uploads/clustered_shading_preprint.pdf)]
+    - Clastered Shadingの原著。
+- [@Burns2013] [[paper](http://jcgt.org/published/0002/02/04/)]
+    - Visibility Bufferの原著。
+- [@Olsson2014] [[slides](http://efficientshading.com/wordpress/wp-content/uploads/sa_2014_intro.pdf)]
+    - Forward ShadingからTiled Shadingまでのメジャーどころを総ざらい。
+- [@Oosten2015] [[blog](https://www.3dgep.com/forward-plus/)]
+    - Forward Shading、Deferred Shading、Forward+それぞれに対する実装の解説とパフォーマンスの比較。
+- [@Drobot2017]
+    - "Call of Duty: IW"で用いたライト割り当ての改善方法。
+- [@Garawany2016]
+    - "Uncharted 4"で用いたDeferred LightingとSpecular Occlusion。
+
+### シャドウイング技術
+
+- [@Peters2015]
+    - Moment Shadow Mapsの提案。
+- [@Lauritzen2010]
+    - Sample Distribution Shadow Mapsの提案。
+- [@Donnelly2006]
+    - Variance Shadow Mapsの提案。
+- [@Yang2010]
+    - Variance Soft Shadow Mapsの提案。
+- [@Peters2017]
+    - Moment Shadow Mapsの拡張。
 
 # References
