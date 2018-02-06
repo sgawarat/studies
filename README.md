@@ -6,8 +6,10 @@ numberSections: false
 
 ## いま読む
 
-- [@Jimenez2012]
-    - SMAA
+- [@Enderton2010]
+    - OIT
+- [@McGuire2017b]
+    - OIT
 - [@Peters2017]
     - Moment Shadow Mapsの拡張。
 - [@Cozzi2017d]
@@ -180,6 +182,8 @@ numberSections: false
     - DLAA
 - [@Jimenez2017]
     - ポストプロセスAAの変遷
+- [@Jimenez2012]
+    - SMAA
 
 ### グローバル・イルミネーション
 
