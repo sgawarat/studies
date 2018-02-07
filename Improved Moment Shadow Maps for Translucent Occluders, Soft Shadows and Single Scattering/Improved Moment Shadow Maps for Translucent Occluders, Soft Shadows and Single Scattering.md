@@ -470,11 +470,15 @@ $$
 
 　我々のDirect3D 11の実装におけるモーメントのストレージは、10ビットの固定小数点数を格納する各3チャネルを持つ2つのテクスチャ(テクセルあたり64ビット、$\alpha_b = 4 \cdot 10^{-3}$)、16ビットの固定小数点数を格納する2チャネルと4チャネルのもの(テクセルあたり96ビット、$\alpha_b = 8 \cdot 10^{-5}$)、単精度floatを格納する3チャネルのもの2つ(テクセルあたり192ビット、$\alpha_b = 5 \cdot 10^{-6}$)のいずれかを用いる。
 
-# 結果と議論[Results and Discussion]
+## 結果と議論[Results and Discussion]
 
-TODO
+### 質的評価[Qualitative Evaluation]
 
-### [] {id="sec:5.5.2"}
+### 実行時間[Run Time] {id="sec:5.5.2"}
+
+### 結論[Conclusions]
+
+# おわりに[Conclusions]
 
 \appendix
 
