@@ -11,14 +11,8 @@ numberSections: false
 
 ## あとで読む
 
-- [@Heitz2017] [[slides](http://blog.selfshadow.com/publications/s2017-shading-course/heitz/s2017_pbs_ltc_lines_disks.pdf)]
+- [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法。
-- [@Peters2016]
-    - Moment Shadow Mapsの応用。
-- [@Jansen2010]
-    - Fourier Opacity Mapsの提案。
-- [@Fernando2005]
-    - Percentage-Closer Soft Shadowsの提案。
 - [@Lottes2016]
     - AMDの次世代カラーグレーディング。
 - [@True2017]
@@ -35,6 +29,18 @@ numberSections: false
     - GCNアーキテクチャを対象とした低レベルな最適化。
 - [@Cigolle2014]
     - GPUで単位ベクトルを表現する方法について調査。
+- [@Jimenez2016]
+    - Filmic SMAA
+
+### 保留
+
+- [@Peters2016]
+    - Moment Shadow Mapsの応用。
+- [@Jansen2010]
+    - Fourier Opacity Mapsの提案。
+- [@Fernando2005]
+    - Percentage-Closer Soft Shadowsの提案。
+
 
 ## 注目人物
 
