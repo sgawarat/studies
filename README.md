@@ -6,8 +6,10 @@ numberSections: false
 
 ## いま読む
 
-- [@Enderton2010]
-    - OIT
+- [@McGuire2011b]
+    - 色付き確率的シャドウマップ
+- [@Tatarchuk2017]
+    - グラフィクスエンジンから見るプログラミングモデルの進化
 
 ## あとで読む
 
@@ -17,8 +19,6 @@ numberSections: false
     - AMDの次世代カラーグレーディング
 - [@True2017]
     - NVIDIAの次世代カラーグレーディング
-- [@Tatarchuk2017]
-    - グラフィクスエンジンから見るプログラミングモデルの進化
 - [@Hodes2016]
     - DirectX12のtips
 - [@Hodes2017]
@@ -33,8 +33,6 @@ numberSections: false
     - Filmic SMAA
 - [@Jakob2010]
     - マイクロフレーク理論
-- [@McGuire2011b]
-    - 色付き確率的シャドウマップ
 - [@McGuire2013]
     - OIT
 - [@Sumaili2017]
@@ -244,6 +242,8 @@ numberSections: false
 
 ### OIT
 
+- [@Enderton2010]
+    - 深度バッファを活用した確率的OIT
 - [@McGuire2017b]
     - 統合的なOITフレームワーク
 
