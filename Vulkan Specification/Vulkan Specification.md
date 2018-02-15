@@ -108,7 +108,7 @@ Vulkanにおけるデバイス、キュー、その他のエンティティはVu
 
 Vulkanオブジェクトの寿命を追跡することと使用中に破壊しないことのはアプリケーションの責任である。
 
-アプリケーション所有のメモリの所有権は渡されたVulkanコマンドによって即座に取得される。そのようなメモリの所有権はそのコマンドの存続期間の終了時にアプリケーションへ返却 **しなければならない** ため、アプリケーションは、このメモリを取得したすべてのコマンドが返った後すぐに、そのメモリを変更したり開放したりすることが **できる**。
+<a id="sec:2.3.1.ownership_temporarily_acquired" />アプリケーション所有のメモリの所有権は渡されたVulkanコマンドによって即座に取得される。そのようなメモリの所有権はそのコマンドの存続期間の終了時にアプリケーションへ返却 **しなければならない** ため、アプリケーションは、このメモリを取得したすべてのコマンドが返った後すぐに、そのメモリを変更したり開放したりすることが **できる**。
 
 以下のオブジェクト型は、Vulkanコマンドに渡され、生成するのに使われるオブジェクトによってそれ以上にアクセスされないとき、消費される。これらは渡されるいかなるAPIコマンドの存続期間中にも破壊され **てはならない**。
 
@@ -184,11 +184,213 @@ Vulkanオブジェクトの寿命を追跡することと使用中に破壊し�
 
 ## 2.4
 
-## 2.5
+## コマンドの構文と存続期間 {id="sec:2.5"}
 
-TODO
+この仕様書はVulkanコマンドをC99の構文を用いる関数または手続きとして記述する。C++やJavaScriptのような他の言語に対する言語バインディングはより厳密な引数渡しやオブジェクト指向インターフェイスを可能に **してもよい**。
 
-## 2.6
+Vulkanは、以下に述べられる場合を除いて、適切なときにスカラパラメータの基本型や文書の他の場所で標準Cの型を用いる。
+
+`VkBool32`は、Cが十分に移植性のあるビルトインのブーリアン型を持たないので、ブーリアンの`True`および`False`の値を表す。
+
+```c
+typedef uint32_t VkBool32;
+```
+
+`VK_TRUE`はブーリアンの **真** (整数の1)の値を表し、`VK_FALSE`はブーリアンの **偽** (整数の0)の値を表す。
+
+Vulkan実装から`VkBool32`で返されるすべての値は`VK_TRUE`か`VK_FALSE`のいずれかであるだろう。
+
+アプリケーションは`VkBool32`が期待されるところのVulkan実装に`VK_TRUE`と`VK_FALSE`以外のいかなる値も渡し
+ **てはならない**。
+
+`VkDeviceSize`はデバイスメモリのサイズとオフセットの値を表す。
+
+```c
+typedef uint64_t VkDeviceSize;
+```
+
+Vulkanオブジェクトを生成するコマンドは`vkCreate*`の形であり、オブジェクトを生成するのに必要な引数とともに`Vk*CreateInfo`構造体を取る。これらのVulkanオブジェクトは`vkDestroy*`の形のコマンドで破壊される。
+
+Vulkanオブジェクトを生成または破壊する各コマンドへの最後の入力引数は`pAllocator`である。`pAllocator`引数は与えられたオブジェクトに対する割り当てがアプリケーションによって提供されるコールバックへ委任されるような非`NULL`値に設定 **できる**。更なる詳細は[メモリ割り当て](#sec:10.1.memory_allocation)の章を参照のこと。
+
+プールオブジェクトによって所有されるVulkanオブジェクトを割り当てるコマンドは`vkAllocate*`の形であり、`Vk*AllocateInfo`構造体を取る。これらのVulkanオブジェクトは`vkFree*`の形のコマンドで解放される。これらのオブジェクトはアロケータを取らない。ホストメモリが必要とされるならば、これらの親のプールが生成されたときに指定されたアロケータを用いるだろう。
+
+コマンドは`vkCmd*`の形のAPIコマンドの呼び出しによってコマンドバッファに記録される。そのようなコマンドは、プライマリおよび/またはセカンダリコマンドバッファの中、レンダパスの内外、サポートされるクエリタイプのひとつまたはそれ以上の中といった、使用 **できる** ところでそれぞれ異なる制限を持っ **てもよい**。これらの制限はそのようなコマンドそれぞれの定義とともに文書化される。
+
+Vulkanコマンドの *存続期間[duration]* はコマンドの呼び出しから呼び出し元へのリターンまでの時間間隔を指す。
+
+### 取得された結果の寿命 {id="sec:2.5.1"}
+
+情報は`vkGet*`や`vkEnumerate*`の形のコマンドで実装から取得される。
+
+個々のコマンドで指定されない場合を除き、その結果は *不変[invariant]* である。すなわち、引数が有効のままである限り、同じ引数による同じコマンドの呼び出しによって再び取得されるときでもこれらは変わらないままだろう。
+
+## スレッディングの挙動 {id="sec:2.6"}
+
+Vulkanは複数のホストスレッドで用いられるときにスケール可能なパフォーマンスを提供することが意図される。すべてのコマンドは複数スレッドから並行に呼び出されることをサポートするが、ある引数または引数の構成要素は *外部同期[externally synchronized]* されることが定義されている。これは、与えられた時間にそのような引数を用いているスレッドが1つ以上存在しないことを呼び出し元が保証 **しなければならない** ことを意味する。
+
+より正確に言うと、VulkanコマンドはVulkanオブジェクトを表現するソフトウェア構造を更新するために単純な格納領域を用いる。外部同期されるとして宣言された引数はホストがコマンド実行している時間にも更新されるそのソフトウェア構造を持っ **てもよい**。2つのコマンドが同じオブジェクトで操作し、少なくともコマンドのひとつが外部同期されるオブジェクトを宣言するならば、呼び出し元は、コマンドが同時に実行しないことだけでなく、(必要であれば)2つのコマンドが適切なメモリバリアによって分けられることも保証 **しなければならない**。
+
+> 注意
+> メモリバリアは、多くの開発者が慣れているx86/x64プログラミングのものより弱い順序付けがされる、ARMのCPUアーキテクチャに特に関係する。幸いにも、(pthreadライブラリのような)ほとんどの高レベル同期プリミティブは相互排他の一部としてメモリバリアを処理するので、これらのプリミティブを介してVulkanオブジェクトを相互排他することは望ましい効果を持つだろう。
+
+同様に、アプリケーションはVulkanコマンドによって[一時的に取得される所有権](#sec:2.3.1.ownership_temporarily_acquired)を持つアプリケーション所有のメモリのいかなる潜在的なデータハザードも回避 **しなければならない**。アプリケーション所有のメモリの所有権はコマンドによって取得されたままである一方で、実装は任意の時にそのメモリを読み込ん **でもよく**、任意の時に`const`修飾されていないメモリに書き込ん **でもよい**。`const`修飾されていないアプリケーション所有のメモリを参照している引数は仕様書では *外部同期* されるとして明示的に印付けされない。
+
+多くのオブジェクト型は *不変[immutable]* である。これは、一度生成されればオブジェクトは変更 **できない** ことを意味する。これらのオブジェクト型は、他のスレッドで使用中に破壊 **してはならない** ことを除いて、外部同期を一切必要としない。とある特殊な場合では、可変[mutable]なオブジェクトパラメータは外部同期を必要としないかのように内部で同期される。この一例は`vkCreateGraphicsPipelines`や`vkCreateComputePipelines`における`VkPipelineCache`の使用である。ここでは、そんな重量級コマンドの周りの外部同期は実用的ではないだろう。その実装はこの例においてキャッシュを内部的に同期 **しなければならず**、そのコマンドの周りにより粒度の細かいミューテックスの形で行うことを可能に **してもよい**。外部同期されるとしてラベリングされていないいずれかコマンド引数はコマンドによって変わらないか、内部的に同期されているかのどちらかである。加えて、コマンドの引数に関連するあるオブジェクト(例えば、コマンドプールやデスクリプタプール)はコマンドによって影響を受け **てもよく**、また、外部同期され **なければならない**。これらの暗黙の引数は以下で述べられるように文書化される。
+
+外部同期されるコマンドの引数は以下にリスト化される。
+
+- [vkDestroyInstance](#sec:X.X.vkDestroyInstance)における引数`instance`
+- [vkDestroyDevice](#sec:X.X.vkDestroyDevice)における引数`device`
+- [vkQueueSubmit](#sec:X.X.vkQueueSubmit)における引数`queue`
+- [vkQueueSubmit](#sec:X.X.vkQueueSubmit)における引数`fence`
+- [vkFreeMemory](#sec:X.X.vkFreeMemory)における引数`memory`
+- [vkMapMemory](#sec:X.X.vkMapMemory)における引数`memory`
+- [vkUnmapMemory](#sec:X.X.vkUnmapMemory)における引数`memory`
+- [vkBindBufferMemory](#sec:X.X.vkBindBufferMemory)における引数`buffer`
+- [vkBindImageMemory](#sec:X.X.vkBindImageMemory)における引数`image`
+- [vkQueueBindSparse](#sec:X.X.vkQueueBindSparse)における引数`queue`
+- [vkQueueBindSparse](#sec:X.X.vkQueueBindSparse)における引数`fence`
+- [vkDestroyFence](#sec:X.X.vkDestroyFence)における引数`fence`
+- [vkDestroySemaphore](#sec:X.X.vkDestroySemaphore)における引数`semaphore`
+- [vkDestroyEvent](#sec:X.X.vkDestroyEvent)における引数`event`
+- [vkSetEvent](#sec:X.X.vkSetEvent)における引数`event`
+- [vkResetEvent](#sec:X.X.vkResetEvent)における引数`event`
+- [vkDestroyQueryPool](#sec:X.X.vkDestroyQueryPool)における引数`queryPool`
+- [vkDestroyBuffer](#sec:X.X.vkDestroyBuffer)における引数`buffer`
+- [vkDestroyBufferView](#sec:X.X.vkDestroyBufferView)における引数`bufferView`
+- [vkDestroyImage](#sec:X.X.vkDestroyImage)における引数`image`
+- [vkDestroyImageView](#sec:X.X.vkDestroyImageView)における引数`imageView`
+- [vkDestroyShaderModule](#sec:X.X.vkDestroyShaderModule)における引数`shaderModule`
+- [vkDestroyPipelineCache](#sec:X.X.vkDestroyPipelineCache)における引数`pipelineCache`
+- [vkMergePipelineCaches](#sec:X.X.vkMergePipelineCaches)における引数`dstCache`
+- [vkDestroyPipeline](#sec:X.X.vkDestroyPipeline)における引数`pipeline`
+- [vkDestroyPipelineLayout](#sec:X.X.vkDestroyPipelineLayout)における引数`pipelineLayout`
+- [vkDestroySampler](#sec:X.X.vkDestroySampler)における引数`sampler`
+- [vkDestroyDescriptorSetLayout](#sec:X.X.vkDestroyDescriptorSetLayout)における引数`descriptorSetLayout`
+- [vkDestroyDescriptorPool](#sec:X.X.vkDestroyDescriptorPool)における引数`descriptorPool`
+- [vkResetDescriptorPool](#sec:X.X.vkResetDescriptorPool)における引数`descriptorPool`
+- [vkAllocateDescriptorSets](#sec:X.X.vkAllocateDescriptorSets)における引数`pAllocateInfo`にある`descriptorPool`
+- [vkFreeDescriptorSets](#sec:X.X.vkFreeDescriptorSets)における引数`descriptorPool`
+- [vkDestroyFramebuffer](#sec:X.X.vkDestroyFramebuffer)における引数`framebuffer`
+- [vkDestroyRenderPass](#sec:X.X.vkDestroyRenderPass)における引数`renderPass`
+- [vkDestroyCommandPool](#sec:X.X.vkDestroyCommandPool)における引数`commandPool`
+- [vkResetCommandPool](#sec:X.X.vkResetCommandPool)における引数`commandPool`
+- [vkAllocateCommandBuffers](#sec:X.X.vkAllocateCommandBuffers)における引数`pAllocateInfo`にある`commandPool`
+- [vkFreeCommandBuffers](#sec:X.X.vkFreeCommandBuffers)における引数`commandPool`
+- [vkBeginCommandBuffer](#sec:X.X.vkBeginCommandBuffer)における引数`commandBuffer`
+- [vkEndCommandBuffer](#sec:X.X.vkEndCommandBuffer)における引数`commandBuffer`
+- [vkResetCommandBuffer](#sec:X.X.vkResetCommandBuffer)における引数`commandBuffer`
+- [vkCmdBindPipeline](#sec:X.X.vkCmdBindPipeline)における引数`commandBuffer`
+- [vkCmdSetViewport](#sec:X.X.vkCmdSetViewport)における引数`commandBuffer`
+- [vkCmdSetScissor](#sec:X.X.vkCmdSetScissor)における引数`commandBuffer`
+- [vkCmdSetLineWidth](#sec:X.X.vkCmdSetLineWidth)における引数`commandBuffer`
+- [vkCmdSetDepthBias](#sec:X.X.vkCmdSetDepthBias)における引数`commandBuffer`
+- [vkCmdSetBlendConstants](#sec:X.X.vkCmdSetBlendConstants)における引数`commandBuffer`
+- [vkCmdSetDepthBounds](#sec:X.X.vkCmdSetDepthBounds)における引数`commandBuffer`
+- [vkCmdSetStencilCompareMask](#sec:X.X.vkCmdSetStencilCompareMask)における引数`commandBuffer`
+- [vkCmdSetStencilWriteMask](#sec:X.X.vkCmdSetStencilWriteMask)における引数`commandBuffer`
+- [vkCmdSetStencilReference](#sec:X.X.vkCmdSetStencilReference)における引数`commandBuffer`
+- [vkCmdBindDescriptorSets](#sec:X.X.vkCmdBindDescriptorSets)における引数`commandBuffer`
+- [vkCmdBindIndexBuffer](#sec:X.X.vkCmdBindIndexBuffer)における引数`commandBuffer`
+- [vkCmdBindVertexBuffers](#sec:X.X.vkCmdBindVertexBuffers)における引数`commandBuffer`
+- [vkCmdDraw](#sec:X.X.vkCmdDraw)における引数`commandBuffer`
+- [vkCmdDrawIndexed](#sec:X.X.vkCmdDrawIndexed)における引数`commandBuffer`
+- [vkCmdDrawIndirect](#sec:X.X.vkCmdDrawIndirect)における引数`commandBuffer`
+- [vkCmdDrawIndexedIndirect](#sec:X.X.vkCmdDrawIndexedIndirect)における引数`commandBuffer`
+- [vkCmdDispatch](#sec:X.X.vkCmdDispatch)における引数`commandBuffer`
+- [vkCmdDispatchIndirect](#sec:X.X.vkCmdDispatchIndirect)における引数`commandBuffer`
+- [vkCmdCopyBuffer](#sec:X.X.vkCmdCopyBuffer)における引数`commandBuffer`
+- [vkCmdCopyImage](#sec:X.X.vkCmdCopyImage)における引数`commandBuffer`
+- [vkCmdBlitImage](#sec:X.X.vkCmdBlitImage)における引数`commandBuffer`
+- [vkCmdCopyBufferToImage](#sec:X.X.vkCmdCopyBufferToImage)における引数`commandBuffer`
+- [vkCmdCopyImageToBuffer](#sec:X.X.vkCmdCopyImageToBuffer)における引数`commandBuffer`
+- [vkCmdUpdateBuffer](#sec:X.X.vkCmdUpdateBuffer)における引数`commandBuffer`
+- [vkCmdFillBuffer](#sec:X.X.vkCmdFillBuffer)における引数`commandBuffer`
+- [vkCmdClearColorImage](#sec:X.X.vkCmdClearColorImage)における引数`commandBuffer`
+- [vkCmdClearDepthStencilImage](#sec:X.X.vkCmdClearDepthStencilImage)における引数`commandBuffer`
+- [vkCmdClearAttachments](#sec:X.X.vkCmdClearAttachments)における引数`commandBuffer`
+- [vkCmdResolveImage](#sec:X.X.vkCmdResolveImage)における引数`commandBuffer`
+- [vkCmdSetEvent](#sec:X.X.vkCmdSetEvent)における引数`commandBuffer`
+- [vkCmdResetEvent](#sec:X.X.vkCmdResetEvent)における引数`commandBuffer`
+- [vkCmdWaitEvents](#sec:X.X.vkCmdWaitEvents)における引数`commandBuffer`
+- [vkCmdPipelineBarrier](#sec:X.X.vkCmdPipelineBarrier)における引数`commandBuffer`
+- [vkCmdBeginQuery](#sec:X.X.vkCmdBeginQuery)における引数`commandBuffer`
+- [vkCmdEndQuery](#sec:X.X.vkCmdEndQuery)における引数`commandBuffer`
+- [vkCmdResetQueryPool](#sec:X.X.vkCmdResetQueryPool)における引数`commandBuffer`
+- [vkCmdWriteTimestamp](#sec:X.X.vkCmdWriteTimestamp)における引数`commandBuffer`
+- [vkCmdCopyQueryPoolResults](#sec:X.X.vkCmdCopyQueryPoolResults)における引数`commandBuffer`
+- [vkCmdPushConstants](#sec:X.X.vkCmdPushConstants)における引数`commandBuffer`
+- [vkCmdBeginRenderPass](#sec:X.X.vkCmdBeginRenderPass)における引数`commandBuffer`
+- [vkCmdNextSubpass](#sec:X.X.vkCmdNextSubpass)における引数`commandBuffer`
+- [vkCmdEndRenderPass](#sec:X.X.vkCmdEndRenderPass)における引数`commandBuffer`
+- [vkCmdExecuteCommands](#sec:X.X.vkCmdExecuteCommands)における引数`commandBuffer`
+
+コマンドが外部同期される引数をその中身に持つユーザーの割り当てたリストを取ることが **できる** いくつかの例も存在する。これらの場合、その呼び出し元は多くても1つのスレッドが与えられた時間にリスト内の与えられた要素を使っていることを保証 **しなければならない**。これらの引数は以下にリスト化される。
+
+- [vkQueueSubmit](#sec:X.X.vkQueueSubmit)における引数`pSubmits`の各要素のメンバー`pWaitSemaphores`の各要素
+- [vkQueueSubmit](#sec:X.X.vkQueueSubmit)における引数`pSubmits`の各要素のメンバー`pSignalSemaphores`の各要素
+- [vkQueueBindSparse](#sec:X.X.vkQueueBindSparse)における引数`pBindInfo`の各要素のメンバー`pWaitSemaphores`の各要素
+- [vkQueueBindSparse](#sec:X.X.vkQueueBindSparse)における引数`pBindInfo`の各要素のメンバー`pSignalSemaphores`の各要素
+- [vkQueueBindSparse](#sec:X.X.vkQueueBindSparse)における引数`pBindInfo`の各要素のメンバー`pBufferBinds`の各要素のメンバー`buffer`
+- [vkQueueBindSparse](#sec:X.X.vkQueueBindSparse)における引数`pBindInfo`の各要素のメンバー`pImageOpaqueBinds`の各要素のメンバー`image`
+- [vkQueueBindSparse](#sec:X.X.vkQueueBindSparse)における引数`pBindInfo`の各要素のメンバー`pImageBinds`の各要素のメンバー`image`
+- [vkResetFences](#sec:X.X.vkResetFences)における引数`pFences`の各要素
+- [vkFreeDescriptorSets](#sec:X.X.vkFreeDescriptorSets)における引数`pDescriptorSets`の各要素
+- [vkUpdateDescriptorSets](#sec:X.X.vkUpdateDescriptorSets)における引数`pDescriptorWrites`の各要素のメンバー`dstSet`
+- [vkUpdateDescriptorSets](#sec:X.X.vkUpdateDescriptorSets)における引数`pDescriptorCopies`の各要素のメンバー`dstSet`
+- [vkFreeCommandBuffers](#sec:X.X.vkFreeCommandBuffers)における引数`pCommandBuffers`の各要素
+
+加えて、外部同期される必要があるいくつかの暗黙の引数がある。例えば、外部同期される必要があるすべての引数`commandBuffer`はそのコマンドバッファの生成時に渡された`commandPool`もまた外部同期される必要があることを暗に示す。暗黙の引数とそれらに関連するオブジェクトはいかにリスト化される。
+
+- [vkDeviceWaitIdle](#sec:X.X.vkDeviceWaitIdle)における`device`から生成されたすべて`VkQueue`オブジェクト
+- [vkResetDescriptorPool](#sec:X.X.vkResetDescriptorPool)における`descriptorPool`から割り当てられたいずれかの`VkDescriptorSet`オブジェクト
+- [vkBeginCommandBuffer](#sec:X.X.vkBeginCommandBuffer)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkEndCommandBuffer](#sec:X.X.vkEndCommandBuffer)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdBindPipeline](#sec:X.X.vkCmdBindPipeline)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdSetViewport](#sec:X.X.vkCmdSetViewport)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdSetScissor](#sec:X.X.vkCmdSetScissor)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdSetLineWidth](#sec:X.X.vkCmdSetLineWidth)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdSetDepthBias](#sec:X.X.vkCmdSetDepthBias)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdSetBlendConstants](#sec:X.X.vkCmdSetBlendConstants)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdSetDepthBounds](#sec:X.X.vkCmdSetDepthBounds)における`commandBuffer`を割り当てた`VkCommandPool`
+[vkCmdSetStencilCompareMask](#sec:X.X.vkCmdSetStencilCompareMask)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdSetStencilWriteMask](#sec:X.X.vkCmdSetStencilWriteMask)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdSetStencilReference](#sec:X.X.vkCmdSetStencilReference)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdBindDescriptorSets](#sec:X.X.vkCmdBindDescriptorSets)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdBindIndexBuffer](#sec:X.X.vkCmdBindIndexBuffer)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdBindVertexBuffers](#sec:X.X.vkCmdBindVertexBuffers)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdDraw](#sec:X.X.vkCmdDraw)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdDrawIndexed](#sec:X.X.vkCmdDrawIndexed)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdDrawIndirect](#sec:X.X.vkCmdDrawIndirect)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdDrawIndexedIndirect](#sec:X.X.vkCmdDrawIndexedIndirect)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdDispatch](#sec:X.X.vkCmdDispatch)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdDispatchIndirect](#sec:X.X.vkCmdDispatchIndirect)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdCopyBuffer](#sec:X.X.vkCmdCopyBuffer)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdCopyImage](#sec:X.X.vkCmdCopyImage)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdBlitImage](#sec:X.X.vkCmdBlitImage)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdCopyBufferToImage](#sec:X.X.vkCmdCopyBufferToImage)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdCopyImageToBuffer](#sec:X.X.vkCmdCopyImageToBuffer)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdUpdateBuffer](#sec:X.X.vkCmdUpdateBuffer)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdFillBuffer](#sec:X.X.vkCmdFillBuffer)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdClearColorImage](#sec:X.X.vkCmdClearColorImage)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdClearDepthStencilImage](#sec:X.X.vkCmdClearDepthStencilImage)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdClearAttachments](#sec:X.X.vkCmdClearAttachments)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdResolveImage](#sec:X.X.vkCmdResolveImage)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdSetEvent](#sec:X.X.vkCmdSetEvent)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdResetEvent](#sec:X.X.vkCmdResetEvent)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdWaitEvents](#sec:X.X.vkCmdWaitEvents)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdPipelineBarrier](#sec:X.X.vkCmdPipelineBarrier)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdBeginQuery](#sec:X.X.vkCmdBeginQuery)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdEndQuery](#sec:X.X.vkCmdEndQuery)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdResetQueryPool](#sec:X.X.vkCmdResetQueryPool)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdWriteTimestamp](#sec:X.X.vkCmdWriteTimestamp)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdCopyQueryPoolResults](#sec:X.X.vkCmdCopyQueryPoolResults)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdPushConstants](#sec:X.X.vkCmdPushConstants)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdBeginRenderPass](#sec:X.X.vkCmdBeginRenderPass)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdNextSubpass](#sec:X.X.vkCmdNextSubpass)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdEndRenderPass](#sec:X.X.vkCmdEndRenderPass)における`commandBuffer`を割り当てた`VkCommandPool`
+- [vkCmdExecuteCommands](#sec:X.X.vkCmdExecuteCommands)における`commandBuffer`を割り当てた`VkCommandPool`
 
 ## 2.7
 
