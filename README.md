@@ -6,41 +6,41 @@ numberSections: false
 
 ## いま読む
 
-- [@McGuire2011b]
-    - 色付き確率的シャドウマップ
+- [@Khronos2018]
+    - Vulkanの仕様書
 - [@Tatarchuk2017]
     - グラフィクスエンジンから見るプログラミングモデルの進化
 
 ## あとで読む
 
+- [@Aalund2013]
+    - SSAOの比較研究
+- [@Cigolle2014]
+    - GPUで単位ベクトルを表現する方法について調査
+- [@Drobot2014]
+    - GCNアーキテクチャを対象とした低レベルな最適化
+- [@Hammon2017]
+    - 物理ベースのディフューズライティング
 - [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法
-- [@Lottes2016]
-    - AMDの次世代カラーグレーディング
-- [@True2017]
-    - NVIDIAの次世代カラーグレーディング
 - [@Hodes2016]
     - DirectX12のtips
 - [@Hodes2017]
     - 非同期コンピュートのAMDとNVIDIAのプラクティス
-- [@Thomas2016]
-    - DirectX12のプラクティス
-- [@Drobot2014]
-    - GCNアーキテクチャを対象とした低レベルな最適化
-- [@Cigolle2014]
-    - GPUで単位ベクトルを表現する方法について調査
-- [@Jimenez2016]
-    - Filmic SMAA
 - [@Jakob2010]
     - マイクロフレーク理論
-- [@McGuire2013]
-    - OIT
-- [@Sumaili2017]
-    - "Horizon Zero Dawn"のツールパイプラインの作成
+- [@Jimenez2016]
+    - Filmic SMAA
+- [@Lottes2016]
+    - AMDの次世代カラーグレーディング
 - [@Rouwe2014]
     - エンティティ更新のスレッド化
-- [@Hammon2017]
-    - 物理ベースのディフューズライティング
+- [@Sumaili2017]
+    - "Horizon Zero Dawn"のツールパイプラインの作成
+- [@Thomas2016]
+    - DirectX12のプラクティス
+- [@True2017]
+    - NVIDIAの次世代カラーグレーディング
 
 ## 注目人物
 
@@ -244,6 +244,8 @@ numberSections: false
 
 - [@Enderton2010]
     - 深度バッファを活用した確率的OIT
+- [@McGuire2013]
+    - 重みを用いたOIT
 - [@McGuire2017b]
     - 統合的なOITフレームワーク
 
@@ -305,10 +307,14 @@ numberSections: false
 
 ### シャドウイング技術
 
+- [@Dimitrov2007]
+    - Cascaded Shadow Maps
 - [@Donnelly2006]
     - Variance Shadow Maps
 - [@Lauritzen2010]
     - Sample Distribution Shadow Maps
+- [@McGuire2011b]
+    - 色付き確率的シャドウマップ
 - [@Peters2015]
     - Moment Shadow Maps
 - [@Peters2017]
