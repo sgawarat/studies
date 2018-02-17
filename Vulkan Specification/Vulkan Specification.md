@@ -413,7 +413,7 @@ Vulkanのコアとなる原則のひとつはコマンドバッファの構築�
 
 いくつかの有効な使い方の条件は実行時の制限や機能の可用性との依存関係を持つ。これらの制限と機能のためのVulkanのサポートされる最小値、または、他の既知の値のいくつかのサブセットに対するこれらの条件を検証することが可能である。
 
-有効な使い方の条件は(エラーコードのリターンを含む)うまく定義された挙動が存在する条件を網羅しない。
+有効な使い方の条件は(エラーコードのリターンを含む)うまく定義された挙動が存在する条件を取り扱わない。
 
 有効な使い方の条件はその条件についての完璧な情報がアプリケーションの実行中に知られているであろうコマンドや構造に適用される **必要がある**。これは検証レイヤーやlinterがそれらの指定される時点でこれらのステートメントに対して直接書かれることが **できる** のようなものである。
 
@@ -426,9 +426,140 @@ Vulkanのコアとなる原則のひとつはコマンドバッファの構築�
 
 ### 暗黙の有効な使い方 {id="sec:2.7.2"}
 
-いくつかの有効な使い方の条件は、特定のコマンドや構造に対して明示的に示されていない限り、APIにおけるすべてのコマンドと構造に適用される。これらの条件は *暗黙的* と見なされ、それらが適用される各コマンドや構造に"有効な使い方(暗黙的)"とラベル付けされたブロックに述べられる。暗黙の有効な使い方の条件は以下にその詳細を述べる。
+いくつかの有効な使い方の条件は、特定のコマンドや構造に対して明示的に示されていない限り、APIにおけるすべてのコマンドと構造に適用される。これらの条件は *暗黙的* と見なされ、それらが適用される各コマンドや構造に"有効な使い方(暗黙的)[Valid Usage (Implicit)]"とラベル付けされたブロックに述べられる。暗黙の有効な使い方の条件は以下にその詳細を述べる。
 
 #### オブジェクトハンドルに対する有効な使い方
+
+オブジェクトハンドルであるコマンドのいずれかの入力引数は、そうでないと指定されない限り、有効なオブジェクトで **なければならない**。オブジェクトハンドルは以下であれば有効である。
+
+- 以前の成功したAPI呼び出しによって生成または割り当てられた。そのような呼び出しは仕様書に記載されている。
+- 以前のAPI呼び出しによって消去または解放されなかった。そのような呼び出しは仕様書に記載されている。
+- 生成や実行の一部としてそのオブジェクトに使われるいずれかのオブジェクトもまた有効で **なければならない**。
+
+予約された値[VK_NULL_HANDLE](#sec:D.VK_NULL_HANDLE)と`NULL`は、*仕様書に明記される[explicitly called out in the specification]* とき、それぞれ有効なディスパッチ不能ハンドルとディスパッチ可能ハンドルの代わりに使用 **できる**。正常にオブジェクトを生成するいずれかのコマンドはこれらの値を返し **てはならない**。これらの値を`vkDestroy*`や`vkFree*`コマンドに渡すことは有効であり、そのときはこれらの値を淡々と無視するだろう。
+
+#### ポインタに対する有効な使い方
+
+ポインタであるいずれかの引数は有効な使い方のステートメントによって明記される場合に限り *有効なポインタ[valid pointer]* で **なければならない**。
+
+ポインタは、それがコマンドによって期待される数値や型の値を含むメモリを指し、(例えば、配列の要素や構造体のメンバのような)ポインタを通してアクセスされるすべての基本型がホストプロセッサのアライメント要件を満足するならば、"有効"である。
+
+#### 文字列に対する有効な使い方
+
+`char`へのポインタであるいずれかの引数は、null文字で終端された値の有限の列で **なければならず**、もしくは、*仕様書に明記される* ならば、`NULL`にすることが **できる**。
+
+#### 列挙型に対する有効な使い方
+
+列挙型のいずれかの引数はその型の有効な列挙子[enumerant^[訳注:ラテン語由来の語である"enamerate"を形容詞化および名詞化するための語尾"-ant"に変化させたもの。]]で **なければならない**。列挙子は以下の場合に有効である。
+
+- 列挙子は列挙型の一部として定義される。
+- 列挙子は、`_BEGIN_RANGE`、`_END_RANGE`、`_RANGE_SIZE`、`_MAX_ENUM`[^special_values_for_enum]が語尾に付いた、列挙型のために定義された特別な値のひとつでない。
+
+[^special_values_for_enum]: これらの特殊なトークンの意味はVulkanの仕様書において公開されない。これらはAPIの一部ではなく、アプリケーションで使われないようにする **必要がある**。これらの元々意図された使い方はVulkan実装による内部消費のためであった。この使い方は将来的にもはやサポートされないだろうが、後方互換性の理由のために保持されるだろう。
+
+クエリコマンドから返される、またはそうでなければ、Vulkanからアプリケーションに出力される、いかなる列挙型も予約された値を持っ **てはならない**。予約された値はその列挙型に対するいずれの拡張によっても定義されない値である。
+
+> 注意
+> この言葉は、ドライバ内部だけが知っている拡張や、アプリケーションの情報なしに拡張を有効化するレイヤーのような"隠された"場合を、いかなる拡張によっても定義されない値の返却を許可しないことで、融通することを意図している。
+
+#### フラグに対する有効な使い方
+
+フラグの集まりは`VkFlags`型を用いるビットマスクによって表される。
+
+```c
+typedef uint32_t VkFlags;
+```
+
+ビットマスクは選択肢をコンパクトに表すために多くのコマンドと構造に渡されるが、`VkFlags`はAPIにおいて直接使われない。代わりに、`VkFlags`の別名である`Vk*Flags`型が使われる。その名前は、この型に対して有効である対応する`Vk*FlagBits`と一致する。これらの別名は仕様書の付録「[フラグ型](#sec:X.flag_types)」において述べられる。
+
+APIにおいて入力として使われる引数のメンバー`Vk*Flags`はいずれもビットフラグの有効な組み合わせで **なければならない**。有効な組み合わせはゼロか有効なビットフラグのビット単位ORのどちらかである。ビットフラグは以下の場合に有効である。
+
+- そのビットフラグは`Vk*FlagBits`の一部として定義される。そこでは、ビット型はフラグ型を取り、語尾の`Flags`を`FlagBits`に置き換えることによって得られる。例えば、[VkColorComponentFlags](#sec:X.X.VkColorComponentFlags)型のフラグ値は[VkColorComponentFlagBits](#sec:X.X.VkColorComponentFlagBits)によって定義されるビットフラグのみを含ま **なければならない**。
+- そのフラグはそれが使われている文脈に応じて許可される。例えば、いくつかの場合、あるビットフラグやビットフラグの組み合わせは相互排他的である。
+
+クエリコマンドから返される、またはそうでなければ、Vulkanからアプリケーションに出力される、いずれかのメンバーまたは引数の`Vk*Flags`はその対応する`Vk*FlagBits`型に定義されていないビットフラグを含ん **でもよい**。アプリケーションはこれらの明示されていないビットの状態に依存 **できない**。
+
+#### 構造タイプに対する有効な使い方
+
+メンバー`sType`を含む構造体であるいかなる引数も構造体の型に一致する有効な[VkStructureType](#sec:X.X.VkStructureType)値である`sType`の値を持た **なければならない**。
+
+Vulkan APIによってサポートされる構造タイプは以下を含める。
+
+```c
+typedef enum VkStructureType {
+    VK_STRUCTURE_TYPE_APPLICATION_INFO = 0,
+    VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO = 1,
+    VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO = 2,
+    VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO = 3,
+    VK_STRUCTURE_TYPE_SUBMIT_INFO = 4,
+    VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO = 5,
+    VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE = 6,
+    VK_STRUCTURE_TYPE_BIND_SPARSE_INFO = 7,
+    VK_STRUCTURE_TYPE_FENCE_CREATE_INFO = 8,
+    VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO = 9,
+    VK_STRUCTURE_TYPE_EVENT_CREATE_INFO = 10,
+    VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO = 11,
+    VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO = 12,
+    VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO = 13,
+    VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO = 14,
+    VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO = 15,
+    VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO = 16,
+    VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO = 17,
+    VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO = 18,
+    VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO = 19,
+    VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO = 20,
+    VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO = 21,
+    VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO = 22,
+    VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO = 23,
+    VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO = 24,
+    VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO = 25,
+    VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO = 26,
+    VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO = 27,
+    VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO = 28,
+    VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO = 29,
+    VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO = 30,
+    VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO = 31,
+    VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO = 32,
+    VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO = 33,
+    VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO = 34,
+    VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET = 35,
+    VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET = 36,
+    VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO = 37,
+    VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO = 38,
+    VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO = 39,
+    VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO = 40,
+    VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO = 41,
+    VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO = 42,
+    VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO = 43,
+    VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER = 44,
+    VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER = 45,
+    VK_STRUCTURE_TYPE_MEMORY_BARRIER = 46,
+    VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO = 47,
+    VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO = 48,
+} VkStructureType;
+```
+
+各値は一致する名前を持つ`sType`メンバーを含む特定の構造体に対応する。一般的な規定として、各`VkStructureType`の値の名前は、その構造体の名前を取り、先頭の`Vk`を取り除き、各頭文字の前に`_`を付け、結果の文字列全体を大文字に変換し、その前に`VK_STRUCTURE_TYPE_`を付けることで得られる。例えば、構造体`VkImageCreateInfo`は`VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO`の`VkStructureType`に対応し、故に、そのメンバー`sType`はAPIに渡されるときにそれと等しく **なければならない**。
+
+`VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO`と`VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO`はローダーによる内部使用のために予約され、この仕様書において対応するVulkan構造体を持たない。
+
+#### 構造ポインタチェインに対する有効な使い方
+
+メンバー`void* pNext`を含む構造体であるいかなる引数も、`NULL`である、または、文書「[Vulkan Documentation and Extensions]()」における"Extension Interactions"の章で述べられるように`sType`と`pNext`を含む、拡張によって定義される有効な構造対を指す、のいずれかである`pNext`の値を持た **なければならない**。ポインタ`pNext`によって接続される一連の構造体は *`pNext`チェイン[pNext chain]* と呼ばれる。その拡張が実装によってサポートされるならば、それは有効化され **なければならない**。
+
+有効な構造体の各型は`pNext`チェイン中に1回以上現れ **てはならない**。
+
+実装のいずれかの構成要素(ローダー、有効化されたレイヤー、ドライバ)は、その構成要素によってサポートされる拡張によって定義されない`sType`値を持つチェインにおけるいかなる構造体も(`sType`と`pNext`メンバーを読むこと以外に)処理をせず、読み飛ばさ **なければならない**。
+
+拡張の構造体はベースとなるVulkan仕様書では述べられず、これらの拡張が組み込まれるレイヤーの仕様書か別のベンダーが提供する文書に記載される。
+
+#### ネストした構造に対する有効な使い方
+
+上記の条件は、コマンドへの直接の引数として、または、それら自体が他の構造体のメンバーとして、コマンドへの入力として提供される構造体のメンバーにも再帰的に適用される。
+
+各コマンドの有効な使い方の詳細はそれらの個々の節で取り扱われる。
+
+### リターンコード {id="sec:2.7.3"}
 
 TODO
 
