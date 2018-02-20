@@ -8,8 +8,8 @@ numberSections: false
 
 - [@Khronos2018]
     - Vulkanの仕様書
-- [@Tatarchuk2017]
-    - グラフィクスエンジンから見るプログラミングモデルの進化
+- [@Thomas2016]
+    - DirectX12のプラクティス
 
 ## あとで読む
 
@@ -37,8 +37,6 @@ numberSections: false
     - エンティティ更新のスレッド化
 - [@Sumaili2017]
     - "Horizon Zero Dawn"のツールパイプラインの作成
-- [@Thomas2016]
-    - DirectX12のプラクティス
 - [@True2017]
     - NVIDIAの次世代カラーグレーディング
 
@@ -289,6 +287,8 @@ numberSections: false
     - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化
 - [@Vale2017]
     - Decima Engineの可視性
+- [@Tatarchuk2017]
+    - グラフィクスエンジンから見るプログラミングモデルの進化
 
 ### シェーディング技術
 
