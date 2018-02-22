@@ -260,4 +260,145 @@ title: Practice DirectX 12 - Programming Model and Hardware Capabilities [@Thoma
 
 # 同期[Synchronization]
 
-TODO
+- バリア
+- フェンス
+
+# バリアその1[Barriers #1]
+
+- リソースバリアがパフォーマンスバリアにならないようにする
+- バリアを共にバッチする
+- 最小のusageフラグセットを用いる
+    - 冗長なフラッシュの回避
+- 読み込み間[read-to-read]バリアを避ける
+    - 後続のすべての読み込みに対して正しいステートでリソースを取得する
+- 可能なときは"分割バリア[split-barriers]"を用いる
+
+# バリアその2[Barriers #2]
+
+- `COPY_SOURCE`は恐らく`SHADER_RESOURCE`より大幅に高価であるだろう
+    - コピーキューでのアクセスを可能にする
+- バリア数は大まかに書き込まれるサーフェス数の倍にすべき
+
+# フェンス[Fences]
+
+- GPUセマフォ
+    - 例、GPUがリソースを使い終わることを確実にする
+- 各フェンスは`ExecuteCommandLists`とだいたい同じCPUとGPUコストである
+- フェンスが`ExecuteCommandLists`呼び出しあたり1回より細かい粒度でシグナルをトリガーする/進展すると思わない
+
+# その他諸々[Miscellaneous]
+
+- マルチGPU
+- スワップチェイン
+- Set Stable Power State
+- ピクセル対コンピュート
+
+# マルチGPU[Multi GPU]
+
+- DirectX 12のAPIに組み込まれた機能
+- cross-adapterとlinked-nodeのトレードオフ
+    - 詳しいことは[Juha Sjöholmのトーク](https://www.gdcvault.com/play/1023131/Advanced-Graphics-Techniques-Tutorial-Day)を参照
+- デバイス間でリソースを明示的に同期する
+    - 適切な`CreationNodeMask`を用いる
+- PCIeの帯域幅を忘れんといて
+    - PCI 3.0 (8x) --- 8GB/s (期待値は約6GB/s)
+    - PCI 2.0 (8x) --- 4GB/s (期待値は約3GB/s) ← まだまだ現役…
+        - 例えば、4kのHDRバッファを転送すると、すぐに50/100FPSくらいまで下がってしまう
+
+# スワップチェイン[Swap Chains]
+
+- アプリケーションは明示的なバッファローテーションを行わなければならない
+    - `IDXGISwapChain3::GetCurrentBackBufferIndex()`
+- VSYNCオフを再現するには
+    - `SettFullScreenState(TRUE)`
+    - ボーダーのないフルスクリーンウィンドウを用いる
+    - FLIPスワップチェインモード
+- とってもリッチで新しいAPI！
+
+# Set Stable Power State
+
+- `HRESULT ID3D12Device::SetStablePowerState(BOOL Enable);`
+    - パフォーマンスを落とす
+    - チップ内のGPU構成要素のパフォーマンス比率が変化する
+- **やらんといて！(頼んます)**
+
+# ピクセル対コンピュート --- パフォーマンス[Pixel vs Compute - Performance]
+
+- <font color="Green">NVIDIA</font>
+    - ピクセルシェーダ
+        - 共有メモリがない？
+        - スレッドは同時に完了する？
+        - 高頻度に定数バッファへアクセスする？
+        - 2Dバッファに格納する？
+    - コンピュートシェーダ
+        - グループ共有メモリを使う？
+        - アウトオブオーダーなスレッド完了を期待する？
+        - レジスタを大量に使う？
+        - 1D/3Dバッファに格納する？
+- <font color="Red">AMD</font>
+    - ピクセルシェーダ
+        - 深度/ステンシルリジェクションから恩恵を受けられる？
+        - グラフィクスパイプラインが必要？
+        - カラー圧縮を活用したい？
+    - コンピュートシェーダ
+        - その他なんでも:)
+- 以上のこれらのガイドラインからベストなパフォーマンスが得られる
+- (非同期コンピュートを用いるパフォーマンス的な利点を検討する)
+
+# ハードウェア機能[Hardware Features]
+
+- Conservative Rasterization
+- Volume Tiled Resources
+- Rster Ordered Views
+- Typed UAV Loads
+- Stencil Output
+
+# ハードウェア機能の状況[Hardware Features Stats]
+
+# Conservative Rasterization
+
+- プリミティブが触れるすべてのピクセルを描画する
+    - 異なるTiers --- 仕様を参照
+- GS通過前に可能なトリック、ただし、比較的遅い
+    - [GPU Gems 2](https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter42.html)を参照
+- ラスタライゼーションを使って、いくつかのナイスなテクニック実装できる
+    - [Hybrid Raytraced Shadows](http://developer.download.nvidia.com/assets/events/GDC15/hybrid_ray_traced_GDC_2015.pdf)を参照
+
+# Ray traced shadows in, "Tom Clancy's The Division", using conservative rasterization
+
+# Volume Tiled Resources
+
+- DX11.2からあるTiledリソースはボリューム/3Dリソースに使える
+    - Tier 3のTiledリソース
+- タイルは依然として64kB
+    - そして、タイルマッピングがCPUから更新させるのに依然として必要
+- かなりのメモリ/パフォーマンス的な利点がある
+    - [Latency Resistant Sparse Fluid Simulation](https://www.gdcvault.com/play/1021767/Advanced-Visual-Effects-With-DirectX)
+
+# Raster Ordered Views
+
+- 順序のある書き込み
+    - クラシックなユースケースはOIT
+        - [k+ buffer](https://abasilak.github.io/#i3d2014)を参照
+    - プログラマブルブレンディング
+        - 固定ハードウェアに縛られない、完全にカスタムなブレンディング
+- 気を付けて使おう！タダじゃないので
+    - 衝突数を監視する
+
+# Typed UAV Loads
+
+- ついに、APIから32ビット制限がなくなった
+- エンジンにコンソール固有パスを取り除けるかも
+- UAVからのローディングはSRVからのローディングより遅い
+    - SRVは未だにリードオンリーアクセスで使うので
+
+# Stencil Output
+
+- 実装？
+    - ステンシルを用いるN変数のアルゴリズム？
+        - 以前は、クリア＋Nパス
+        - 現在は、シングルパス
+- パフォーマンス的な懸念事項
+    - 深度出力を用いる場合に匹敵する
+
+# ご質問は？[Questions?]
