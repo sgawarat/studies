@@ -6,10 +6,12 @@ numberSections: false
 
 ## いま読む
 
+- [@Hodes2016]
+    - DirectX12のtips
+- [@Jakob2010]
+    - マイクロフレーク理論
 - [@Khronos2018]
     - Vulkanの仕様書
-- [@Thomas2016]
-    - DirectX12のプラクティス
 
 ## あとで読む
 
@@ -23,12 +25,8 @@ numberSections: false
     - 物理ベースのディフューズライティング
 - [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法
-- [@Hodes2016]
-    - DirectX12のtips
 - [@Hodes2017]
     - 非同期コンピュートのAMDとNVIDIAのプラクティス
-- [@Jakob2010]
-    - マイクロフレーク理論
 - [@Jimenez2016]
     - Filmic SMAA
 - [@Lottes2016]
@@ -155,6 +153,8 @@ numberSections: false
     - モバイル系メーカーによるVulkan APIの概要
 - [@Themaister2017]
     - Vulkanベースのフレームグラフの実装とそこからの知見
+- [@Thomas2016]
+    - DirectX12のプラクティス
 - [@Thomas2017]
     - バリアとキューについてのD3D12とVulkanの横断的なtips
 - [@Schott2016]
