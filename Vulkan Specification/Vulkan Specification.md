@@ -939,6 +939,89 @@ typedef VkFlags VkPipelineStageFlags;
 
 ### アクセスタイプ {id="sec:6.1.3"}
 
+Vulkanにおけるメモリはシェーダ呼び出しの内部やパイプラインのいくつかの固定機能ステージ経由でアクセス**できる**。*アクセスタイプ*は、用いられる[デスクリプタタイプ](#)の関数、または、固定機能ステージがメモリにアクセスする方法である。各アクセスタイプは[VkAccessFlagBits](#)におけるビットフラグに対応する。
+
+いくつかの同期コマンドはメモリ依存性の[アクセススコープ](#)をていぎする引数としてアクセスタイプの集合を取る。同期コマンドがsourceアクセスマスクを含むならば、その最初の[アクセススコープ](#)はそのマスクに指定されるアクセスタイプを介するアクセスのみを含む。同様に、同期コマンドがdestinationアクセスマスクを含むならば、その次の[アクセススコープ](#)はそのマスクに指定されるアクセスタイプを介するアクセスのみを含む。
+
+アクセスマスクに設定**できる**アクセスタイプは以下を含む。
+
+```c
+typedef enum VkAccessFlagBits {
+    VK_ACCESS_INDIRECT_COMMAND_READ_BIT = 0x00000001,
+    VK_ACCESS_INDEX_READ_BIT = 0x00000002,
+    VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT = 0x00000004,
+    VK_ACCESS_UNIFORM_READ_BIT = 0x00000008,
+    VK_ACCESS_INPUT_ATTACHMENT_READ_BIT = 0x00000010,
+    VK_ACCESS_SHADER_READ_BIT = 0x00000020,
+    VK_ACCESS_SHADER_WRITE_BIT = 0x00000040,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT = 0x00000080,
+    VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT = 0x00000100,
+    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT = 0x00000200,
+    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT = 0x00000400,
+    VK_ACCESS_TRANSFER_READ_BIT = 0x00000800,
+    VK_ACCESS_TRANSFER_WRITE_BIT = 0x00001000,
+    VK_ACCESS_HOST_READ_BIT = 0x00002000,
+    VK_ACCESS_HOST_WRITE_BIT = 0x00004000,
+    VK_ACCESS_MEMORY_READ_BIT = 0x00008000,
+    VK_ACCESS_MEMORY_WRITE_BIT = 0x00010000,
+} VkAccessFlagBits;
+```
+
+- `VK_ACCESS_INDIRECT_COMMAND_READ_BIT`はindirect描画およびディスパッチコマンドの一部として読み込まれたindirectコマンド構造への読み込みアクセスを指定する。
+- `VK_ACCESS_INDEX_READ_BIT`は[vkCmdBindIndexBuffer](#)によってバインドされた、インデックス付き描画コマンドの一部としてのインデックスバッファへの読み込みアクセスを指定する。
+- `VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT`は[vkCmdBindVertexBuffers](#)によってバインドされた、描画コマンドの一部としての頂点バッファへの読み込みアクセスを指定する。
+- `VK_ACCESS_UNIFORM_READ_BIT`は[ユニフォームバッファ](#)への読み込みアクセスを指定する。
+- `VK_ACCESS_INPUT_ATTACHMENT_READ_BIT`はフラグメントシェーダ中のレンダパス内部の[入力アタッチメント](#)への読み込みアクセスを指定する。
+- `VK_ACCESS_SHADER_READ_BIT`は[ストレージバッファ](#)、[ユニフォームテクセルバッファ](#)、[ストレージテクセルバッファ](#)、[Sampledイメージ](#)、[ストレージイメージ](#)への読み込みアクセスを指定する。
+- `VK_ACCESS_SHADER_WRITE_BIT`は[ストレージバッファ](#)、[ストレージテクセルバッファ](#)、[ストレージイメージ](#)への書き込みアクセスを指定する。
+- `VK_ACCESS_COLOR_ATTACHMENT_READ_BIT`は、[ブレンディング](#)、[論理操作](#)、ある[サブパスロード操作](#)を介するような、[カラーアタッチメント](#)への読み込みアクセスを指定する。
+- `VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT`は、[ブレンディング](#)、[論理操作](#)、ある[サブパスロードおよびストア操作](#)を介するような、[カラーアタッチメント](#)への書き込みアクセスを指定する。
+- `VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT`は、[深度またはステンシル操作](#)、ある[サブパスロード操作](#)を介するような、[深度/ステンシルアタッチメント](#)への読み込みアクセスを指定する。
+- `VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT`は、[深度またはステンシル操作](#)、ある[サブパスロードおよびストア操作](#)を介するような、[深度/ステンシルアタッチメント](#)への書き込みアクセスを指定する。
+- `VK_ACCESS_TRANSFER_READ_BIT`は[コピー](#)操作におけるイメージやバッファへの読み込みアクセスを指定する。
+- `VK_ACCESS_TRANSFER_WRITE_BIT`は[コピー](#)や[クリア](#)操作におけるイメージやバッファへの書き込みアクセスを指定する。
+- `VK_ACCESS_HOST_READ_BIT`はホスト操作による読み込みアクセスを指定する。このタイプのアクセスはリソースを通さず、メモリで直接処理される。
+- `VK_ACCESS_HOST_WRITE_BIT`はホスト操作による書き込みアクセスを指定する。このタイプのアクセスはリソースを通さず、メモリで直接処理される。
+- `VK_ACCESS_MEMORY_READ_BIT`は固有でないエンティティを介した読み込みアクセスを指定する。これらのエンティティはVulkanデバイスおよびホストを含むが、Vulkanデバイスの外部にある、または、コアVulkanパイプラインの一部ではないエンティティを含ん**でもよい**。destinationアクセスマスクに含まれるとき、すべての可用な書き込みをVulkanデバイスに知られているエンティティでの今後すべての読み込みアクセスから可視にする。
+- `VK_ACCESS_MEMORY_WRITE_BIT`は固有でないエンティティを介した書き込みアクセスを指定する。これらのエンティティはVulkanデバイスおよびホストを含むが、Vulkanデバイスの外部にある、または、コアVulkanパイプラインの一部ではないエンティティを含ん**でもよい**。sourceアクセスマスクに含まれるとき、Vulkanデバイスに知られているエンティティによって処理されるすべての書き込みは可用になる。destinationアクセスマスクに含まれるとき、すべての可用な書き込みをVulkanデバイスに知られているエンティティでの今後すべての書き込みアクセスから可視にする。
+
+あるアクセスタイプはパイプラインステージのサブセットによってのみ処理される。ステージマスクとアクセスマスクの両方を取るいずれかの同期コマンドは[アクセススコープ](#)を定義するために両方を使う --- 指定のステージによって処理される指定のアクセスタイプのみがアクセススコープに含まれる。アプリケーションは、そのタイプのアクセスを処理できる対応するステージマスクにパイプラインステージを含まないならば、同期コマンドにアクセスフラグを指定**してはならない**。以下の表はアクセスフラグごとにどのパイプラインステージがそのアクセスタイプを処理**できる**かをリスト化する。
+
+|アクセスフラグ|サポートするパイプラインステージ|
+|-|-|
+|VK_ACCESS_INDIRECT_COMMAND_READ_BIT|VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT|
+|VK_ACCESS_INDEX_READ_BIT|VK_PIPELINE_STAGE_VERTEX_INPUT_BIT|
+|VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT|VK_PIPELINE_STAGE_VERTEX_INPUT_BIT|
+|VK_ACCESS_UNIFORM_READ_BIT|VK_PIPELINE_STAGE_VERTEX_SHADER_BIT、VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT、VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT、VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT、VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT、または、VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT|
+|VK_ACCESS_INPUT_ATTACHMENT_READ_BIT|VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT|
+|VK_ACCESS_SHADER_READ_BIT|VK_PIPELINE_STAGE_VERTEX_SHADER_BIT、VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT、VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT、VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT、VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT、または、VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT|
+|VK_ACCESS_SHADER_WRITE_BIT|VK_PIPELINE_STAGE_VERTEX_SHADER_BIT、VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT、VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT、VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT、VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT、または、VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT|
+|VK_ACCESS_COLOR_ATTACHMENT_READ_BIT|VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT|
+|VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT|VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT|
+|VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT|VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT、または、VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT|
+|VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT|VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT、または、VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT|
+|VK_ACCESS_TRANSFER_READ_BIT|VK_PIPELINE_STAGE_TRANSFER_BIT|
+|VK_ACCESS_TRANSFER_WRITE_BIT|VK_PIPELINE_STAGE_TRANSFER_BIT|
+|VK_ACCESS_HOST_READ_BIT|VK_PIPELINE_STAGE_HOST_BIT|
+|VK_ACCESS_HOST_WRITE_BIT|VK_PIPELINE_STAGE_HOST_BIT|
+|VK_ACCESS_MEMORY_READ_BIT|該当なし|
+|VK_ACCESS_MEMORY_WRITE_BIT|該当なし|
+
+メモリオブジェクトが`VK_MEMORY_PROPERTY_HOST_COHERENT_BIT`特性を持たないならば、ホストからメモリオブジェクトへの書き込みが`VK_ACCESS_HOST_WRITE_BIT`[アクセスタイプ](#)から可視となることを保証するために、[vkFlushMappedMemoryRanges](#)を呼び出さ**なければならない**。ここでは、[同期コマンド](#)によってデバイスに対してさらに可用にすることが**できる**。同様に、`VK_ACCESS_HOST_READ_BIT`[アクセスタイプ](#)から可視である書き込みがホスト操作から可視となることを保証するため、[vkInvalidateMappedMemoryRanges](#)を呼び出さ**なければならない**。
+
+メモリオブジェクトが`VK_MEMORY_PROPERTY_HOST_COHERENT_BIT`特性フラグを持つならば、星ストからメモリオブジェクトへの書き込みは自動的に`VK_ACCESS_HOST_WRITE_BIT`[アクセスタイプ](#)から可視になる。同様に、`VK_ACCESS_HOST_READ_BIT`[アクセスタイプ](#)から可視となった書き込みは自動的にホストから可視となる。
+
+!!! note
+    [vkQueueSubmit](#)コマンドは、コマンドが実行される前にフラッシュされたならば、[`VK_ACCESS_HOST_WRITE_BIT`にフラッシュしたホスト書き込みが可用となることを自動的に保証する]ので、ほとんどの場合、このようなケースに対して明示的なメモリバリアは必要とされない。サブミットがホスト書き込みとデバイス読み込みアクセスの間に発生しないようないくつかの状況では、書き込みは明示的なメモリバリアを用いることによって可用となることが**できる**。
+
+```c
+typedef VkFlags VkAccessFlags;
+```
+
+`VkAccessFlags`は0個以上の[VkAccessFlagBits](#)のマスクを設定するためのビットマスク型である。
+
+# フレームバッファ領域の依存性 {id="sec:6.1.4"}
+
 TODO
 
 ## 6.2 {id="sec:6.2"}
