@@ -84,4 +84,110 @@ Deep Dive: Asynchronous Compute
 
 # <font color='red'>🚩リソース競合</font> --- AMD[<font color='red'>🚩 Resource Contention</font> - AMD]
 
+**問題**: SIMDごとのリソースはWavefronts間で共有される
+
+SIMDは(異なるシェーダの)Wavefrontsを実行する
+
+- 占有率は以下によって制限される
+    - レジスタ数
+    - LDSの量
+    - 他の制限が適用されるかも…
+- Wavefrontsはキャッシュを求めて競合する
+
+# <font color='red'>🚩リソース競合</font> --- AMD[<font color='red'>🚩 Resource Contention</font> - AMD]
+
+- ベクタレジスタ(VGPR)数に目を配る
+
+|GCN VGPR数|24以下|28|32|36|40|48|64|84|128以下|128超|
+|-|-|-|-|-|-|-|-|-|-|-|
+|最大SIMDあたりのWave数|10|9|8|7|6|5|4|3|2|1|
+
+- キャッシュスラッシングに気を付けて！
+    - ダミーLDSを割り当てることで占有率を制限してみる
+
+# <font color='green'>ハードウェア詳細</font> --- NVIDIA[<font color='green'>Hardware Details</font> - NVIDIA]
+
+- コンピュートはSM全体に幅優先でスケジュールされる[Compute scheduled breadth first over SMs]
+- コンピュートワークロードはグラフィクス以上の優先度を持つ
+    - ドライバはSMの分散をヒューリスティックに制御する
+
+# <font color='red'>🚩</font><font color='green'>デスクリプタヒープ</font> --- NVIDIA[<font color='red'>🚩</font><font color='green'>Descriptor Heap</font> - NVIDIA]
+
+**問題**: ハードウェアはひとつしか持てない --- アプリケーションは*たくさん*生成できる
+
+デスクリプタヒープの切り替えは(現在のハードウェアでは)ハザードになり得る
+
+- GPUはヒープを切り替える前にワークを空にし[drain]なければならない
+- CBV/SRV/UAV **と**サンプラヒープに適用する
+- (冗長な変更はフィルタリングされる)
+- D3D: CLごとに`SetDescriptorHeap`を呼ばなければならない
+
+# <font color='red'>🚩</font><font color='green'>デスクリプタヒープ</font> --- NVIDIA[<font color='red'>🚩</font><font color='green'>Descriptor Heap</font> - NVIDIA]
+
+デスクリプタ(すべてのヒープ)の総数がプールサイズより小さいとハザードを回避する
+
+プールサイズ(<font color='green'>Kepler+</font>)
+
+- CBV/UAV/SRV = 1048576
+- サンプラ = 2048個 + 2032個(静的) + 16個(ドライバ所有)
+- **NB** [1048575|4095] -> [0xFFFFF|0xFFF] -> (32ビットにパックされる)
+
+# <font color='red'>🚩</font>同期[<font color='red'>🚩</font> Synchronization]
+
+考慮すべきGPU同期モデル
+
+- 撃ちっぱなし[fire-and-forget]
+- ハンドシェイク
+
+CPUもやることがある
+
+- ExecuteCommandLists(ECLs)はGPUワークを*スケジュール*する
+- ***CPU***でのECLs間の隙間は***GPU***に翻訳できる
+
+# <font color='red'>🚩</font>撃ちっぱなし(同期)[<font color='red'>🚩</font> Fire-and-Forget (Sync.)]
+
+- ワークの開始はフェンスを介して同期される
+
+# <font color='red'>🚩</font>撃ちっぱなし(同期)[<font color='red'>🚩</font> Fire-and-Forget (Sync.)]
+
+- ワークの開始はフェンスを介して同期される
+- しかし、いくつかのワークロードはフレームごとに変化する
+- この変化が望ましくないワークペアリングを引き起こす
+- 悪いペアリングはパフォーマンスに影響を及ぼすので、全体フレーム時間に影響を及ぼす
+
+# <font color='red'>🚩</font>CPUレイテンシー(同期)[<font color='red'>🚩</font> CPU Latency (Sync.)]
+
+- 同様のシチュエーション --- ここではCPUが役割を果たす
+
+# <font color='red'>🚩</font>CPUレイテンシー(同期)[<font color='red'>🚩</font> CPU Latency (Sync.)]
+
+- 同様のシチュエーション --- ここではCPUが役割を果たす
+- ゲームはECLs間のCPUでのレイテンシーを導入する
+- レイテンシーはGPUに翻訳できる
+- 望ましくないワークペアリングなどを引き起こす…
+
+# <font color='red'>🚩</font>ハンドシェイク(同期)[<font color='red'>🚩</font> Handshake (Sync.)]
+
+- ワークペアリングの開始と終了を同期する
+- ペアリング決定論を保証する
+- いくつかの非同期の機会を捕らえ損なうかも(ハードウェア管理可能)
+- あなたのコードをfuture proofにする！
+
+# <font color='red'>🚩</font>同期 --- アドバイス[<font color='red'>🚩</font> Synchronization - Advice]
+
+CPUは純真潔白ではない、目を配ろう
+
+2つのGPU同期モデル
+
+- 撃ちっぱなし :(
+    - 反対: 非決定的なregimeペアリング
+    - 賛成: 少ない同期 == より即時的なパフォーマンス(ベストケースのシナリオ)
+- ハンドシェイク :)
+    - 反対: 追加の同期がパフォーマンスを低下させるかも
+    - 賛成: regimeペアリング決定論(いつでも)
+
+決定論(と同様に正確性)のために同期する
+
+# <font color='red'>🚩</font>非同期税[<font color='red'>🚩</font> Async. Tax]
+
 TODO
