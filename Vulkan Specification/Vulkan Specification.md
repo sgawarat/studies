@@ -1106,11 +1106,98 @@ VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkRenderPass)
 
 サブパスの実行は、実行依存性によって強制されない限り、他のサブパスに関して重なり合ったり順序を外れて実行**してもよい**。各サブパスは同じサブパスに記録されたコマンドやレンダパスを区切る[vkCmdBeginRenderPass](#)と[vkCmdEndRenderPass](#)コマンドの[サブミッション順序](#)のみを尊重し、他のサブパス内のコマンドは含まれない。これは他のほとんどの[暗黙の順序保証](#)に影響を与える。
 
-レンダパスはアタッチメントに固有のイメージビューから独立してサブパスとアタッチメントの構造を述べる。アタッチメントで用いられるであろう固有のイメージビューとその大きさは`VkFramebuffer`オブジェクトに指定される。フレームバッファはそれと互換性のある固有のレンダパスに関して生成される([レンダパス互換性](#)を参照)。まとめて、れんだぱすとフレームバッファは1つ以上のサブパスに対する完全なレンダターゲットステートとサブパス間のアルゴリズム的な依存関係を定義する。
+レンダパスはアタッチメントに固有のイメージビューから独立してサブパスとアタッチメントの構造を述べる。アタッチメントで用いられるであろう固有のイメージビューとその大きさは`VkFramebuffer`オブジェクトに指定される。フレームバッファはそれと互換性のある固有のレンダパスに関して生成される([レンダパス互換性](#)を参照)。まとめて、レンダパスとフレームバッファは1つ以上のサブパスに対する完全なレンダターゲットステートとサブパス間のアルゴリズム的な依存関係を定義する。
 
 与えられたサブパスのための描画コマンドの様々なパイプラインステージは、[パイプライン順序](#)を尊重しつつ、描画コマンドの内[within]と外[across]の両方で、並行して、および/または、順序を外れて実行**してもよい**。しかし、与えられた(x, y, layer, sample)の場所に対して、あるサンプル毎の操作は[ラスタライゼーション順序](#)で処理される。
 
 # レンダパス生成{id="sec:7.1"}
+
+TODO: `vkCreateRenderPass`
+
+TODO: `VkRenderPassCreateInfo`
+
+TODO: `VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT`
+
+`VkSubpassDescription`構造体は以下のように定義される。
+
+```c
+typedef struct VkSubpassDescription {
+VkSubpassDescriptionFlags       flags;
+VkPipelineBindPoint             pipelineBindPoint;
+uint32_t                        inputAttachmentCount;
+const VkAttachmentReference*    pInputAttachments;
+uint32_t                        colorAttachmentCount;
+const VkAttachmentReference*    pColorAttachments;
+const VkAttachmentReference*    pResolveAttachments;
+const VkAttachmentReference*    pDepthStencilAttachment;
+uint32_t                        preserveAttachmentCount;
+const uint32_t*                 pPreserveAttachments;
+} VkSubpassDescription;
+```
+
+- `flags`はサブパスの使い方指定する[VkSubpassDescrpitionFlagBits](#)のビットマスクである。
+- `pipelineBindPoint`はこれがコンピュートまたはグラフィクスのサブパスかどうかを指定する[VkPipelineBindPoint](#)の値である。現時点では、グラフィクスサブパスのみがサポートされる。
+- `pInputAttachments`はサブパス中にフラグメントシェーダステージで読み込むことが**できる**レンダパスのアタッチメントと、サブパス中に各アタッチメントがとるレイアウトをリストアップする(以下で定義される)[VkAttachmentReference](#)構造体の配列である。配列の各要素はシェーダにおける入力アタッチメントユニットに対応する。すなわち、シェーダが入力変数を`layout(input_attachment_index=X, set=Y, binding=Z)`と宣言するならば、`pInputAttachments[X]`に渡されるアタッチメントを用いる。入力アタッチメントはロケーション`(set=Y, binding=Z)`に書き込まれた入力アタッチメントデスクリプタを持つデスクリプタセットもパイプラインにバインド**しなければならない**。フラグメントシェーダはフラグメントの(x, y, layer)フレームバッファ座標で入力アタッチメントの内容にアクセスするためにサブパスの入力変数を用いることが**できる**。
+- `colorAttachmentCount`は色アタッチメントの数である。
+- `pColorAttachments`はサブパスにおいて色アタッチメントとして用いられるレンダパスのアタッチメントとサブパス中に各アタッチメントがとるレイアウトをリストアップする`colorAttachmentCount`個の[VkAttachmentReference](#)構造体の配列である。配列の各要素はフラグメントシェーダの出力ロケーションに対応する。すなわち、シェーダが出力変数を`layout(location=X)`と宣言したならば、`pColorAttachments[X]`に提供されるアタッチメントを用いる。
+- `pResolveAttachments`は`NULL`かサブパスの終わりに解決されるレンダパスのアタッチメントとマルチサンプル解決操作中に各アタッチメントがとるレイアウトをリストアップする`colorAttachmentCount`個の[VkAttachmentReference](#)構造体の配列である。`pResolveAttachments`が`NULL`であるならば、要素のそれぞれは色アタッチメント(おなじインデックスの`pColorAttachments`の要素)に対応し、マルチサンプル解決操作はアタッチメントごとに定義される。各サブパスの終わりに、解決アタッチメントインデックスが`VK_ATTACHMENT_UNUSED`でない限り、マルチサンプル解決操作はサブパスの色アタッチメントを読み込み、対応する解決アタッチメントにおける同じピクセルロケーションへのピクセルごとのサンプルを解決する。レンダパスにおけるアタッチメントの最初の使用が解決アタッチメントとしてであるならば、解決はレンダエリアのすべてのピクセルを上書きすることが保証されているので、`loadOp`は事実上無視される。
+- `pDepthStencilAttachment`は深度/ステンシルデータに用いられるであろうアタッチメントとサブパス中にとるレイアウトを指定する[VkAttachmentReference](#)へのポインタである。アタッチメントインデックスを`VK_ATTACHMENT_UNUSED`に設定するか、このポインタを`NULL`のままにすることはサブパスでは深度/ステンシルアタッチメントが用いられないことを示す。
+- `preserveAttachmentCount`は保存アタッチメントの数である。
+- `pPreserveAttachments`はサブパスでは使われないがその内容がサブパスを通して保存され**なければならない**アタッチメントを記述する`preserveAttachmentCount`個のレンダパスアタッチメントインデックスの配列である。
+
+以下の条件がすべて真であるならば、レンダエリア内のアタッチメントの内容はさぶぱす$S$の開始時に未定義になる。
+
+- そのアタッチメントはレンダパスにおいていずれのサブパスでも色、深度/ステンシル、または、解決アタッチメントとして用いられる。
+- そのアタッチメントを使用または保存するサブパス$S_1$と、$S_1$から$S$へのサブパス依存性が存在する。
+- そのアタッチメントはサブパス$S$において使用または保存されない。
+
+ひとたびサブパス$S$においてアタッチメントの内容が未定義になれば、再び書き込まれるまで、$S$から始まるサブパス依存性連鎖内のサブパスでは未定義のままである。しかし、サブパス$S_1$から始まる他のサブパス依存性連鎖におけるサブパスがそのアタッチメントを使用または保存するならば、それらのサブパスでは有効のままである。
+
+TODO: `VkSubpassDescription`のValid Usage
+
+`VkSubpassDependency`構造体は以下のように定義される。
+
+```c
+typedef struct VkSubpassDependency {
+    uint32_t                srcSubpass;
+    uint32_t                dstSubpass;
+    VkPipelineStageFlags    srcStageMask;
+    VkPipelineStageFlags    dstStageMask;
+    VkAccessFlags           srcAccessMask;
+    VkAccessFlags           dstAccessMask;
+    VkDependencyFlags       dependencyFlags;
+} VkSubpassDependency;
+```
+
+- `srcSubpass`は依存性における最初のサブパスのインデックス、または、`VK_SUBPASS_EXTERNAL`である。
+- `dstSubpass`は依存性における次のサブパスのインデックス、または、`VK_SUBPASS_EXTERNAL`である。
+- `srcStageMask`は[sourceステージマスク](#)を指定する[VkPipelineStageFlagBits](#)のビットマスクである。
+- `dstStageMask`は[destinationステージマスク](#)を指定する[VkPipelineStageFlagBits](#)のビットマスクである。
+- `srcAccessMask`は[sourceアクセスマスク](#)を指定する[VkAccessFlagBits](#)のビットマスクである。
+- `dstStageMask`は[destinationアクセスマスク](#)を指定する[VkAccessFlagBits](#)のビットマスクである。
+- `dependencyFlags`は[VkDependencyFlagBits](#)のビットマスクである。
+
+`srcSubpass`が`dstSubpass`に等しいならば、[VkSubpassDependency](#)は[サブパス自己依存性](#)を記述し、サブパスインスタンス内部で許可されるパイプラインバリアのみを含む。そうでなければ、サブパス依存性を含むレンダパスインスタンスがキューにサブミットされるとき、`srcSubpass`と`dstSubpass`によって識別されるサブパスの間のメモリ依存性を定義する。
+
+`srcSubpass`が`VK_SUBPASS_EXTERNAL`に等しいならば、最初の[同期スコープ](#)はレンダパスインスタンスが開始される前にキューにサブミットされたコマンドを含む。そうでなければ、最初のコマンド一式は`srcSubpass`と`srcSubpass`で使われるアタッチメントに対するロード、ストア、マルチサンプル解決操作によって識別されるサブパスインスタンスの一部としてサブミットされるすべてのコマンドを含む。いずれかの場合に、最初の同期スコープは`srcStageMask`によって指定される[sourceステージマスク](#)によって決定されるパイプラインステージに対する操作に制限される。
+
+`dstSubpass`が`VK_SUBPASS_EXTERNAL`に等しいならば、次の[同期スコープ](#)はレンダパスインスタンスが終了した後にサブミットされるコマンドを含む。そうでなければ、次のコマンド一式は`dstSubpass`と`destSubpass`で用いられるアタッチメントでのロード、ストア、マルチサンプル解決操作によって識別されるサブパスインスタンスの一部としてサブミットされるすべてのコマンドを含む。いずれかの場合、次の同期スコープは`dstStageMask`によって指定される[destinationステージマスク](#)によって決定されるパイプラインステージでの操作に制限される。
+
+最初の[アクセススコープ](#)は`srcStageMask`で指定される[sourceステージマスク](#)によって決定されるパイプラインステージにおけるアクセスに制限される。`srcAccessMask`で指定される[sourceアクセスマスク](#)におけるアクセスタイプにも制限される。
+
+次の[アクセススコープ](#)は`dstStageMask`で指定される[destinationステージマスク](#)によって決定されるパイプラインステージにおけるアクセスに制限される。`dstAccessMask`で指定される[destinationアクセスマスク](#)におけるアクセスタイプにも制限される。
+
+サブパス依存性によって定義される[可用性および可視性操作](#)はレンダパス内の[イメージレイアウト遷移](#)の実行に影響を与える。
+
+!!! note
+    アタッチメントでないリソースでは、サブパス依存性によって表現されるメモリ依存性は(一致する`srcStageMask`/`dstStageMask`引数を持つ)[vkCmdPipelineBarrier](#)の一部としてサブミットされる(一致する`srcAccessMask`/`dstAccessMask`引数を持つ)[VkMemoryBarrier](#)のそれとほぼ同一である。唯一異なることは、そのスコープが、その前後に影響を与える可能性のあるすべてのものではなく、識別されたサブパスに制限されることである。
+    <!--  -->
+    しかし、アタッチメントでは、サブパス依存性は上記の[VkMemoryBarrier](#)、`VK_QUEUE_FAMILY_IGNORED`に設定されるキューファミリーインデックス、以下のようなレイアウトと同じように定義される[VkImageMemoryBarrier](#)とよく似ている。
+    <!--  -->
+    - `oldLayout`が`srcSubpass`のサブパスデスクリプションに従うアタッチメントのレイアウトに相当する。
+    - `newLayout`が`dstSubpass`のサブパスデスクリプションに従うアタッチメントのレイアウトに相当する。
+
+TODO: `VkSubpassDependency`のValid Usage
 
 TODO
 
