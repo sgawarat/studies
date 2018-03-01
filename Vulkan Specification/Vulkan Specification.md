@@ -1181,7 +1181,7 @@ typedef struct VkSubpassDependency {
 
 `srcSubpass`が`VK_SUBPASS_EXTERNAL`に等しいならば、最初の[同期スコープ](#)はレンダパスインスタンスが開始される前にキューにサブミットされたコマンドを含む。そうでなければ、最初のコマンド一式は`srcSubpass`と`srcSubpass`で使われるアタッチメントに対するロード、ストア、マルチサンプル解決操作によって識別されるサブパスインスタンスの一部としてサブミットされるすべてのコマンドを含む。いずれかの場合に、最初の同期スコープは`srcStageMask`によって指定される[sourceステージマスク](#)によって決定されるパイプラインステージに対する操作に制限される。
 
-`dstSubpass`が`VK_SUBPASS_EXTERNAL`に等しいならば、次の[同期スコープ](#)はレンダパスインスタンスが終了した後にサブミットされるコマンドを含む。そうでなければ、次のコマンド一式は`dstSubpass`と`destSubpass`で用いられるアタッチメントでのロード、ストア、マルチサンプル解決操作によって識別されるサブパスインスタンスの一部としてサブミットされるすべてのコマンドを含む。いずれかの場合、次の同期スコープは`dstStageMask`によって指定される[destinationステージマスク](#)によって決定されるパイプラインステージでの操作に制限される。
+`dstSubpass`が`VK_SUBPASS_EXTERNAL`に等しいならば、次の[同期スコープ](#)はレンダパスインスタンスが終了した後にサブミットされるコマンドを含む。そうでなければ、次のコマンド一式は`dstSubpass`と`dstSubpass`で用いられるアタッチメントでのロード、ストア、マルチサンプル解決操作によって識別されるサブパスインスタンスの一部としてサブミットされるすべてのコマンドを含む。いずれかの場合、次の同期スコープは`dstStageMask`によって指定される[destinationステージマスク](#)によって決定されるパイプラインステージでの操作に制限される。
 
 最初の[アクセススコープ](#)は`srcStageMask`で指定される[sourceステージマスク](#)によって決定されるパイプラインステージにおけるアクセスに制限される。`srcAccessMask`で指定される[sourceアクセスマスク](#)におけるアクセスタイプにも制限される。
 
@@ -1198,6 +1198,89 @@ typedef struct VkSubpassDependency {
     - `newLayout`が`dstSubpass`のサブパスデスクリプションに従うアタッチメントのレイアウトに相当する。
 
 TODO: `VkSubpassDependency`のValid Usage
+
+`VK_SUBPASS_EXTERNAL`からアタッチメントを使う最初のサブパスへのサブパス依存性がないならば、`VK_SUBPASS_EXTERNAL`からそれが使われる最初のサブパスへの暗黙のサブパス依存性が存在する。そのサブパス依存性は以下の引数で定義されるかのように操作する。
+
+```c
+VkSubpassDependency implicitDependency = {
+    .srcSubpass = VK_SUBPASS_EXTERNAL;
+    .dstSubpass = firstSubpass;  // アタッチメントが使われる最初のサブパス
+    .srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    .dstStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+    .srcAccessMask = 0;
+    .dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
+                     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                     VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                     VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                     VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    .dependencyFlags = 0;
+};
+```
+
+同様に、アタッチメントを使う最後のサブパスから`VK_SUBPASS_EXTERNAL`へのサブパス依存性がないならば、それが使われる最後のサブパスから`VK_SUBPASS_EXTERNAL`への暗黙のサブパス依存性が存在する。そのサブパス依存性は以下の引数で定義されるかのように操作する。
+
+```c
+VkSubpassDependency implicitDependency = {
+    .srcSubpass = lastSubpass; // アタッチメントが使われる最後のサブパス
+    .dstSubpass = VK_SUBPASS_EXTERNAL;
+    .srcStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+    .dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    .srcAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
+                     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                     VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                     VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                     VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    .dstAccessMask = 0;
+    .dependencyFlags = 0;
+};
+```
+
+サブパスは、サブパス依存性連鎖がその他を記述しない限り、他のサブパスに関して重なり合ったり順序を外れて実行**してもよい**ので、サブパス間で要求されるレイアウト遷移はアプリケーションには知ることが**できない**。代わりに、アプリケーションは各アタッチメントがレンダパスの開始および終了時にい**なければならない**レイアウトと、使われる各サブパス中にい**なければならない**レイアウトを提供する。実装は、イメージが各サブパスによって要求されるレイアウトにあり、レンダパスの終わりに最終レイアウトにあることを保証するため、サブパス間でレイアウト遷移を実行**しなければならない**。
+
+自動的レイアウト遷移はフレームバッファにアタッチされるイメージサブリソース全体に適用される。
+
+サブパスで使われるレイアウトから離れる自動的レイアウト遷移は`srcSubpass`としてそのサブパスを伴うすべての依存性に対する可用性操作の後に発生する。
+
+サブパスで使われるレイアウトに入る自動的レイアウト遷移は`dstSubpass`としてそのサブパスを伴うすべての依存性に対する可視性操作の後に発生する。
+
+`initialLayout`から離れる自動的レイアウト遷移は、`dstSubpass`が遷移されるであろうアタッチメントを用いる、`VK_SUBPASS_EXTERNAL`に等しい`srcSubpass`を持つすべての依存性に対する可用性操作の後に発生する。`VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT`で生成されたアタッチメントでは、`initialLayout`から離れる自動的レイアウト遷移は、`dstSubpass`がいずれかのエイリアスされたアタッチメントを用いる、`VK_SUBPASS_EXTERNAL`に等しい`srcSubpass`を持つすべての依存性に対する可用性操作の後に発生する。
+
+`finalLayout`に入る自動的レイアウト遷移は、`srcSubpass`が遷移されるであろうアタッチメントを用いる、`VK_SUBPASS_EXTERNAL`に等しい`dstSubpass`を持つすべての依存性に対する可視性操作の前に発生する。`VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT`で生成されたアタッチメントでは、`finalLayout`に入る自動的レイアウト遷移は、`srcSubpass`がいずれかのエイリアスされたアタッチメントを用いる、`VK_SUBPASS_EXTERNAL`に等しい`dstSubpass`を持つすべての依存性に対する可用性操作の前に発生する。
+
+2つのサブパスが異なるレイアウトで同じアタッチメントを用いるならば、両方のレイアウトはリードオンリーであり、サブパス依存性はこれらのサブパスの間に指定される必要はない。実装がこれらのレイアウトを個々に扱うならば、各レイアウトで個別に用いるために、これらのサブパスの間に暗黙のサブパス依存性を挿入**しなければならない**。そのサブパス依存性は以下の引数で定義されるかのように操作される。
+
+```c
+// 入力アタッチメントのために用いられる
+VkPipelineStageFlags inputAttachmentStages = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+VkAccessFlags inputAttachmentAccess = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
+// 深度/ステンシルアタッチメントのために用いられる
+VkPipelineStageFlags depthStencilAttachmentStages =
+VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+VkAccessFlags depthStencilAttachmentAccess =
+VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+VkSubpassDependency implicitDependency = {
+    .srcSubpass = firstSubpass;
+    .dstSubpass = secondSubpass;
+    .srcStageMask = inputAttachmentStages | depthStencilAttachmentStages;
+    .dstStageMask = inputAttachmentStages | depthStencilAttachmentStages;
+    .srcAccessMask = inputAttachmentAccess | depthStencilAttachmentAccess;
+    .dstAccessMask = inputAttachmentAccess | depthStencilAttachmentAccess;
+    .dependencyFlags = 0;
+};
+```
+
+サブパスが、入力アタッチメントと、色アタッチメントか深度/ステンシルアタッチメントのどちらか、の両方として同じアタッチメントを用いるならば、色または深度/ステンシルアタッチメントを介する書き込みは自動的に入力アタッチメントを介する読み込みから可視にしないので、以下の条件のいずれかを除いて、*フィードバックループ*を引き起こす。
+
+- 入力アタッチメントによって読み込まれる色要素または深度/ステンシル要素が色または深度/ステンシルアタッチメントによる書き込まれる要素と相互排他的であるならば、フィードバックループはない。これは、`colorWriteMask`を介する入力として読み込まれる色要素への書き込みを無効化したり、`depthWriteEnable`や`stencilTestEnable`を介する入力として読み込まれる深度/ステンシル要素への書き込みを無効化したりするため、サブパスで用いられるグラフィクスパイプラインを要求する。
+- そのアタッチメントが入力アタッチメントと深度/ステンシルアタッチメントのみとして使われ、深度/ステンシルアタッチメントが書き込まれない場合。
+- そのアタッチメントが書き込まれる時と後のフラグメントによって続けて読み込まれる時との間にメモリ依存性が挿入されら場合。[サブパス自己依存性](#)を表現する[パイプラインバリア](#)はこれを達成するたったひとつの方法であり、これはフラグメントが特定のサンプル座標(x, y, layer, sample)の値を読み出すたび、最近のパイプラインバリア以降、または、サブパスの開始以降にパイプラインバリアがなかったときはサブパスの開始以降にこれらの値が書き込まれたならば、そのたびに挿入され**なければならない**。
+
+入力アタッチメントと色アタッチメントの両方として使われるアタッチメントは`VK_IMAGE_LAYOUT_GENERAL`レイアウトに**なければならない**。入力アタッチメントと深度/ステンシルアタッチメントとして使われるアタッチメントは`VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL`か`VK_IMAGE_LAYOUT_GENERAL`に**なければならない**。アタッチメントは深度/ステンシルアタッチメントと色アタッチメントの両方として用い**てはならない**。
+
+TODO: `vkDestroyRenderPass`
+
+## レンダパス互換性 {id="sec:7.2"}
 
 TODO
 
