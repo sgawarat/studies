@@ -130,7 +130,7 @@ SIMDは(異なるシェーダの)Wavefrontsを実行する
 
 - CBV/UAV/SRV = 1048576
 - サンプラ = 2048個 + 2032個(静的) + 16個(ドライバ所有)
-- **NB** [1048575|4095] -> [0xFFFFF|0xFFF] -> (32ビットにパックされる)
+- **注意せよ[NB]** [1048575|4095] -> [0xFFFFF|0xFFF] -> (32ビットにパックされる)
 
 # <font color='red'>🚩</font>同期[<font color='red'>🚩</font> Synchronization]
 
@@ -190,4 +190,78 @@ CPUは純真潔白ではない、目を配ろう
 
 # <font color='red'>🚩</font>非同期税[<font color='red'>🚩</font> Async. Tax]
 
-TODO
+非同期コンピュートに関するオーバーヘッドコスト
+
+- 定量化: [AC無効化時(ms)] / [直列化したACの有効化時(ms)] %
+    - グラフィクスAPIを介して手動でシリアライズする
+- *ACゲインを簡単にノックアウトできる！*
+
+# <font color='red'>🚩</font>非同期税 --- *根本的な原因*[<font color='red'>🚩</font> Async. Tax - *Root Cause*]
+
+**CPU**:
+
+- 非同期タスクを組織化/スケジュールする追加のCPUワーク
+- 同期/ExecuteCommandListsのオーバーヘッド
+
+**GPU**:
+
+- 同期のオーバーヘッド
+- ACのオン/オフの間で使われるシェーダが異なる
+- 追加のバリア(キュー間同期)
+
+# <font color='red'>🚩</font>非同期税 --- *アドバイス*[<font color='red'>🚩</font> Async. Tax - *Advice*]
+
+最初に: CPUまたはGPUがボトルネックかどうかを決定する (GPUView)
+
+**CPU**:
+
+- フレームあたりのAPI呼び出しを数えて、ACのオン/オフの差を比較する
+- スレッド毎のプロファイリングを通して差異を計測する
+
+**GPU**:
+
+- ACのオン/オフのシェーダのGPUコストを比較する
+- 寄与部分の差異を調査する[Inspect difference contributors]
+
+# ツール[Tools]
+
+- APIタイムスタンプ: 非同期コンピュートを有効化/無効化する時間
+- GPUView: (次スライドへ続く)
+
+# GPU Viewその1[GPU View #1]
+
+- 3D、コンピュート、コピーを使用
+- フレーム境界 @ Flipキューパケット
+- フレーム毎のグラフィクスにオーバーラップするコンピュート
+
+# GPU Viewその2 --- マーカー[GPU View #2 - Markers]
+
+**注意せよ** Ctrl+eで開く
+
+**説明**
+
+- *Time*: GPUの正確な時間
+- *DataSize*: Dataのバイトサイズ
+- *Data*: PIXBegin/EndEventでemitされたイベント名
+    - バイト配列 -> ASCII/Unicode
+    - 手動ステップ :(
+
+# GPU Viewその3 --- イベント[GPU View #3 - Events]
+
+**CPUタイムライン**:
+
+- `ID3D12Fence::Signal`
+    - DxKrnl --- SignalSynchronizationObjectFromCpu
+- `ID3D12Fence::Wait`
+    - DxKrnl --- WaitSynchronizationObjectFromCpu
+
+**GPUタイムライン**:
+
+- `ID3D12CommandQueue::Signal`
+    - DxKrnl --- SignalSynchronizationObjectFromGpu
+- `ID3D12CommandQueue::Wait`
+    - DxKrnl --- WaitSynchronizationObjectFromGpu
+
+# ありごとうございました[Thanks \\0]
+
+ご質問は？
