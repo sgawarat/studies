@@ -1282,7 +1282,19 @@ TODO: `vkDestroyRenderPass`
 
 ## レンダパス互換性 {id="sec:7.2"}
 
-TODO
+フレームバッファとグラフィクスパイプラインは固有のレンダパスオブジェクトに基づいて生成される。これらはそのレンダパスオブジェクトかそれと互換性のあるものでのみ使われ**なければならない**。
+
+2つのアタッチメントリファレンスは、一致するフォーマットとサンプル数を持つ、または、両方が`VK_ATTACHMENT_UNUSED`かそのリファレンスを含むポインタが`NULL`である場合に互換性がある。
+
+2つのアタッチメントリファレンスの配列は、対応するアタッチメントの組が互換性を持つ場合に互換性がある。その配列の長さが異なるならば、小さい方の配列で表されていないアタッチメントリファレンスは`VK_ATTACHMENT_UNUSED`として扱われる。
+
+2つのレンダパスは、対応する色、入力、解決、および、深度/ステンシルアタッチメントリファレンスが互換性を持ち、以下を除いてそれ以外で同一である場合に互換性がある。
+
+- アタッチメントデスクリプションにおける初期および最終イメージレイアウト
+- アタッチメントデスクリプションにおけるロードおよびストア操作
+- アタッチメントリファレンスにおけるイメージレイアウト
+
+## 7.3 {id="sec:7.3"}
 
 # 8 {id="sec:8"}
 
@@ -1383,3 +1395,108 @@ TODO: `vkMapMemory`
 TODO: `vkUnmapMemory`
 
 # 11 {id="sec:11"}
+
+# 12 {id="sec:12"}
+
+# リソースデスクリプタ {id="sec:13"}
+
+シェーダはAPIを介してバッファおよびイメージビューに間接的にバインドされる特別なシェーダ変数を用いることでバッファおよびイメージリソースにアクセスする。これらの変数はセットにまとめられる。ここでは、バインディングの各セットがAPIにおいて*デスクリプタセット[descriptor set]*によって表現され、デスクリプタセットは一度にすべてバインドされる。*デスクリプタ[descriptor]*はバッファビュー、イメージビュー、サンプラ、複合イメージサンプラ[combined image sampler]のようなシェーダリソースを表す不透明データ構造である。各セットの内容はその*デスクリプタセットレイアウト[descriptor set layout]*によって決定され、パイプライン内のシェーダにおけるリソース変数によって使われることが**できる**そのセットレイアウトの列は*パイプラインレイアウト*で指定される。
+
+各シェーダは最大`maxBoundDescriptorSets`([制限](#)を参照)個のデスクリプタセットを使用**でき**、各デスクリプタセットはすべてのデスクリプタタイプのデスクリプタのためのバインディングを含めることが**できる**。各シェーダリソース変数はデスクリプタセットレイアウト内のそのロケーションを定義する(セット番号、バインディング番号、配列要素)のタプルに割り当てられる。GLSLでは、セット番号とバインディング番号はlayout修飾子を介して割り当てられ、配列要素は連続的に配列の最初の要素が0に等しいインデックスから始まって暗黙的に割り当てられる(そして、配列でない変数に対して配列要素は0である)。
+
+```glsl
+// セット番号 = M、バインディング番号 = N、配列要素 = 0を割り当てる。
+layout (set=M, binding=N) uniform sampler2D variableName;
+// すべての配列要素に対して、セット番号 = M、バインディング番号 = Nを割り当て、そして
+// I番目の配列のメンバーに配列要素 = Iを割り当てる。
+layout (set=M, binding=N) uniform sampler2D variableNameArray[I];
+```
+: GLSLの例
+
+```spir-v
+// Assign set number = M, binding number = N, array element = 0
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %10 "variableName"
+               OpDecorate %10 DescriptorSet M
+               OpDecorate %10 Binding N
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeImage %6 2D 0 0 0 1 Unknown
+          %8 = OpTypeSampledImage %7
+          %9 = OpTypePointer UniformConstant %8
+         %10 = OpVariable %9 UniformConstant
+               ...
+// Assign set number = M, binding number = N for all array elements, and
+// array element = I for the I'th member of the array.
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %13 "variableNameArray"
+               OpDecorate %13 DescriptorSet M
+               OpDecorate %13 Binding N
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeImage %6 2D 0 0 0 1 Unknown
+          %8 = OpTypeSampledImage %7
+          %9 = OpTypeInt 32 0
+         %10 = OpConstant %9 I
+         %11 = OpTypeArray %8 %10
+         %12 = OpTypePointer UniformConstant %11
+         %13 = OpVariable %12 UniformConstant
+               ...
+```
+: SPIR-Vの例
+
+## デスクリプタタイプ {id="sec:13.1"}
+
+以下の節はVulkanによってサポートされる様々なデスクリプタタイプの概要を述べる。各節はデスクリプタタイプを定義し、各デスクリプタタイプはデスクリプタセットにおいてと同様にシェーダ言語とSPIR-Vにおける表明[manifestation]を持つ。デスクリプタタイプとシェーダ言語における不透明型のクラスの間には1対1対応がほぼ存在する。ここで、シェーダ言語における不透明型は対応するデスクリプタタイプのパイプラインレイアウトにおけるデスクリプタを参照**しなければならない**。ただし、[複合イメージサンプラ](#)に述べられるようにこの規定には例外が存在する。
+
+### ストレージイメージ {id="sec:13.1.1"}
+
+*ストレージイメージ[storage image]*(`VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`)はパイプラインにバインドされたシェーダ内でロード、ストア、イメージメモリでのアトミック操作に使われるデスクリプタタイプである。
+
+ストレージイメージからのロードはサンプラを使わず、フィルタされず、座標のラッピング[wrapping]やクランピング[clamping]をサポートしない。ロードは[vkGetPhysicalDeviceFormatProperties](#)を介した`VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`でサポートを報告するイメージフォーマットに対してすべてのシェーダステージにおいてサポートされる。
+
+ストレージイメージへのストアは`VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`でサポートを報告するイメージフォーマットに対してコンピュートシェーダにおいてサポートされる。
+
+ストレージイメージでのロードおよびストア操作は`VK_IMAGE_LAYOUT_GENERAL`にあるイメージでのみ行うことが**できる**。
+
+`fragmentStoresAndAtomics`機能が有効化されているとき、ストアおよびアトミック操作はコンピュートシェーダでサポートされるのと同じイメージフォーマット一式によるフラグメントシェーダにおけるストレージイメージに対してもサポートされる。`vertexPIpelineStoresAndAtomics`機能が有効化されているとき、ストアおよびアトミック操作はコンピュートシェーダでサポートされるのと同じイメージフォーマット一式による頂点、テッセレーション、ジオメトリシェーダにおいてもサポートされる。
+
+ストレージイメージ宣言はその変数がアトミック操作で用いられる場合にはシェーダでイメージフォーマットを指定**しなければならない**。
+
+`shaderStorageImageReadWithoutFormat`機能が有効化されていないならば、ストレージイメージ宣言はその変数がロード操作で用いられる場合にはシェーダでイメージフォーマットを指定**しなければならない**。
+
+`shaderStorageImageWriteWithoutFormat`機能が有効化されていないならば、ストレージイメージ宣言はその変数がストア操作で用いられる場合にはシェーダでイメージフォーマットを指定**しなければならない**。
+
+ストレージイメージはGLSLシェーダソースでは(必要ならば)フォーマットレイアウト修飾子と一緒に適切な次元のユニフォームな`image`変数を用いて宣言される。
+
+```glsl
+layout (set=m, binding=n, r32f) uniform image2D myStorageImage;
+```
+: GLSLの例
+
+```spir-v
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %9 "myStorageImage"
+               OpDecorate %9 DescriptorSet m
+               OpDecorate %9 Binding n
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeImage %6 2D 0 0 0 2 R32f
+          %8 = OpTypePointer UniformConstant %7
+          %9 = OpVariable %8 UniformConstant
+               ...
+```
+: SPIR-Vの例
+
+### サンプラ {id="sec:13.1.2"}
+
+TODO
