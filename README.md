@@ -6,10 +6,12 @@ numberSections: false
 
 ## いま読む
 
-- [@Hodes2016]
-    - DirectX12のtips
+- [@Hammon2017]
+    - 物理ベースのディフューズライティング
 - [@Jakob2010]
     - マイクロフレーク理論
+- [@Jakob2010b]
+    - [@Jakob2010]の補足資料
 - [@Khronos2018]
     - Vulkanの仕様書
 
@@ -21,12 +23,8 @@ numberSections: false
     - GPUで単位ベクトルを表現する方法について調査
 - [@Drobot2014]
     - GCNアーキテクチャを対象とした低レベルな最適化
-- [@Hammon2017]
-    - 物理ベースのディフューズライティング
 - [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法
-- [@Hodes2017]
-    - 非同期コンピュートのAMDとNVIDIAのプラクティス
 - [@Jimenez2016]
     - Filmic SMAA
 - [@Lottes2016]
@@ -147,6 +145,10 @@ numberSections: false
     - モバイル系メーカーによるVulkan APIの概要
 - [@Hector2016b]
     - Vulkanのレンダパスのtips
+- [@Hodes2016]
+    - DirectX12のtips
+- [@Hodes2017]
+    - 非同期コンピュートのAMDとNVIDIAのプラクティス
 - [@Lorach2016]
     - AZDOなOpenGLとVulkanのtips
 - [@Olson2016]
