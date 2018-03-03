@@ -338,7 +338,7 @@ title: PBR Diffuse Lighting for GGX+Smith Microsurfaces [@Hammon2017]
 # ディフューズシミュレーションのサブトピックマップ
 
 - シャドウイング/マスキング関数 ($G_1$, $G_2$)
-    - 無相関 対 高さ相関$G$
+    - 相関のない vs 高さ相関のある$G$
     - Smithのシャドウイング/マスキング
     - 新しいSmith+GGXの$G_2$近似
     - Smithの偉大さとおかしさ
@@ -347,12 +347,168 @@ title: PBR Diffuse Lighting for GGX+Smith Microsurfaces [@Hammon2017]
 # ディフューズシミュレーションのサブトピックマップ
 
 - シャドウイング/マスキング関数 ($G_1$, $G_2$)
-    - <font color='skyblue'>無相関 対 高さ相関$G$</font>
+    - <font color='skyblue'>相関のない vs 高さ相関$G$</font>
     - Smithのシャドウイング/マスキング
     - 新しいSmith+GGXの$G_2$近似
     - Smithの偉大さとおかしさ
 - パストレーシング
 
-# 高さ相関$G$
+# 高さ相関のある$G$
 
-TODO
+- $G_n$は$n$個の方向からの幾何的な可視性である
+- 相関がない場合:
+    - $G_2(L, V, m) = G_1(L, m) G_1(V, m)$
+    - 現実的じゃない！点が高い位置にあるほど、$L$と$V$の両方から見える可能性が大きくなる(低ければ、可能性は小さくなる)
+    - 依然として、実践では、驚くほど優秀である
+
+# 高さ相関のある$G$
+
+- 相関のない$G$はハイトフィールドで法線に当たる光を取り…
+
+# 高さ相関のある$G$
+
+- …そして、その法線を持つ各マイクロファセットのいたるところに均等にばらまく
+
+# 高さ相関のある$G$
+
+- これは光を小さくする傾向にあるので、その可視性を減少したり、スペキュラを暗くしたりする
+
+# 高さ相関のある$G$
+
+- 相関のない$G$の誤差は遮蔽に関係している
+- サーフェスが粗くなるほど、誤差が大きくなる
+- $L$と$V$がよりglancing[表面すれすれ]であるほど、誤差が大きくなる
+    - $L = N$および/または$V = N$ならば誤差なし
+
+# 相関のない vs 相関のある$G$
+
+高さ相関あり(下)は粗いサーフェスでのglancing反射を増幅する
+
+黒のアルベド
+光の強度 = $\pi$
+
+# 相関のない vs 相関のある$G$
+
+# 厳密 vs 近似の相関のある$G$
+
+近似(下)はかなり優秀だが、依然として中くらいの角度とラフネスでほんの少し暗くなりすぎている
+
+# 厳密 vs 近似の相関のある$G$
+
+#
+
+高さ相関のある$G$ 相関のない$G$ 差異
+
+# 相関のある$G$
+
+- 角度相関も存在する
+- $L = V$のときに必要: $G_2(V, V, m) = G_1(V, m)$
+- 相関のない形式: $G_2(V, V, m) = G_1(V, m)^2$
+- 高さ相関のある$G_2$では$L = V$の内のどこか[?Height correlated G_2 somewhere in between when L = V]
+
+# ディフューズシミュレーションのサブトピックマップ
+
+- シャドウイング/マスキング関数 ($G_1$, $G_2$)
+    - 相関のない vs 高さ相関$G$
+    - <font color='skyblue'>Smithのシャドウイング/マスキング</font>
+    - 新しいSmith+GGXの$G_2$近似
+    - Smithの偉大さとおかしさ
+- パストレーシング
+
+# Smithのシャドウイング/マスキング
+
+- すべての法線が平等に遮蔽されると仮定する
+    - すなわち、$G_1$と$G_2$は$m$に依存しない
+    - 可能な限り最もバランスの取れた仮定
+
+# Smithのシャドウイング/マスキング
+
+- 正規化制約から導出できる:
+    - $G_1(V) \int_\Omega D(m) \langle m \cdot V \rangle dm = |N \cdot V|$
+- 確率的ハイトフィールドのレイトレーシングからも導出できる
+
+# Smithのシャドウイング/マスキング
+
+- 超基本的なレイトレース導出:
+    - PDF$P_{22}(p, q)$によって2D平面に$m$を射影する
+    - $D(m)$は等方的なので、PDF$P_2(q)$による1Dスライスを用いる
+    - 傾き$\mu$を持つレイがハイトフィールドをウォークしつつ、レイ-サーフェスのコリジョンのPDFを得るために$P_2(q)$を用いる
+    - $G_1$を得るためにコリジョンのPDFを用いる
+
+# Smithのシャドウイング/マスキング
+
+極[polar]の法線$m$、PDF$D(m)$
+
+# Smithのシャドウイング/マスキング
+
+<font color='skyblue'>2Dの傾き$p, q$、PDF$P_{22}(p, q)$</font>
+
+<font color='skyblue'>$(p, q, 1)$</font>
+
+極[polar]の法線$m$、PDF$D(m)$
+
+# Smithのシャドウイング/マスキング
+
+<font color='skyblue'>2Dの傾き$p, q$、PDF$P_{22}(p, q)$</font>
+
+<font color='indianred'>$q$</font>
+
+<font color='lightgreen'>$q$に対するすべての$p$</font>
+
+<font color='skyblue'>$(p, q, 1)$</font>
+
+極[polar]の法線$m$、PDF$D(m)$
+
+# Smithのシャドウイング/マスキング
+
+<font color='skyblue'>2Dの傾き$p, q$、PDF$P_{22}(p, q)$</font>
+
+<font color='indianred'>$q$　　　1Dの傾き$q$、PDF$P_2(q)$</font>
+
+<font color='lightgreen'>$q$に対するすべての$p$</font>
+
+<font color='skyblue'>$(p, q, 1)$</font>
+
+極[polar]の法線$m$、PDF$D(m)$
+
+# Smith: 任意の$D(m)$
+
+- $P_{22}(p, q) = \cos^4 \theta_m D(m)$
+- $P_2(q) = \int_{-\infty}^{\infty} P_{22}(p, q) dp$
+- $\Lambda(\mu) = \frac{1}{\mu} \int_{\mu}^{\infty} (q - \mu) P_2(q) dq$
+- $G_1(V) = \frac{1}{1 + \Lambda(V)}, G_2(L, V) = \frac{1}{1 + \Lambda(L) + \Lambda(V)}$
+
+# Smith: 相関あり vs 相関なし
+
+- $G_1(V) = \frac{1}{1+\Lambda(V)}$
+- 相関あり: $G_2(L, V) = \frac{1}{1+\Lambda(L)+\Lambda(V)}$
+- 相関なし: $G_2(L, V) = \frac{1}{1+\Lambda(L)+\Lambda(V)+\color{indianred}{\Lambda(L)\Lambda(V)}}$
+    - $L$または$V$に対して$\Lambda = 0$(すなわち、$G_1 = 1$)でない限り、小さくなりすぎる
+
+# GGXのSmith: $\Lambda(V)$
+
+- GGXでは: $D(m) = \frac{\alpha^2}{\pi (\cos^4 \theta_m (\alpha^2 + \tan^2 \theta_m)^2)}$
+- $P_{22}(p, q) = \frac{\alpha^2}{\pi (\alpha^2 + \tan^2 \theta_m)^2} = \frac{\alpha^2}{\pi (\alpha^2 + p^2 + q^2)^2}$
+- $P_2(q) = \int_{-\infty}^{\infty} \frac{\alpha^2}{\pi (\alpha^2 + p^2 + q^2)^2} dp = \frac{\alpha^2}{2 (\alpha^2 + q^2)^{3/2}}$
+
+# GGXのSmith: $\Lambda(V)$
+
+- $\Lambda(\mu) = \frac{1}{\mu} \int_{\mu}^{\infty} (q - \mu) P_2(q) dq = \frac{1}{2} \left( \frac{\sqrt{\alpha^2 + \mu^2}}{\mu} - 1 \right)$
+- $\mu = \cot \theta_V$
+- $\cos \theta_V = N \cdot V$
+- $\Lambda(V) = \frac{1}{2} \left( \frac{\sqrt{\alpha^2 + (1 - \alpha^2) (N \cdot V)^2}}{N \cdot V} - 1 \right)$
+
+# GGXのSmith: $G_1(V), G_2(L, V)$
+
+- $G_1(V) = \frac{2 N \cdot V}{\sqrt{\alpha^2 + (1 - \alpha^2) (N \cdot V)^2} + N \cdot V}$
+- $G_2(L, V) = \frac{2(N \cdot L)(N \cdot V)}{N \cdot V \sqrt{\alpha^2 + (1 - \alpha^2) (N \cdot L)^2} + N \cdot L \sqrt{\alpha^2 + (1 - \alpha^2) (N \cdot V)^2}}$
+    - もっと安価な近似にしたい！
+
+# ディフューズシミュレーションのサブトピックマップ
+
+- シャドウイング/マスキング関数 ($G_1$, $G_2$)
+    - 相関のない vs 高さ相関$G$
+    - Smithのシャドウイング/マスキング
+    - <font color='skyblue'>新しいSmith+GGXの$G_2$近似</font>
+    - Smithの偉大さとおかしさ
+- パストレーシング
