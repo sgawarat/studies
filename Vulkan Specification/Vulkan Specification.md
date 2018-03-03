@@ -1499,4 +1499,262 @@ layout (set=m, binding=n, r32f) uniform image2D myStorageImage;
 
 ### サンプラ {id="sec:13.1.2"}
 
+*サンプラ[sampler]*(`VK_DESCRIPTER_TYPE_SAMPLER`)は*sampled image*([Sampled Image](#)を参照)からフィルタされたロードを処理するために使われることが**できる**、アドレスの計算、フィルタの挙動、その他の特性を制御するパラメータ一式を表現する。
+
+サンプラは`sampler`変数を用いてGLSLシェーダソースで宣言される。ここで、サンプラ型は関連するテクスチャ次元を持たない。
+
+```glsl
+layout (set=m, binding=n) uniform sampler mySampler;
+```
+: GLSLの例
+
+```spir-v
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %8 "mySampler"
+               OpDecorate %8 DescriptorSet m
+               OpDecorate %8 Binding n
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeSampler
+          %7 = OpTypePointer UniformConstant %6
+          %8 = OpVariable %7 UniformConstant
+               ...
+```
+: SPIR-Vの例
+
+### Sampled Image {id="sec:13.1.3"}
+
+*sampled image*(`VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`)はサンプルされたイメージデータを取得するために(通常ではサンプラと共に)使うことが**できる**。シェーダはsampled imageハンドルとサンプルデータへのサンプラハンドルを用いる。ここで、イメージハンドルは形状とメモリのフォーマットを一般に定義し、サンプラは座標アドレッシングの処理方法を一般に定義する。同じサンプラは複数のイメージからサンプルするのに使用**でき**、それぞれが異なるサンプリングパラメータ一式を持つ複数のサンプラを持つ同じsampled imageからサンプルすることができる。
+
+sampled imageは適切な次元のユニフォームな`texture`変数を用いてGLSLシェーダソースに宣言される。
+
+```glsl
+layout (set=m, binding=n) uniform texture2D mySampledImage;
+```
+: GLSLの例
+
+```spir-v
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %9 "mySampledImage"
+               OpDecorate %9 DescriptorSet m
+               OpDecorate %9 Binding n
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeImage %6 2D 0 0 0 1 Unknown
+          %8 = OpTypePointer UniformConstant %7
+          %9 = OpVariable %8 UniformConstant
+               ...
+```
+: SPIR-Vの例
+
+### 複合イメージサンプラ {id="sec:13.1.4"}
+
+*複合イメージサンプラ[combined image sampler]*(`VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`)はサンプリングパラメータ一式が付属するsampled imageを表す。これは一緒にバインドされるsampled imageとサンプラである論理的に見なされる。
+
+!!! note
+    いくつかの実装では、複合的なデスクリプタにおけるデスクリプタセットに一緒に格納されるサンプラとsampled imageの組み合わせを用いてイメージからサンプルすることをより効率的に**してもよい**。
+
+複合イメージサンプラは適切な次元のユニフォームな`sampler`変数を用いてGLSLシェーダソースに宣言される。
+
+```glsl
+layout (set=m, binding=n) uniform sampler2D myCombinedImageSampler;
+```
+: GLSLの例
+
+```spir-v
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %10 "myCombinedImageSampler"
+               OpDecorate %10 DescriptorSet m
+               OpDecorate %10 Binding n
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeImage %6 2D 0 0 0 1 Unknown
+          %8 = OpTypeSampledImage %7
+          %9 = OpTypePointer UniformConstant %8
+         %10 = OpVariable %9 UniformConstant
+               ...
+```
+: SPIR-Vの例
+
+`VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`のデスクリプタセットエントリーは個別のサンプラとsampled imageのシェーダ変数を介してアクセスすることも**できる**。そのような変数は対応するデスクリプタの半分を排他的に参照し、同じデスクリプタや他の複合または個別のデスクリプタタイプからやって来ることが**できる**サンプラかsampled imagesとシェーダで組み合わせることが**できる**。複合デスクリプタに由来するため、個別のサンプラやsampled image変数が使われる方法に対する追加の制約はない。
+
+### ユニフォームテクセルバッファ {id="sec:13.1.5"}
+
+*ユニフォームテクセルバッファ[uniform texel buffer]*(`VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER`)はバッファに格納される均質なフォーマットされたデータのタイトにパックされた配列を表し、シェーダからアクセス可能にする。
+
+ユニフォームテクセルバッファはユニフォームな`samplerBuffer`変数を用いてGLSLシェーダソースに宣言される。
+
+```glsl
+layout (set=m, binding=n) uniform samplerBuffer myUniformTexelBuffer;
+```
+: GLSLの例
+
+```spir-v
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %9 "myUniformTexelBuffer"
+               OpDecorate %9 DescriptorSet m
+               OpDecorate %9 Binding n
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeImage %6 Buffer 0 0 0 1 Unknown
+          %8 = OpTypePointer UniformConstant %7
+          %9 = OpVariable %8 UniformConstant
+               ...
+```
+: SPIR-Vの例
+
+### ストレージテクセルバッファ {id="sec:13.1.6"}
+
+*ストレージテクセルバッファ[storage texel buffer]*(`VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER`)はバッファに格納される均質なフォーマットされたデータのタイトにパックされた配列を表し、シェーダからアクセス可能にする。ストレージテクセルバッファはシェーダにおいてストアとアトミック操作をサポートするという点でユニフォームテクセルバッファと異なり、コト載る最大長をサポート**してもよく**、異なるパフォーマンス的な特徴を持っ**てもよい**。
+
+ストレージテクセルバッファはユニフォームな`imageBuffer`変数を用いてGLSLシェーダソースに宣言される。
+
+```glsl
+layout (set=m, binding=n, r32f) uniform imageBuffer myStorageTexelBuffer;
+```
+: GLSLの例
+
+```spir-v
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %9 "myStorageTexelBuffer"
+               OpDecorate %9 DescriptorSet m
+               OpDecorate %9 Binding n
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeImage %6 Buffer 0 0 0 2 R32f
+          %8 = OpTypePointer UniformConstant %7
+          %9 = OpVariable %8 UniformConstant
+               ...
+```
+: SPIR-Vの例
+
+### ユニフォームバッファ {id="sec:13.1.7"}
+
+*ユニフォームバッファ[uniform buffer]*(`VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER`)はシェーダからのリードオンリーアクセスに対してアクセス可能にする構造的なストレージの領域である。これは一般的にシェーダパラメータ、行列、その他の関連するデータのような定数の中くらいの大きさの配列を格納するのに使われる。
+
+ユニフォームバッファはユニフォームストレージ修飾子とブロック構文を用いてGLSLシェーダソースに宣言される。
+
+```glsl
+layout (set=m, binding=n) uniform myUniformBuffer {
+    vec4 myElement[32];
+};
+```
+: GLSLの例
+
+```spir-v
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %11 "myUniformBuffer"
+               OpMemberName %11 0 "myElement"
+               OpName %13 ""
+               OpDecorate %10 ArrayStride 16
+               OpMemberDecorate %11 0 Offset 0
+               OpDecorate %11 Block
+               OpDecorate %13 DescriptorSet m
+               OpDecorate %13 Binding n
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeVector %6 4
+          %8 = OpTypeInt 32 0
+          %9 = OpConstant %8 32
+         %10 = OpTypeArray %7 %9
+         %11 = OpTypeStruct %10
+         %12 = OpTypePointer Uniform %11
+         %13 = OpVariable %12 Uniform
+               ...
+```
+: SPIR-Vの例
+
+### ストレージバッファ {id="sec:13.1.8"}
+
+*ストレージバッファ[storage buffer]*(`VK_DESCRIPTOR_TYPE_STORAGE_BUFFER`)はシェーダの読み書きアクセス両方をサポートする構造的なストレージの領域である。一般的な読み書き操作に加えて、ストレージバッファのいくつかのメンバーはアトミック操作の対象として用いることが**できる**。一般に、アトミック操作は符号なし整数フォーマットを持つメンバーでのみサポートされる。
+
+ストレージバッファはバッファストレージ修飾子とブロック構文を用いてGLSLシェーダソースに宣言される。
+
+```glsl
+layout (set=m, binding=n) buffer myStorageBuffer {
+    vec4 myElement[];
+};
+```
+: GLSLの例
+
+```spir-v
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %9 "myStorageBuffer"
+               OpMemberName %9 0 "myElement"
+               OpName %11 ""
+               OpDecorate %8 ArrayStride 16
+               OpMemberDecorate %9 0 Offset 0
+               OpDecorate %9 BufferBlock
+               OpDecorate %11 DescriptorSet m
+               OpDecorate %11 Binding n
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeVector %6 4
+          %8 = OpTypeRuntimeArray %7
+          %9 = OpTypeStruct %8
+         %10 = OpTypePointer Uniform %9
+         %11 = OpVariable %10 Uniform
+               ...
+```
+: SPIR-Vの例
+
+### 動的ユニフォームバッファ {id="sec:13.1.9"}
+
+*動的ユニフォームバッファ[dynamic uniform buffer]*(`VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC`)はそのアドレスと長さが指定される方法においてのみユニフォームバッファと異なる。ユニフォームバッファはバッファハンドル、オフセット、範囲によってデスクリプタセット更新において指定されるバッファアドレスと長さをバインドする([デスクリプタセット更新](#)を参照)。動的ユニフォームバッファでは、デスクリプタセットに指定されるバッファハンドル、オフセット、範囲がそのベースアドレスと長さを定義する。このベースアドレスに相対的な動的オフセットは[vkCmdBindDescriptorSets](#)の引数`pDynamicOffsets`から取られる([デスクリプタセットバインディング](#)を参照)。動的ユニフォームバッファのために用いられるアドレスはそのバッファベースと相対的オフセットの合計である。長さは修正されず、デスクリプタ更新で指定された範囲のままである。シェーダ構文はユニフォームと動的ユニフォームバッファとで同一である。
+
+### 動的ストレージバッファ {id="sec:13.1.10"}
+
+*動的ストレージバッファ[dynamic storage buffer]*(`VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC`)はそのアドレスと長さが指定される方法においてのみストレージバッファと異なる。その差異はユニフォームバッファと動的ユニフォームバッファとの差異と同一である([動的ユニフォームバッファ](#)を参照)。シェーダ構文はストレージバッファと動的ストレージバッファとで同一である。
+
+### 入力アタッチメント {id="sec:13.1.11"}
+
+*入力アタッチメント[input attachment]*(`VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT`)はパイプラインにバインドされたフラグメントシェーダ内部でピクセルローカルなロード操作のために用いることが**できる**イメージビューである。入力アタッチメントからのロードはフィルタされない。与えられたイメージタイリングモードに対する色アタッチメント(`VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT`)か深度/ステンシルアタッチメント(`VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT`)でサポートされるすべてのイメージフォーマットもまた入力アタッチメントでサポートされる。
+
+シェーダでは、入力アタッチメントはデスクリプタセットとバインディングの番号に加えて入力アタッチメントインデックスで装飾**しなければならない**。
+
+```glsl
+layout (input_attachment_index=i, set=m, binding=n) uniform subpassInput
+myInputAttachment;
+```
+: GLSLの例
+
+```spir-v
+               ...
+          %1 = OpExtInstImport "GLSL.std.450"
+               ...
+               OpName %9 "myInputAttachment"
+               OpDecorate %9 DescriptorSet m
+               OpDecorate %9 Binding n
+               OpDecorate %9 InputAttachmentIndex i
+          %2 = OpTypeVoid
+          %3 = OpTypeFunction %2
+          %6 = OpTypeFloat 32
+          %7 = OpTypeImage %6 SubpassData 0 0 0 2 Unknown
+          %8 = OpTypePointer UniformConstant %7
+          %9 = OpVariable %8 UniformConstant
+               ...
+```
+
+## デスクリプタセット {id="sec:13.2"}
+
 TODO
