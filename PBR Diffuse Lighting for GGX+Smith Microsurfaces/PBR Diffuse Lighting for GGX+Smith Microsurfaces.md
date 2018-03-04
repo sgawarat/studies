@@ -271,7 +271,7 @@ title: PBR Diffuse Lighting for GGX+Smith Microsurfaces [@Hammon2017]
 # ディフューズマイクロファセットBRDF
 
 - $\int_\Omega \color{skyblue}{\rho_m(L, V, m)} D(m) G_2(L, V, m) \frac{\langle m \cdot L \rangle}{|N \cdot L|} \frac{\langle m \cdot V \rangle}{|N \cdot V|} dm$
-    - ランバートディフューズ: $\color{skyblue}{\rho_m(L, V, m) = \frac{1}{\pi}}$
+    - Lambertianディフューズ: $\color{skyblue}{\rho_m(L, V, m) = \frac{1}{\pi}}$
     - 積分を取り除くためのDiracのデルタがない ☹️
     - GGX+Smithの閉形式の解がない ☹️☹️
 
@@ -341,16 +341,16 @@ title: PBR Diffuse Lighting for GGX+Smith Microsurfaces [@Hammon2017]
     - 相関のない vs 高さ相関のある$G$
     - Smithのシャドウイング/マスキング
     - 新しいSmith+GGXの$G_2$近似
-    - Smithの偉大さとおかしさ
+    - Smithの偉大さと奇妙さ
 - パストレーシング
 
 # ディフューズシミュレーションのサブトピックマップ
 
 - シャドウイング/マスキング関数 ($G_1$, $G_2$)
-    - <font color='skyblue'>相関のない vs 高さ相関$G$</font>
+    - <font color='skyblue'>相関のない vs 高さ相関のある$G$</font>
     - Smithのシャドウイング/マスキング
     - 新しいSmith+GGXの$G_2$近似
-    - Smithの偉大さとおかしさ
+    - Smithの偉大さと奇妙さ
 - パストレーシング
 
 # 高さ相関のある$G$
@@ -412,7 +412,7 @@ title: PBR Diffuse Lighting for GGX+Smith Microsurfaces [@Hammon2017]
     - 相関のない vs 高さ相関$G$
     - <font color='skyblue'>Smithのシャドウイング/マスキング</font>
     - 新しいSmith+GGXの$G_2$近似
-    - Smithの偉大さとおかしさ
+    - Smithの偉大さと奇妙さ
 - パストレーシング
 
 # Smithのシャドウイング/マスキング
@@ -507,8 +507,182 @@ title: PBR Diffuse Lighting for GGX+Smith Microsurfaces [@Hammon2017]
 # ディフューズシミュレーションのサブトピックマップ
 
 - シャドウイング/マスキング関数 ($G_1$, $G_2$)
-    - 相関のない vs 高さ相関$G$
+    - 相関のない vs 高さ相関のある$G$
     - Smithのシャドウイング/マスキング
     - <font color='skyblue'>新しいSmith+GGXの$G_2$近似</font>
-    - Smithの偉大さとおかしさ
+    - Smithの偉大さと奇妙さ
 - パストレーシング
+
+# Smith: 近似GGX $G_1(V)$
+
+- $G_1$の分母:
+    - $\sqrt{\alpha^2 + (1 - \alpha^2) (N \cdot V)^2} + N \cdot V$
+    - $\sqrt{\text{lerp}((N \cdot V)^2, 1, \alpha^2)} + N \cdot V$
+    - 近似: $\text{lerp}(N \cdot V, 1, \alpha) + N \cdot V$
+
+# Smith: 近似GGX $G_1(V)$
+
+- $G_1(V) \approx \frac{2 N \cdot V}{\text{lerp}(N \cdot V, 1, \alpha) + N \cdot V} = \frac{2 N \cdot V}{N \cdot V (2 - \alpha) + \alpha}$
+- UnrealのSmithと同一と判明:
+    - $G_1(V) \approx \frac{N \cdot V}{N \cdot V (1 - k) + k}, k = \frac{\alpha}{2}$
+
+# Smith: 近似GGX $G_2(L, V)$
+
+- $\Lambda(V)$に対するこの$G_1$を解いて、$G_2(L, V)$に接続する:
+    - $G_2(L, V) = \frac{2|N \cdot V| |N \cdot V|}{\text{lerp}(2|N \cdot L| |N \cdot V|, |N \cdot L| + |N \cdot V|, \alpha)}$
+    - $G_2$の分子は完全なスペキュラBRDFでは打ち消される:
+        - $\frac{F(L, H) D(H) G_2(L, V)}{4|N \cdot L| |N \cdot V|} = \frac{F(L, H) D(H)}{2 \text{lerp}(2|N \cdot L| |N \cdot V|, |N \cdot L| + |N \cdot V|, \alpha)}$
+
+# Smithの近似のコスト
+
+- 分母のコストを比較する:
+    - $G_1(L)G_1(V)$: $\frac{F(L, H) D(H)}{(|N \cdot L| (2 - \alpha) + \alpha)(|N \cdot V| (2 - \alpha) + \alpha)}$　約4サイクル
+    - $G_2(L, V)$: $\frac{F(L, H) D(H)}{2 \text{lerp}(2|N \cdot L| |N \cdot V|, |N \cdot L| + |N \cdot V|, \alpha)}$　約6サイクル
+        - コストは$N \cdot L$と$N \cdot V$の計算を除く
+        - 高さ相関のある形式は無視できる追加コストを持つ
+
+# Smithの近似のクオリティ
+
+- glancing角での粗い誘電体に役立つ
+
+# Smithの近似のクオリティ
+
+- glancing角での粗い誘電体に役立つ
+
+#
+
+相関のない$G$
+近似
+
+差の画像:
+
+赤 = 相関
+緑 = 近似
+
+#
+
+相関のある$G$
+近似
+
+差の画像:
+
+相関のない近似との比較
+
+#
+
+相関のある$G$
+厳密
+
+差の画像:
+
+相関のある近似との比較
+
+# ディフューズシミュレーションのサブトピックマップ
+
+- シャドウイング/マスキング関数 ($G_1$, $G_2$)
+    - 相関のない vs 高さ相関のある$G$
+    - Smithのシャドウイング/マスキング
+    - 新しいSmith+GGXの$G_2$近似
+    - <font color='skyblue'>Smithの偉大さと奇妙さ</font>
+- パストレーシング
+
+# Smithのマイクロサーフェスのハイトフィールド
+
+[@Walter2007]におけるSmithのレイトレーシング導出の図から1Dハイトフィールドを例示する
+
+# Smithのマイクロサーフェスのハイトフィールド
+
+- 導出は幅が0に近いほとんど独立したスラブの1Dハイトフィールド**も**使う
+    - 突如としてハイトフィールドの下にあることのみを禁止する
+
+# Smithのマスキングが奇妙な理由
+
+- レイトレーシング導出は異なる段階で矛盾する仮定を持つ:
+    - 次の$d\tau$における高さはこの高さから独立している
+        - 連続でないと仮定している
+    - ハイトフィールドは任意の微分可能な関数である
+        - 連続であると仮定している
+
+# Smithのマスキングが奇妙な理由
+
+- 計算曰く、可視性は非対称である: 下向きのレイは上向きのレイより同じハイトフィールド経路を生き延びる可能性が低い！
+    - $\Lambda(\mu) = \frac{1}{\mu} \int_{\mu}^{\infty} (q - \mu) P_2(q) dq$
+    - $\Lambda(\mu)$はすべての$q > \mu$を積分するので、$\mu < 0$は$\mu > 0$のときより多くの$q$の値にヒットする可能性がある
+
+# Smithのマスキングが素晴らしい理由
+
+- すべてのファセットの法線が同じ可視割合を持つ所では$G$はエネルギー保存則を満たす
+- その他の$m$を使わない$G$ではいくつかの方向で間違った可視面積を得る
+    - 可視面積が大きければ、反射が強くなるので、エネルギーを作る
+    - 可視面積が小さければ、反射が弱くなるので、エネルギーを吸収する
+
+# ディフューズシミュレーションのサブトピックマップ
+
+- シャドウイング/マスキング関数 ($G_1$, $G_2$)
+    - 相関のない vs 高さ相関のある$G$
+    - Smithのシャドウイング/マスキング
+    - 新しいSmith+GGXの$G_2$近似
+    - Smithの偉大さと奇妙さ
+- <font color='skyblue'>パストレーシング</font>
+
+# パストレースによるディフューズの解法
+
+- Smithの奇妙な点は現実のハイトフィールドがその仮定と一致するのを妨げる
+    - 連続的であり、かつ、非連続的であることは不可能である
+- 数学モデルをレイトレースしなければならない
+    - 数多の詳細はボーナススライドを参照
+
+# 最初のレイトレース結果
+
+- GGXスペキュラかLambertianディフューズを選ぶためのFresnel付きの単純なレイトレーサー
+- 結果のBRDFは対称ではなかった！
+    - $\rho(L, V, N) = \rho(V, L, N)$
+- 何か間違ったかな？両部分は対称なBRDFなのに！
+
+# 非対称なBRDFの原因
+
+- 本質的には、マージされたBRDFを持っていた:
+    - $\rho = F(L, N) \rho_{spec} + (1 - F(L, N)) \rho_{diff}$
+    - Fresnel補間が非対称！
+- 物理的にもっともらしい方法で直すには？
+
+# なぜLambertianディフューズなのか？
+
+- Lambertianディフューズは何をシミュレートする？
+    - BRDF$\rho = \frac{1}{\pi}$: すべての視点で同じ
+    - 放射輝度$= \rho \cos\theta_V$: 法線でより多くのフォトン
+        - $V$から見える総表面積に対して$\frac{1}{\cos\theta_V}$でバランスを取る
+        - なぜコサインでエネルギーが減少するのか？答えは驚くほどわかりにくいけど、かなり単純！
+
+# Lambertianディフューズの説明
+
+- BRDFはサーフェスに与えられるが、ディフューズ光は単に表面を通り過ぎる
+    - Lambertは内部の光がすべての方向に同じ密度を持つことを仮定する
+    - コサインでの減少は光方向に相対的なサーフェス角度に起因する
+
+# Lambertianディフューズの説明
+
+- 方向ごとに<font color="indianred">面積</font>あたりの同じエネルギー
+- 表面の方を向いた方向がより大きな<font color='skyblue'>面積</font>に投影される
+    - $1 / \cos\theta$でスケールされる単位光あたりの面積
+    - $\cos\theta$でスケールされる面積あたりの光
+
+# Lambertianディフューズの説明
+
+- 光は侵入[enter]し、周囲でバウンスし、脱出[exit]する
+- 脱出方向は多数のバウンス事象の後に無作為である
+- アルベドは周波数依存の吸収事象に起因する
+
+# 対称なBRDFのためのディフューズ修正
+
+- 侵入には反射/透過のためにFresnelを使う
+- 脱出は常に透過すると仮定する
+- 脱出にもFresnelが必要！
+
+# 対称なBRDFのためのディフューズ修正
+
+- 反射: $F = F_0 + (1 - F_0)(1 - N \cdot V)^5$
+- 透過: $1 - F = (1 - F_0)(1 - (1 - N \cdot V)^5)$
+- Fresnelの法則は対称なので、視点からサーフェスに侵入する割合は視点に向かってサーフェスを脱出する割合に等しい
+
+# 対称なBRDFのためのディフューズ修正
