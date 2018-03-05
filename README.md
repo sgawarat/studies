@@ -23,16 +23,16 @@ numberSections: false
     - GPUで単位ベクトルを表現する方法について調査
 - [@Drobot2014]
     - GCNアーキテクチャを対象とした低レベルな最適化
+- [@Habel2013]
+    - 表面下散乱のディフュージョン理論の今昔
 - [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法
+- [@Jensen2001]
+    - BSSRDF
 - [@Jimenez2016]
     - Filmic SMAA
 - [@Lottes2016]
     - AMDの次世代カラーグレーディング
-- [@Rouwe2014]
-    - エンティティ更新のスレッド化
-- [@Sumaili2017]
-    - "Horizon Zero Dawn"のツールパイプラインの作成
 - [@True2017]
     - NVIDIAの次世代カラーグレーディング
 
