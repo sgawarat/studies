@@ -686,3 +686,133 @@ title: PBR Diffuse Lighting for GGX+Smith Microsurfaces [@Hammon2017]
 - Fresnelの法則は対称なので、視点からサーフェスに侵入する割合は視点に向かってサーフェスを脱出する割合に等しい
 
 # 対称なBRDFのためのディフューズ修正
+
+- 内部的に反射する光はずっと透過する機会を得続けるので、正規化する必要がある！
+    - $\color{skyblue}{2\pi} \int_0^{\pi/2} k(1-(1-\cos\theta)^5) \color{indianred}{\cos\theta} \color{skyblue}{\sin\theta d\theta} = 1$
+        - 因子$(1 - F_0)$は正規化因子$k$に吸収される
+        - $\color{indianred}{\cos\theta}$はBRDFを正規化するのに必要になる
+        - $\color{skyblue}{2\pi}$と$\color{skyblue}{\sin\theta d\theta}$は半球上の積分に由来する
+
+# 対称なBRDFのためのディフューズ修正
+
+- <u>厳密に</u>簡単に解ける: $k = \frac{21}{20\pi} = \frac{1.05}{\pi}$
+- マージされたディフューズ＋スペキュラマイクロファセットBRDF:
+    - $F = F_0 + (1-F_0)(1-N \cdot V)^5$
+    - $\rho = F \rho_{spec}+(1-F)\frac{1.05}{\pi}(1-(1-N \cdot V)^5)$
+
+# おわりに！
+
+- パストレーシングシミュレーションに必要なすべてが揃ったので、最終的にどうなったかというと…
+
+#
+
+シミュレーション
+スペキュラ付き
+
+アルベド:
+{0.75, 0.5, 0.25}
+
+#
+
+シミュレーション
+ディフューズのみ
+
+アルベド:
+{0.75, 0.5, 0.25}
+
+#
+
+近似
+ディフューズのみ
+
+アルベド:
+{0.75, 0.5, 0.25}
+
+# GGXディフューズ近似
+
+- $facing = 0.5 + 0.5 L \cdot V$
+- $rough = facing (0.9 - 0.4 facing) (\frac{0.5+N \cdot H}{N \cdot H})$
+- $smooth = 1.05 (1-(1-N \cdot L)^5)(1-(1-N \cdot V)^5)$
+- $single = \frac{1}{\pi} \text{lerp}(smooth, rough, \alpha)$
+- $multi = 0.1159 \alpha$
+- $diffuse = albedo * (single + albedo * multi)$
+
+# 余談: 有用なシェーダ恒等式
+
+- $|L + V|^2 = 2 + 2L \cdot V$
+    - $0.5 + 0.5 L \cdot V = \frac{1}{4}|L+V|^2$
+- $N \cdot H = \frac{N\cdot L+L\cdot V}{|L+V|}$
+- $L \cdot H = V \cdot H = \frac{1}{2}|L+V|$
+
+# 余談: 有用なシェーダ恒等式
+
+- $H$を求めなくても$N \cdot H$と$L \cdot H$は求められる！
+
+|計算|サイクル|レジスタ|
+|-|-|-|
+|$H = \text{normalize}(L+V)$を得る|13|4|
+|$H$から$N \cdot H$を得る|16|4|
+|$H$から$N \cdot H$と$L \cdot H$を得る|19|4|
+|恒等式から$N \cdot H$を得る|7*|2|
+|恒等式から$L \cdot H$と$V \cdot H$を得る|8*|2|
+
+\* $L \cdot V$が計算済みでない場合、その分の+3サイクルが加わる
+
+# 余談: 有用なシェーダ恒等式
+
+- $lenSq_{LV} = 2+2 L \cdot V$
+- $rcpLen_{LV} = rsqrt(lenSq_{LV})$
+- $N \cdot H = (H \cdot L + N \cdot V) * rcpLen_{LV}$
+- $L \cdot H = V \cdot H = rcpLen_{LV} + rcpLen_{LV} * L \cdot V$
+    - ($L \cdot H = \frac{1}{2}|L + V| = \frac{1}{2}\sqrt{2+2L \cdot V} = \frac{1}{2} \left( \frac{2+2L \cdot V}{\sqrt{2+2L \cdot V}} \right) = (1+L \cdot V)\frac{1}{\sqrt{2+2L \cdot V}}$による)
+
+# 本日のトークのロードマップ
+
+- 一般的なマイクロファセットベースBRDF
+- GGX+Smithマイクロファセットモデルによるディフューズのシミュレーション
+    - シャドウイング/マスキング関数
+    - パストレーシング
+- <font color='skyblue'>他のディフューズBRDFとの比較</font>
+
+# でも、まずは…
+
+- DisneyのBRDFスライスをサクッと理解するのが良い
+
+# DisneyのBRDFスライス
+
+- BRDFは2つの極ベクトルの4D関数である
+- 以前は、光線と視線のベクトル: $\theta_l, \phi_l, \theta_v, \phi_v$
+- 以後は、半角と差分: $\theta_h, \phi_h, \theta_d, \phi_d$
+    - 等方的なBRDFでは$\phi_h$に<u>一切</u>依存しない
+    - $\phi_d$への依存はしばしば無視できる
+
+# DisneyのBRDFスライスの直観
+
+- 各行は光線と視線の組である($\theta_d$)
+    - 上端で反対、中央で垂直、下端で一致
+- 左から右へはスペキュラハイライトの中心から離れることでの減衰を示す($\theta_h$)
+
+# 照らされた球での間違った色の例
+
+明るい線は球で使われる行を強調する
+
+明るい線は$\phi_d = 90^\circ$を強調する
+$\phi_d$は反時計回りに増加する
+
+# DisneyのBRDFスライス
+
+# 球上での$\theta_h, \theta_d, \phi_d$の振る舞い
+
+# DisneyのBRDFスライス
+
+- 様々な恒等式:
+    - $\cos\theta_h = N \cdot H$
+    - $\cos\theta_d = L \cdot H = V \cdot H$　$\cos 2\theta_d = L \cdot V$
+    - $\cos\phi_d = \frac{N \cdot V - N \cdot L}{\sqrt{(2 - 2 L \cdot V) (1 - (N \cdot H)^2)}}$
+- BRDFは主に$N \cdot H$と$L \cdot V$の関数である！
+
+# BRDFを比較する準備はほぼ完了！
+
+- まずは、比較フォーマットを導入する
+
+#
