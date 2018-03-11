@@ -6,10 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Habel2013]
-    - 表面下散乱のディフュージョン理論の今昔
-- [@Khronos2018]
-    - Vulkanの仕様書
+- [@Jensen2001]
+    - BSSRDF
 - [@Sloan2008]
     - 球面調和関数
 
@@ -23,8 +21,6 @@ numberSections: false
     - GCNアーキテクチャを対象とした低レベルな最適化
 - [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法
-- [@Jensen2001]
-    - BSSRDF
 - [@Jimenez2016]
     - Filmic SMAA
 - [@Lottes2016]
@@ -81,6 +77,11 @@ numberSections: false
     - CryENGINE 3のAA
 - [@Yang2011]
     - DLAA
+
+### 拡散理論
+
+- [@Habel2013]
+    - 表面下散乱のディフュージョン理論の今昔
 
 ### グローバル・イルミネーション
 
@@ -145,6 +146,8 @@ numberSections: false
     - DirectX12のtips
 - [@Hodes2017]
     - 非同期コンピュートのAMDとNVIDIAのプラクティス
+- [@Khronos2018]
+    - Vulkanの仕様書
 - [@Lorach2016]
     - AZDOなOpenGLとVulkanのtips
 - [@Olson2016]
