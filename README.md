@@ -6,8 +6,7 @@ numberSections: false
 
 ## いま読む
 
-- [@Jensen2001]
-    - BSSRDF
+-
 - [@Sloan2008]
     - 球面調和関数
 
@@ -19,8 +18,12 @@ numberSections: false
     - GPUで単位ベクトルを表現する方法について調査
 - [@Drobot2014]
     - GCNアーキテクチャを対象とした低レベルな最適化
+- [@Frisvad2014]
+    - Directional Dipole Model
 - [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法
+- [@Jimenez2015]
+    - Separable Subsurface Scattering
 - [@Jimenez2016]
     - Filmic SMAA
 - [@Lottes2016]
@@ -82,6 +85,8 @@ numberSections: false
 
 - [@Habel2013]
     - 表面下散乱のディフュージョン理論の今昔
+- [@Jensen2001]
+    - BSSRDF
 
 ### グローバル・イルミネーション
 
