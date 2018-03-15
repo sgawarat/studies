@@ -340,6 +340,42 @@ $$
 
 ![](assets/sigma_factors.png)
 
+上図はLanczosおよびHanningのシグマファクタを用いた結果を示す。投影されている信号は次数6のデルタ関数である。これは、SHに投影できる"最大ピークの[peakiest]"信号であり、リンギングアーティファクトを示す。デルタ関数の投影はZHでありので、これらは球の断面[cross section]を示し、$\phi$は固定される。放射状の大きさがプロットされ、ローブの符号は互い違いになる。
+
+すべてのグラフを一緒に見ると(赤はデルタ関数のそのままの投影を示す)、窓掛けがどれだけ信号をブラーしつつ、リンギングを除去しているかを確認できる(図の原点近くに見られる)。
+
+![](assets/all_sigma_factors.png)
+
+## 汎関数[functional]の最小化
+
+代わりのアプローチとして、二乗近似誤差に加えていくつかの関数を最小化することを試みる。これを行う方法のひとつに、一連の制約を満たし(例えば、少数の点での厳密な再構築)、そして、いくつかの誤差汎関数[error functional]を最小化するために(十分な自由度があると仮定して)余りの"スラック[slack]"変数を用いる方法がある[@38]。ゲームやグラフィクスでしばしば用いられる低いSH次数であれば、このアプローチは実践的であるように思えないので、これ以上の時間を費やすことはないだろう。代替案として、大きな振動に不利となるノルムを最小化することを試みる。これは素直なやり方で球面調和関数で行われることができる。Laplace作用素[operator]、または、Laplacianはスカラ関数の勾配の発散[divergence]であり、非混合偏微分[unmixed partial derivatives]の和と等価である。
+
+$$
+\Delta f = \frac{\partial^2 f}{\partial x^2} + \frac{\partial^2 f}{\partial y^2} + \frac{\partial^2 f}{\partial z^2}
+$$
+
+単位球上の球面座標では、これは以下のようになる。
+
+$$
+\Delta f = \frac{1}{\sin\theta} \frac{\partial}{\partial\theta} \left( \sin\theta \frac{\partial f}{\partial\theta} \right) + \frac{1}{\sin^2 \theta} \frac{\partial^2 f}{\partial \phi^2}
+$$
+
+二乗Laplacianの積分は球上で用いられる曲率の大きさである[@38]。その最小化したい関数は以下となる。
+
+$$
+E(c) = \int \left( \tilde{f}(s) - f(s) \right)^2 ds + \lambda \int \left( \Delta \tilde{f}(s) \right)^2 ds
+$$
+
+これに若干の調整を加えたい。生の投影係数$f_l^m$は既知であるので、重み付けされた二乗Laplacianを最小化しつつも、できるだけ最小二乗の結果に近い新しい係数$c_l^m$を見つけたい。これは閉形式で行われることができ([@sec:A6]参照)、$\lambda$与えられると最終的に以下の係数になる。
+
+$$
+c_l^m = \frac{f_l^m}{(1 + \lambda l^2 (l + 1)^2)}
+$$
+
+これは$\lambda$に依存する窓関数に等しいことに注意する。$\lambda$がゼロのときは最小二乗の係数が得られ、$\lambda$が無限大のときは曲率がゼロでありDC項が得られる。$\lambda$を選ぶアプローチのひとつに、固定量、例えば、半分に二乗Laplacianを減らして解く方法がある。これはいずれかの標準の求根[root finding]テクニックを用いて行われることができる。Newtons法を用いてこれを行う方法の説明は[@sec:A7]を参照のこと。下図は6次のデルタ関数を二乗Laplacianが元の10%($\lambda = 0.004209$の緑)、50%($\lambda = 0.000632$の青)になるように解いた結果である。最後のプロットはデルタ関数それ自身と合わせたものである。
+
+![](assets/squared_laplacian.png)
+
 TODO
 
 # A1 {id="sec:A1"}
@@ -353,6 +389,8 @@ TODO
 # A5 {id="sec:A5"}
 
 # A6 {id="sec:A6"}
+
+# A7 {id="sec:A7"}
 
 # A9 {id="sec:A9"}
 
