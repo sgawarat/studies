@@ -1,5 +1,6 @@
 ---
 title: Stupid Spherical Harmonics (SH) Tricks [@Sloan2008]
+#bibliography: bibliography.bib
 numberSections: false
 ---
 # 要約
@@ -413,23 +414,281 @@ $$
 SHを用いて表される2つの関数の積のSH表現を計算することはしばしば有用である。例となるシナリオには以下がある。
 
 1. 大きな飛行物体(可視性×光)、または、シーンの単純な可視性モデル(大きな建物など)に基づいてスカイライトモデルに穴を開ける。
-2.
+2. 可視性関数を乗算する。これは動的で近似的な大域照明を行うときに発生する。
+3. SHライトプロブをスケールまたは修正する。0から1までのある定数の乗算は、例えば、雲を近似するのに使われることができる。
 
-TODO
+周波数領域における積の計算は非常に複雑であり、要するに、2つのSHベクトルと"三重積テンソル"の掛け算になる。このコードは効率的に生成でき[@47]、本論では説明されないだろう。とはいえ、言及する価値のある特殊な場合がいくつかある。
 
-# A1 {id="sec:A1"}
+## 定数関数との積
 
-# A2 {id="sec:A2"}
+SH関数のひとつをたくさん使いたい場合、積の行列と呼ばれる密な行列を作ることができ、これは三重積を、計算コストがかなり小さくなる、単純な行列とベクトルの積にする。次数6の積は、2527個の掛け算が、[@47]で生成されたコードでは1296個の掛け算になる。
 
-# A3 {id="sec:A3"}
+## 可変次数との積
 
-# A4 {id="sec:A4"}
+これは出力次数が、局所的な放射輝度環境を表現できるように、例えば2次のように、低次であるときに特に一般的である。これらの場合でのコードの特例化[special casing]はコードの複雑さを大幅に減少させる。例えば、2つの6次のSHの積は、6次の結果を計算するときは2527の乗算と1995の加算があるが、3次の結果を計算するときは933の乗算と676の加算^[これらの結果は[@47]の出力を適用したナイーブなアルゴリズムを用いているので、より効率的なコードが生成できるかもしれない。]のみで済む。もうひとつの例は単純なアンビエントオクルージョンであり、この場合、項のひとつは単なるDCであり、DCの値で他のベクトルをスケールしなければならない。最後に、2つの関数のひとつはより低次(すなわち、線形な可視性を乗算するだけ)となるかもしれない。これも、そのコストを削減できる。
 
-# A5 {id="sec:A5"}
+## Zonal Harmonicsとの積
+
+関数のひとつがZonal Harmonicであるならば、それと同じフレームに他の関数を回転して(その対称性により2つのEuler角のみを必要とするため、回転の計算コストがより小さい)、積を計算して、回転し直すことができる。ZHフレームにおける疎な性質[sparsity]は相当量の作業を取り除き、パーフォーマンスを増加することができる。1つがZを向くZHである、2つの6次関数の積は380個の乗算と249個の加算のみ必要とする。任意のZHでは、(関数のひとつが常にある任意の方向にある)100万回の積の計算時間は約1.2秒であり、一方で、一般的な6次の積は3秒以上かかるので、この技術はほぼ3倍速くする。
+
+## 解析的関数との積
+
+関数のひとつが解析的な形式をもつならば、積の行列に等しいものを解析的に計算することでより正確になる。一例として、水平線より下ではすべてゼロとするとき(地面があるときに便利)、クランプしたコサイン関数との積を取るとき、がある。これを解析的に行うことは、解析的関数の無限次数展開を持つことと等価であり、一般に、これらの場合ではSH展開を用いるよりはるかに高速であるだろう。これらの2つの例のコードは[@sec:A8]にある。
+
+# おわりに
+
+球面調和関数は、ゲームでは特にライティングで、極めて有用なツールである。本論が、これの使い方とこれを使う時に当たり得る課題の和らげ方、に光明を投じることを願うばかりである。本論で述べたアイデアを拡張する方法がいくつかある。(窓関数で用いる)窓掛け係数は負(または正)のローブの大きさ、または、ゼロになるべき方向を指すときに反射した放射輝度の大きさを最小化するために解くことができる。光を抽出するとき、非線形最適化に基づくより厳格な技術は使用できるかもしれず[@29; @44]、より一般的なライティングモデル(例えば、光源からの円錐の角度を含む)が抽出できるかもしれない。フィッティング処理に窓を掛けてみることの調査をする価値もあるかもしれない。まず、関数の滑らかなバージョンにフィットさせて、窓掛けの量をdial backすることで、より良い極小値へ効果的に舵取りを行う。内容依存の窓掛けのアイデアは、特にPRTのような技術と統合するとき、具体化する必要がある。
+
+球面調和関数で色々やっているときに非常に貴重であると判明したツールのひとつは記号的計算プログラムである。私はMaple([https://www.maplesoft.com/](https://www.maplesoft.com/))を用いたが、Mathematica([http://www.wolfram.com/](http://www.wolfram.com/))のような他のプログラムも同様に機能するだろう。DirectX SDK([http://msdn.microsoft.com/directx](http://msdn.microsoft.com/directx))はPRTと放射照度環境マップの両方を使うサンプルを付属した、計算[evaluation]、回転、積、いくつかの解析的ライティングモデルのための関数を持つ。
+
+# 謝辞
+
+作業の多くは、Microsoft Researchのグラフィクスグループに配属されたときに始まり、他の協力者と、特に、長期に渡る実りの多い論文シリーズを執筆するJohn Snyderと共に行われた。また、Hao Chen(Bungie)、Arn Arndt、James Grieves、Clint Hanson(当時EA)、Loren McQuade(Blizzard在籍中)、Dan Baker(MSとFiraxis)、Alex Evans(当時Lionhead)、Tom Forsyth(Muckyfoot)、Willem de Boer(Muckyfoot)、Alex Manchor Ko(Naughty Dog)、Naty Hoffman(SCEA)、chris Oat(ATI)等、幾人かのゲーム開発者と球面調和関数の議論をさせて頂いた。Jason Sandlin、Ben Luna、Jon SteedはMicrosoftにてサンプルやテストコードに関してやってもらった。そして、SHやその他の話題についてGDAlgorithmsメーリングリストにて議論に参加できたことを嬉しく思う。
+
+# References
+
+\appendix
+
+# A1 SH基底関数の計算のための再帰的規則 {id="sec:A1"}
+
+漸化式[recurrence relations][@48]はSH基底関数の多項式の形式を効率的に求めるのに使用できる。基底関数の定式を再掲する。
+
+$$
+y_l^m = \left\{ \begin{array}{c}
+    \sqrt{2}\text{Re}(Y_l^m) & m > 0 \\
+    \sqrt{2}\text{Im}(Y_l^m) & m < 0 \\
+    Y_l^0 & m = 0
+\end{array} \right. = \left\{ \begin{array}{c}
+    \sqrt{2}K_l^m \cos m\varphi P_l^m(\cos\theta) & m > 0 \\
+    \sqrt{2}K_l^m \sin |m|\varphi P_l^{|m|}(\cos\theta) & m < 0 \\
+    K_l^0 P_l^0(\cos\theta) & m = 0
+\end{array} \right.
+$$
+
+単位球上の点を$(x, y, z)$とすると、(Zのみに依存し、$\sin\theta^m$で割られる)Legendre陪多項式はこれらの再帰性[recurrences]を用いて求めることができる($P_0^0 = 1$)。
+
+$$
+\begin{array}{ccc}
+P_m^m & = & (1 - 2m) P_{m-1}^{m-1} \\
+P_{m+1}^m & = & (2m + 1) z P_m^m \\
+P_l^m & = & \frac{(2l -1) z P_{l-1}^m - (l+m-1) P_{l-2}^m}{l-m}
+\end{array}
+$$
+
+ここで、$l$は内部ループで増加し、$m$は外部ループで増加する。
+
+三角関数の加法定理[trigonometric addition formula]は(球上の座標$(x,y)$から計算できるように$\sin\theta^m$をかけられた)$\phi$依存の項を求めるのに使用できる。ここで、$S(0) = 0, C(0) = 1$である。
+
+$$
+\begin{array}{ccc}
+S(m) & = & xS(m-1)+yC(m-1) \\
+C(m) & = & xC(m-1)+yS(m-1) \\
+\end{array}
+$$
+
+元の式では、$\sin|m|\phi$を$S(m)$に、$\cos m\phi$を$C(m)$に置き換えている。一般に、共通の部分式を自然と因数に分解するため、これらの式に基づくコードを生成することはより効率的である。
+
+# A2 SH基底の多項式の形式 {id="sec:A2"}
+
+SH基底関数の多項式の形式は以下にリスト化される。$L$はバンド番号、$M$は基底関数である。Mapleが$L$と$M$の順をごちゃまぜにすることに注意する…
+
+$$
+\begin{array}{l}
+\{L = 0, M = 0\}, \frac{1}{2\sqrt{\pi}} \\
+\{L = 1, M = -1\}, -\frac{\sqrt{3}y}{2\sqrt{\pi}} \\
+\{L = 1, M = 0\}, \frac{\sqrt{3}z}{2\sqrt{\pi}} \\
+\{L = 1, M = 1\}, -\frac{\sqrt{3}x}{2\sqrt{\pi}} \\
+\{L = 2, M = -2\}, \frac{\sqrt{15}yx}{2\sqrt{\pi}} \\
+\{L = 2, M = -1\}, -\frac{\sqrt{15}yz}{2\sqrt{\pi}} \\
+\{L = 2, M = 0\}, \frac{\sqrt{5}(3z^2 - 1)}{4\sqrt{\pi}} \\
+\{L = 2, M = 1\}, -\frac{\sqrt{15}xz}{2\sqrt{\pi}} \\
+\{L = 2, M = 2\}, \frac{\sqrt{15}(x^2 - y^2)}{4\sqrt{\pi}} \\
+\{L = 3, M = -3\}, -\frac{\sqrt{2}\sqrt{35}y(3x^2-y^2)}{8\sqrt{\pi}} \\
+\{L = 3, M = -2\}, \frac{\sqrt{105}yxz}{2\sqrt{\pi}} \\
+\{L = 3, M = -1\}, -\frac{\sqrt{2}\sqrt{21}y(-1+5z^2)}{8\sqrt{\pi}} \\
+\{L = 3, M = 0\}, \frac{\sqrt{7}z(5z^2-3)}{4\sqrt{\pi}} \\
+\{L = 3, M = 1\}, -\frac{\sqrt{2}\sqrt{21}x(-1+5z^2)}{8\sqrt{\pi}} \\
+\{L = 3, M = 2\}, \frac{\sqrt{105}(x^2-y^2)z}{4\sqrt{\pi}} \\
+\{L = 3, M = 3\}, \frac{\sqrt{2}\sqrt{35}x(x^2-3y^2)}{8\sqrt{\pi}} \\
+\{L = 4, M = -4\}, \frac{3\sqrt{35}yx(x^2-y^2)}{4\sqrt{\pi}} \\
+\{L = 4, M = -3\}, -\frac{3\sqrt{2}\sqrt{35}y(3x^2-y^2)z}{8\sqrt{\pi}} \\
+\{L = 4, M = -2\}, \frac{3\sqrt{5}yx(-1+7z^2)}{4\sqrt{\pi}} \\
+\{L = 4, M = -1\}, -\frac{3\sqrt{2}\sqrt{5}yz(-3+7z^2)}{8\sqrt{\pi}} \\
+\{L = 4, M = 0\}, \frac{3(35z^4-30z^2+3)}{16\sqrt{\pi}} \\
+\{L = 4, M = 1\}, -\frac{3\sqrt{2}\sqrt{5}xz(-3+7z^2)}{8\sqrt{\pi}} \\
+\{L = 4, M = 2\}, \frac{3\sqrt{5}(x^2-y^2)(-1+7z^2)}{8\sqrt{\pi}} \\
+\{L = 4, M = 3\}, \frac{3\sqrt{2}\sqrt{35}x(x^2-3y^2)z}{8\sqrt{\pi}} \\
+\{L = 4, M = 4\}, \frac{3\sqrt{35}(x^4-6y^2x^2+y^4)}{16\sqrt{\pi}} \\
+\{L = 5, M = -5\}, -\frac{3\sqrt{2}\sqrt{77}y(5x^4-10y^2x^2+y^4)}{32\sqrt{\pi}} \\
+\{L = 5, M = -4\}, \frac{3\sqrt{385}yx(x^2-y^2)z}{4\sqrt{\pi}} \\
+\{L = 5, M = -3\}, -\frac{\sqrt{2}\sqrt{385}y(3x^2-y^2)(-1+9z^2)}{32\sqrt{\pi}} \\
+\{L = 5, M = -2\}, \frac{\sqrt{1155}yxz(-1+3z^2)}{4\sqrt{\pi}} \\
+\{L = 5, M = -1\}, -\frac{\sqrt{165}y(-14z^2+21z^4+1)}{16\sqrt{\pi}} \\
+\{L = 5, M = 0\}, \frac{\sqrt{11}z(63z^4-70z^2+15)}{16\sqrt{\pi}} \\
+\{L = 5, M = 1\}, -\frac{\sqrt{165}x(-14z^2+21z^4+1)}{16\sqrt{\pi}} \\
+\{L = 5, M = 2\}, \frac{\sqrt{1155}(x^2-y^2)z(-1+3z^2)}{8\sqrt{\pi}} \\
+\{L = 5, M = 3\}, -\frac{\sqrt{2}\sqrt{385}x(x^2-3y^2)(-1+9z^2)}{32\sqrt{\pi}} \\
+\{L = 5, M = 4\}, \frac{3\sqrt{385}(x^4-6y^2x^2+y^4)z}{16\sqrt{\pi}} \\
+\{L = 5, M = 5\}, -\frac{3\sqrt{2}\sqrt{77}x(x^4-10y^2x^2+5y^4)}{32\sqrt{\pi}}
+\end{array}
+$$
+
+# A3 球光源に対するZH係数 {id="sec:A3"}
+
+ラジアン角$a$に対する球光源があるとすると、最初の6つのバンドの記号的な積分は以下のようになる。
+
+$$
+\begin{array}{ll}
+L = 0: & -\sqrt{\pi}(-1 + \cos(a)) \\
+L = 1: & \frac{1}{2}\sqrt{3}\sqrt{\pi}\sin(a)^2 \\
+L = 2: & -\frac{1}{2}\sqrt{5}\sqrt{\pi}\cos(a)(-1 + \cos(a))(\cos(a) + 1) \\
+L = 3: & -\frac{1}{8}\sqrt{7}\sqrt{\pi}(-1 + \cos(a))(\cos(a) + 1)(7\cos(a)^2 - 3) \\
+L = 4: & -\frac{3}{8}\sqrt{\pi}\cos(a)(-1 + \cos(a))(\cos(a)+1)(7\cos(a)^2 - 3) \\
+L = 5: & -\frac{1}{16}\sqrt{11}\sqrt{\pi}(-1 + \cos(a))(\cos(a)+1)(21\cos(a)^4 - 14\cos(a)^2 + 1)
+\end{array}
+$$
+
+# A4 滑らかな円錐に対するZH係数 {id="sec:A4"}
+
+ラジアン角$a$に対する円錐があるとすると、その光源は北極で強度1を持ち、角度$a$で0に減衰する。6次では、この関数は単精度を用いて約8°以下の角度を求めるべきではない。平滑化関数の微分は北極と$a$で0となる。最初の6つのバンドは以下となる。
+
+$$
+\begin{array}{l}
+\frac{(a^3+6a-12\sin(a)+6\cos(a)a)\sqrt{\pi}}{a^3} \\
+\frac{1}{4}\frac{\sqrt{3}(a^3+3\cos(a)\sin(a)+3\cos(a)^2a)\sqrt{\pi}}{a^3} \\
+\frac{1}{9}\frac{\sqrt{5}(-6a-2\cos(a)^2\sin(a)-9\cos(a)a+14\sin(a)+3\cos(a)^2a)\sqrt{\pi}}{a^3} \\
+\frac{1}{256}\frac{\sqrt{7}4a^3+15a-108\cos(a)^2a-30\cos(a)^3\sin(a)+63\cos(a)\sin(a)+60\cos(a)^4a)\sqrt{\pi}}{a^3} \\
+\frac{1}{1500}\frac{-480a+742\sin(a)+596\cos(a)^2\sin(a)+225\cos(a)a-378\sin(a)\cos(a)^4-1650\cos(a)^3a+945\cos(a)^5a)\sqrt{\pi}}{a^3} \\
+\frac{1}{3072}\frac{\sqrt{11}(-63a+12a^3+350\cos(a)^3\sin(a)-1260\cos(a)^4a-15\cos(a)\sin(a)-224\cos(a)^5\sin(a)+672\cos(a)^6a+540\cos(a)^2a)\sqrt{\pi}}{a^3}
+\end{array}
+$$
+
+# A5 方向およびアンビエント光を伴うSH環境マップを近似するために係数を解く {id="sec:A5"}
+
+方向$d$にある方向光と元のライティング環境との間の近似誤差を最小化する強度$s$を計算できる。
+
+$$
+E(c) = (L_e - cL_d)^2
+$$
+
+ここで、$L_e$はライティング環境のSH表現であり、$L_d$は方向$d$にあるライティングモデルのSH表現である^[放射輝度(ベクトルのまま)か放射照度(ベクトルの畳み込み)のいずれかを用いて最適化できる。]。この解は以下となる。
+
+$$
+c = \frac{L_e \circ L_d}{L_d \circ L_d}
+$$
+
+アンビエント光を追加したいならば、誤差関数を最小化する必要がある。
+
+$$
+E(c, a) = \int (cL_d(s) * H_N(s) + aL_a(s) + H_N(s) - L_e(s) * H_N(s))^2 ds
+$$
+
+ライティングに畳み込みを吸収させ、各変数に関して微分すると以下のようになる。
+
+$$
+\begin{array}{ccc}
+\frac{dE}{dc} & = & 2 \int (c \hat{L}_d(s) + a \hat{L}_a(s) - \hat{L}_e(s)) \hat{L}_d(s) ds \\
+\frac{dE}{da} & = & 2 \int (c \hat{L}_d(s) + a \hat{L}_a(s) - \hat{L}_e(s)) \hat{L}_a(s) ds
+\end{array}
+$$
+
+そして、最小値を見つけるために2つの式が0^[そのHessian行列は$\left[ \begin{array}{cc} 3 & 1 \\ 1 & 1 \end{array} \right]$であり、正の固有値$2 \pm \sqrt{2}$を持つ。すなわち、これは最小値である。]に等しいとして解く。$\hat{L}_a(s)$はスカラの関数であり^[SHベクトルはDC項において非ゼロのみを持つ。]、SHの直交性により、その積分はすべて単純なSHベクトルの内積となる。これは以下の式となる。
+
+$$
+\begin{array}{l}
+cA + aB = D \\
+cB + aC = E
+\end{array}
+$$
+
+ここで、
+
+$$
+A = \frac{508\pi}{867}, B = \frac{16}{17}, C = \frac{4}{\pi}, D = \text{dot}(\hat{L}_d, \hat{L}_e), E = \text{dot}(\hat{L}_a, \hat{L}_e)
+$$
+
+$c$と$a$について解くと、
+
+$$
+\begin{array}{l}
+c = \frac{867}{316\pi} \text{dot}(\hat{L}_d, \hat{L}_e) - \frac{51}{79} \text{dot}(\hat{L}_a, \hat{L}_e) \\
+a = \frac{127\pi}{316} \text{dot}(\hat{L}_a, \hat{L}_e) - \frac{51}{79} \text{dot}(\hat{L}_d, \hat{L}_e)
+\end{array}
+$$
+
+同じ結果に達するより単純な方法が存在することが判明している。環境と光の両方がDC項を含まない方向光の強度を解き、スケールされた方向光を用いるときに環境のDC項を再構築するアンビエント項を計算する。これは最終的に以下となる。
+
+$$
+c = \frac{867}{316\pi} \text{dot}(\hat{L}_d, \hat{L}_e) \\
+a = \left( \hat{L}_e[0] - c \frac{8\sqrt{\pi}}{17} \right) \frac{\sqrt{\pi}}{2}
+$$
+
+上記の式において、内積はDC項を無視し、$\hat{L}_e[0]$は環境光のDC項である。2つや3つの光に対して同様の技術を用いるだろう(その場合、光の強度と同時に$a$を扱うと式はより汚く[much nastier]なる)。
+
+複数の光は同様のやり方で行われることができ、まず、すべての光ベクトルからDCを取り除き、2つの光で、以下の誤差関数をもたらす。
+
+$$
+E(c_0, c_1) = \int (c_0 L_{d0}(s) + c_1 L_{d1}(s) - L_e(s))^2 ds
+$$
+
+その後、係数のそれぞれに関して微分して0に対して解く。以下の式で強度を得る。
+
+$$
+\left[ \begin{array}{c}
+    c_0 \\
+    c_1
+\end{array} \right] = \left[ \begin{array}{cc}
+    \frac{A}{A^2 - B^2} & \frac{-B}{A^2 - B^2} \\
+    \frac{-B}{A^2 - B^2} & \frac{A}{A^2 - B^2}
+\end{array} \right] \left[ \begin{array}{c}
+    L_e \circ L_{d0} \\
+    L_e \circ L_{d0}
+\end{array} \right]
+$$
+
+ここで、
+
+$$
+A = L_{d0} \circ L_{d0}, B = L_{d0} \circ L_{d1}
+$$
+
+$A$が方向に独立して一定であることは指摘しておく価値がある(これは次数とベクトルが畳み込まれるかどうかに依存する)。そのアンビエント項は以下のようになる。
+
+$$
+a = (L_e[0] - (c_0 L_{d0}[0] + c_1 L_{d1}[0])) \frac{\sqrt{\pi}}{2}
+$$
+
+3つの光では、その強度は以下となる。
+
+$$
+\left[ \begin{array}{c}
+    c_0 \\
+    c_1 \\
+    c_2
+\end{array} \right] = \left[ \begin{array}{ccc}
+    \frac{A^2 - D^2}{E} & \frac{CD - AB}{E} & \frac{BD - AC}{E} \\
+    \frac{CD - AB}{E} & \frac{A^2 - C^2}{E} & \frac{BC - AD}{E} \\
+    \frac{BD - AC}{E} & \frac{BD - AD}{E} & \frac{A^2 - B^2}{E} \\
+\end{array} \right] \left[ \begin{array}{c}
+    L_e \circ L_{d0} \\
+    L_e \circ L_{d1} \\
+    L_e \circ L_{d2}
+\end{array} \right]
+$$
+
+ここで、$C = L_{d0} \circ L_{d2}, D = L_{d1} \circ L_{d2}, E = 2BCD + A(A^2 - B^2 - C^2 - D^2)$である。
+
+この行列は対称であり、このアンビエント係数は以下となる。
+
+$$
+a = (L_e[0] - (c_0 L_{d0}[0] + c_1 L_{d1}[0] + c_2 L_{d2}[0])) \frac{\sqrt{\pi}}{2}
+$$
 
 # A6 {id="sec:A6"}
 
 # A7 {id="sec:A7"}
+
+# A8 {id="sec:A8"}
 
 # A9 {id="sec:A9"}
 
