@@ -858,6 +858,189 @@ void CosMult(float* R, float* L) {
 
 # A9 アンビエントキューブ基底 {id="sec:A9"}
 
-TODO
+アンビエントキューブ基底はValveで使われる[@26]。6つの基底関数を含み、それぞれが半球上に定義される。
 
-# A10 {id="sec:A10"}
+$$
+\begin{array}{ll}
+    V0 = \left\{ \begin{array}{cc}
+        x^2 & x > 0 \\
+        0 & x \le 0
+    \end{array} \right. & V1 = \left\{ \begin{array}{cc}
+        0 & x > 0 \\
+        x^2 & x \le 0
+    \end{array} \right. \\
+    V2 = \left\{ \begin{array}{cc}
+        y^2 & y > 0 \\
+        0 & y \le 0
+    \end{array} \right. & V3 = \left\{ \begin{array}{cc}
+        0 & y > 0 \\
+        y^2 & y \le 0
+    \end{array} \right. \\
+    V4 = \left\{ \begin{array}{cc}
+        z^2 & z > 0 \\
+        0 & z \le 0
+    \end{array} \right. & V5 = \left\{ \begin{array}{cc}
+        0 & z > 0 \\
+        z^2 & z \le 0
+    \end{array} \right.
+\end{array}
+$$
+
+この基底は直交ではないので、係数は基底関数に対する積分では生成できない。最適な投影係数を計算するためには、線形な最小二乗問題を解く([@sec:A6]と似ているが、正規直交基底関数を持たない)。
+
+$$
+E(c) = \int \left( \sum_i c_i V_i(s) - f(s) \right)^2 ds
+$$
+
+ここで、$V_i(s)$はアンビエントキューブ基底関数である。これを微分すると以下を得る。
+
+$$
+\frac{dE}{dc_k} = 2 \int \left( \sum_i c_i V_i(s) - f(s) \right) V_k(s) ds
+$$
+
+積分は線形であるので、項を並び替えることができ、0について解くと、以下を得る。
+
+$$
+\sum_i c_i \int V_i(s) V_k(s) ds = \int f(s) V_k(s) ds
+$$
+
+左辺は$A_{ij} = \int V_i(s) V_j(s) ds$となる行列$A$の行であり、右辺はベクトル(関数×基底関数の積分)である。これは線形システム$Ac = b$をもたらし、$A$の逆行列は以下となる。
+
+$$
+\left[ \begin{array}{cccccc}
+    \frac{11}{4\pi} & \frac{1}{4\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} \\
+    \frac{1}{4\pi} & \frac{11}{4\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} \\
+    -\frac{3}{8\pi} & -\frac{3}{8\pi} & \frac{11}{4\pi} & \frac{1}{4\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} \\
+    -\frac{3}{8\pi} & -\frac{3}{8\pi} & \frac{1}{4\pi} & \frac{11}{4\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} \\
+    -\frac{3}{8\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} & \frac{11}{4\pi} & \frac{1}{4\pi} \\
+    -\frac{3}{8\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} & -\frac{3}{8\pi} & \frac{1}{4\pi} & \frac{11}{4\pi}
+\end{array} \right]
+$$
+
+この基底を用いて表現される関数をSHに投影するため、SH基底に対して$V$を積分する。2次球面調和関数では、その結果は以下の行列となる。
+
+$$
+\left[ \begin{array}{c}
+    \frac{\sqrt{\pi}}{3} & \frac{\sqrt{\pi}}{3} & \frac{\sqrt{\pi}}{3} & \frac{\sqrt{\pi}}{3} & \frac{\sqrt{\pi}}{3} & \frac{\sqrt{\pi}}{3} \\
+    0 & 0 & -\frac{\sqrt{3}\sqrt{\pi}}{4} & \frac{\sqrt{3}\sqrt{\pi}}{4} & 0 & 0 \\
+    0 & 0 & 0 & 0 & \frac{\sqrt{3}\sqrt{\pi}}{4} & -\frac{\sqrt{3}\sqrt{\pi}}{4} \\
+    -\frac{\sqrt{3}\sqrt{\pi}}{4} & \frac{\sqrt{3}\sqrt{\pi}}{4} & 0 & 0 &  0 & 0 \\
+    0 & 0 & 0 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0 & 0 & 0 \\
+    -\frac{\sqrt{\pi}\sqrt{5}}{15} & -\frac{\sqrt{\pi}\sqrt{5}}{15} & -\frac{\sqrt{\pi}\sqrt{5}}{15} & -\frac{\sqrt{\pi}\sqrt{5}}{15} & \frac{2\sqrt{\pi}\sqrt{5}}{15} & \frac{2\sqrt{\pi}\sqrt{5}}{15} \\
+    0 & 0 & 0 & 0 & 0 & 0 \\
+    \frac{\sqrt{\pi}\sqrt{15}}{15} & \frac{\sqrt{\pi}\sqrt{15}}{15} & -\frac{\sqrt{\pi}\sqrt{15}}{15} & -\frac{\sqrt{\pi}\sqrt{15}}{15} & 0 & 0
+\end{array} \right]
+$$
+
+二次より上の偶数の次数[degrees]はアンビエントキューブ基底の零空間[null space]にあり、二次より上の次数[degrees]はクランプしたコサイン関数の零空間にある。すなわち、放射照度環境マップが使われているならば、より高い次数[order]は必要ない。アンビエントキューブ基底はDC項を厳密に再構築でき、線形項を近似し、二次基底関数の2つ$(y_2^0, y_2^2)$を厳密に再構築し、零空間にある二次基底関数の3つ$(y_2^{-2}, y_2^{-1}, y_2^1)$を持つ。
+
+SHからアンビエントキューブ基底に投影するためには、以下の誤差関数を最小化する必要がある。
+
+$$
+E(c) = \int \left( \sum_i c_i V_i(s) - \sum_j l_j y_j(s) \right)^2 ds
+$$
+
+ここで、$l_j$は(畳み込まれると仮定される)SHライティング係数である。もう一度、未知の関数に関して微分すると、
+
+$$
+\frac{dE}{dc_k} = 2 \int \left( \sum_i c_i V_i(s) - \sum_j l_j y_j(s) \right) V_k(s) ds
+$$
+
+そして、0に対して解くと、
+
+$$
+\sum_i c_i \int V_i(s) V_k(s) ds = \sum_j l_j \int y_j(s) V_k(s) ds
+$$
+
+同様に、これは線形システム$Ac = Bl$となる。ここで、$A$は以前と同様であり、$B$は$B_{ij} = \int V_i(s) y_j(s) ds$となる行列である。行列$A^{-1}B$はSHからアンビエントキューブ基底に移すときに使用できる。
+
+$$
+\left[ \begin{array}{c}
+    \frac{1}{2\sqrt{\pi}} & 0 & 0 & -\frac{5\sqrt{3}}{8\sqrt{\pi}} & 0 & 0 & -\frac{\sqrt{5}}{4\sqrt{\pi}} & 0 & \frac{\sqrt{15}}{4\sqrt{\pi}} \\
+    \frac{1}{2\sqrt{\pi}} & 0 & 0 & \frac{5\sqrt{3}}{8\sqrt{\pi}} & 0 & 0 & -\frac{\sqrt{5}}{4\sqrt{\pi}} & 0 & \frac{\sqrt{15}}{4\sqrt{\pi}} \\
+    \frac{1}{2\sqrt{\pi}} & -\frac{5\sqrt{3}}{8\sqrt{\pi}} & 0 & 0 & 0 & 0 & -\frac{\sqrt{5}}{4\sqrt{\pi}} & 0 & -\frac{\sqrt{15}}{4\sqrt{\pi}} \\
+    \frac{1}{2\sqrt{\pi}} & \frac{5\sqrt{3}}{8\sqrt{\pi}} & 0 & 0 & 0 & 0 & -\frac{\sqrt{5}}{4\sqrt{\pi}} & 0 & -\frac{\sqrt{15}}{4\sqrt{\pi}} \\
+    \frac{1}{2\sqrt{\pi}} & 0 & \frac{5\sqrt{3}}{8\sqrt{\pi}} & 0 & 0 & 0 & \frac{\sqrt{5}}{2\sqrt{\pi}} & 0 & 0 \\
+    \frac{1}{2\sqrt{\pi}} & 0 & -\frac{5\sqrt{3}}{8\sqrt{\pi}} & 0 & 0 & 0 & \frac{\sqrt{5}}{2\sqrt{\pi}} & 0 & 0
+\end{array} \right]
+$$
+
+# A10 放射照度環境マップに対するシェーダおよびCPUコード {id="sec:A10"}
+
+ライティング環境の二次SH表現があるとすると、シェーダコードを生成するのはかなり単純である。[@35]では、行列表現が用いられるが、これは二次球面調和関数のより直接的な計算と比べてより多くの命令^[スカラGPUでは、このギャップは、60対42となり、さらに重大になる。] (15対11)とより多くの定数(12対7)を必要とすることが判明している。多項式の主定数[leading constants]をライティング係数に折りたたみ[fold]、(float4を用いて)チャネルによって$y_2^{-2}$以外のすべてをグループ化して、$y_2^{-2}$を色としてそのままにして、$y_2^0$の一部をDCに折りたたむ。計算用シェーダコードと定数をセットアップするためのCPUコードは以下に示される。シェーダコードに渡される法線は正規化される必要があり、第4チャネルは1.0である必要がある。CPUコードは二次放射輝度SH係数への3つのfloatポインタの配列と定数をバインドするためのEffectを取る。
+
+```hlsl
+// 放射照度環境マップに含まれる定数
+float4 cAr;
+float4 cAg;
+float4 cAb;
+float4 cBr;
+float4 cBg;
+float4 cBb;
+float4 cC;
+
+float3 ShadeIrad(float4 vNormal) {
+  float3 x1, x2, x3;
+
+  // 多項式の線形および定数項
+  x1.r = dot(cAr,vNormal);
+  x1.g = dot(cAg,vNormal);
+  x1.b = dot(cAb,vNormal);
+
+  // 二次多項式4つ
+  float4 vB = vNormal.xyzz * vNormal.yzzx;    
+  x2.r = dot(cBr,vB);
+  x2.g = dot(cBg,vB);
+  x2.b = dot(cBb,vB);
+
+  // 最終的な二次多項式
+  float vC = vNormal.x*vNormal.x - vNormal.y*vNormal.y;
+  x3 = cC.rgb * vC;  
+  return x1+x2+x3;    
+}
+```
+
+```cpp
+void SetSHEMapConstants(float* fLight[3], ID3DXEffect* pEffect) {  
+    // ライティング環境の定数
+    D3DXVECTOR4 vCoeff[3];
+    static const float s_fSqrtPI = ((float)sqrtf(D3DX_PI));
+    const float fC0 = 1.0f/(2.0f*s_fSqrtPI);
+    const float fC1 = (float)sqrt(3.0f)/(3.0f*s_fSqrtPI);
+    const float fC2 = (float)sqrt(15.0f)/(8.0f*s_fSqrtPI);
+    const float fC3 = (float)sqrt(5.0f)/(16.0f*s_fSqrtPI);
+    const float fC4 = 0.5f*fC2;
+    for(int iC = 0; iC < 3; iC++) {
+        vCoeff[iC].x = -fC1 * fLight[iC][3];
+        vCoeff[iC].y = -fC1 * fLight[iC][1];
+        vCoeff[iC].z =  fC1 * fLight[iC][2];
+        vCoeff[iC].w =  fC0 * fLight[iC][0] - fC3 * fLight[iC][6];
+    }
+    pEffect->SetVector("cAr", &vCoeff[0]);
+    pEffect->SetVector("cAg", &vCoeff[1]);
+    pEffect->SetVector("cAb", &vCoeff[2]);
+    for(int iC = 0; iC < 3; iC++) {
+r        vCoeff[iC].x =      fC2 * fLight[iC][4];
+        vCoeff[iC].y =     -fC2 * fLight[iC][5];
+        vCoeff[iC].z = 3.0f*fC3 * fLight[iC][6];
+        vCoeff[iC].w =     -fC2 * fLight[iC][7];
+    }
+    pEffect->SetVector("cBr", &vCoeff[0]);
+    pEffect->SetVector("cBg", &vCoeff[1]);
+    pEffect->SetVector("cBb", &vCoeff[2]);
+    vCoeff[0].x = fC4 * fLight[0][8];
+    vCoeff[0].y = fC4 * fLight[1][8];
+    vCoeff[0].z = fC4 * fLight[2][8];
+    vCoeff[0].w = 1.0f;
+    pEffect->SetVector("cC", &vCoeff[0]);
+}
+```
+
+# バージョン履歴
+
+- 2008年 2月14日  最初の公開バージョン
+- 2008年 4月 1日  SH計算時の漸化式を付録に追加して、付録の番号を付け直す
+- 2009年 3月17日  漸化式のtypoを修正
+- 2009年11月30日  アンビエント光と最適線形な方向のtypoを修正
+- 2010年 2月10日  積の行列の定義のtypo(指摘してくれたDon Holdenに感謝)
