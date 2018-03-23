@@ -6,10 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Jimenez2009]
-    - スクリーンスペースの肌レンダリング
-- [@Sloan2008]
-    - 球面調和関数
+- [@Jimenez2010]
+    - 肌レンダリング
 
 ## あとで読む
 
@@ -23,8 +21,6 @@ numberSections: false
     - Directional Dipole Model
 - [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法
-- [@Jimenez2010]
-    - 肌レンダリング
 - [@Jimenez2016]
     - Filmic SMAA
 - [@Lottes2016]
@@ -335,8 +331,15 @@ numberSections: false
 - [@Yang2010]
     - Variance Soft Shadow Maps
 
+### 球面調和関数
+
+- [@Sloan2008]
+    - 球面調和関数
+
 ### 表面下散乱
 
+- [@Jimenez2009]
+    - スクリーンスペースの肌レンダリング
 - [@Jimenez2015]
     - Separable Subsurface Scattering
 
