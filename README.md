@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Jimenez2010]
-    - 肌レンダリング
+- [@Frisvad2014]
+    - Directional Dipole Model
 
 ## あとで読む
 
@@ -17,8 +17,6 @@ numberSections: false
     - GPUで単位ベクトルを表現する方法について調査
 - [@Drobot2014]
     - GCNアーキテクチャを対象とした低レベルな最適化
-- [@Frisvad2014]
-    - Directional Dipole Model
 - [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法
 - [@Jimenez2016]
@@ -340,6 +338,8 @@ numberSections: false
 
 - [@Jimenez2009]
     - スクリーンスペースの肌レンダリング
+- [@Jimenez2010]
+    - 肌のための半透明レンダリング
 - [@Jimenez2015]
     - Separable Subsurface Scattering
 
