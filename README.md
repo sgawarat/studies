@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Frisvad2014]
-    - Directional Dipole Model
+- [@Fredriksson2017]
+    - キャッシュ効率を測るツール
 
 ## あとで読む
 
@@ -78,6 +78,8 @@ numberSections: false
 
 ### 拡散理論
 
+- [@Frisvad2014]
+    - Directional Dipole Model
 - [@Habel2013]
     - 表面下散乱のディフュージョン理論の今昔
 - [@Jensen2001]
@@ -294,6 +296,8 @@ numberSections: false
     - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化
 - [@Vale2017]
     - Decima Engineの可視性
+- [@Tatarchuk2015]
+    - Destinyのマルチスレッド化されたゲームエンジン
 - [@Tatarchuk2017]
     - グラフィクスエンジンから見るプログラミングモデルの進化
 
