@@ -501,4 +501,254 @@ GenerateMemoryAccesses(core_index, ud, rip, ilen, ExcInfo->ContextRecord);
 
 # キャッシュシミュレーションを突く
 
-TODO
+```cpp
+// Generate I-cache traffic.
+CacheSim::AccessResult r = g_Cache.Access(core_index, rip, ilen, CacheSim::kCodeRead);
+stats->m_Stats[r] += 1;
+```
+
+# キャッシュシミュレーションを突く
+
+```cpp
+// Generate I-cache traffic.
+CacheSim::AccessResult r = g_Cache.Access(core_index, rip, ilen, CacheSim::kCodeRead);
+stats->m_Stats[r] += 1;
+
+// Generate D-cache traffic.
+for (int i = 0; i < read_count; ++i) {
+  CacheSim::AccessResult r = g_Cache.Access(core_index, reads[i].ea, reads[i].sz, CacheSim::kRead);
+  stats->m_Stats[r] += 1;
+}
+```
+
+# キャッシュシミュレーションを突く
+
+```cpp
+// Generate I-cache traffic.
+CacheSim::AccessResult r = g_Cache.Access(core_index, rip, ilen, CacheSim::kCodeRead);
+stats->m_Stats[r] += 1;
+
+// Generate D-cache traffic.
+for (int i = 0; i < read_count; ++i) {
+  CacheSim::AccessResult r = g_Cache.Access(core_index, reads[i].ea, reads[i].sz, CacheSim::kRead);
+  stats->m_Stats[r] += 1;
+}
+
+for (int i = 0; i < write_count; ++i) {
+  CacheSim::AccessResult r = g_Cache.Access(core_index, writes[i].ea, writes[i].sz, CacheSim::kWrite);
+  stats->m_Stats[r] += 1;
+}
+```
+
+# 二次元配列としてセットアソシアティブキャッシュをモデル化できる
+
+入力アドレスを分解する:
+
+# 二次元配列としてセットアソシアティブキャッシュをモデル化できる
+
+入力アドレスを分解する:
+
+そのセットの位置を突き止める
+
+# 二次元配列としてセットアソシアティブキャッシュをモデル化できる
+
+入力アドレスを分解する:
+
+そのセットの位置を突き止める
+
+キャッシュされているかを確認するために各ウェイとアドレスを比較する
+
+# Jaguarのキャッシュのシミュレート
+
+- コンソールのJaguarはモジュールを2つ持っている
+    - 各モジュールは4コアで共有されるL2キャッシュを持つ
+    - 各コアは自身のD1とI1キャッシュを持つ
+
+# Jaguarのキャッシュのシミュレート
+
+- コンソールのJaguarはモジュールを2つ持っている
+    - 各モジュールは4コアで共有されるL2キャッシュを持つ
+    - 各コアは自身のD1とI1キャッシュを持つ
+- Jaguarのキャッシュは*侵入的*である(D1/I1にあるラインはL2にも存在しなければならない)
+
+# Jaguarのキャッシュのシミュレート
+
+- コンソールのJaguarはモジュールを2つ持っている
+    - 各モジュールは4コアで共有されるL2キャッシュを持つ
+    - 各コアは自身のD1とI1キャッシュを持つ
+- Jaguarのキャッシュは*侵入的*である(D1/I1にあるラインはL2にも存在しなければならない)
+- セットアソシアティブ性を我々の配列構造に対応させる
+    - I1: 512ライン(32KB)、2ウェイ、256セット
+    - D1: 512ライン(32KB)、8ウェイ、64セット
+    - L2: 32768ライン(2MB)、16ウェイ、2048セット
+
+# キャッシュの定義
+
+```cpp
+// Simulating a Jaguar cache
+
+//                      size in byte   |  assoc
+using JaguarD1 = Cache<      32 * 1024,      8>;
+using JaguarI1 = Cache<      32 * 1024,      2>;
+using JaguarL2 = Cache<2 * 1024 * 1024,     16>;
+```
+
+# キャッシュの定義
+
+```cpp
+// Simulating a Jaguar cache
+
+//                      size in byte   |  assoc
+using JaguarD1 = Cache<      32 * 1024,      8>;
+using JaguarI1 = Cache<      32 * 1024,      2>;
+using JaguarL2 = Cache<2 * 1024 * 1024,     16>;
+
+struct JaguarModule {
+    JaguarD1      m_CoreD1[4];   // モジュールあたり4コア、個別のD1とI1を持つ
+    JaguarI1      m_CoreI1[4];
+    JaguarL2      m_Level2;      // 共有L2キャッシュ
+    JaguarModule* m_OtherModule; // 無効化のための他のモジュールへのポインタ
+}
+```
+
+# 擬似コードで見るキャッシュの更新
+
+キャッシュラインがアクセスされるごとに:
+
+# 擬似コードで見るキャッシュの更新
+
+キャッシュラインがアクセスされるごとに:
+
+  書き込んでいる場合:
+    他のすべてのコアの外にキャッシュラインを追い出す
+    他のモジュールのL2の外にキャッシュラインを追い出す
+
+# 擬似コードで見るキャッシュの更新
+
+キャッシュラインがアクセスされるごとに:
+
+  書き込んでいる場合:
+    他のすべてのコアの外にキャッシュラインを追い出す
+    他のモジュールのL2の外にキャッシュラインを追い出す
+
+  ヒット1 = D1/I1でキャッシュラインを探して記録する
+  ヒット2 = L2でキャッシュラインを探して記録する
+
+# 擬似コードで見るキャッシュの更新
+
+キャッシュラインがアクセスされるごとに:
+
+  書き込んでいる場合:
+    他のすべてのコアの外にキャッシュラインを追い出す
+    他のモジュールのL2の外にキャッシュラインを追い出す
+
+  ヒット1 = D1/I1でキャッシュラインを探して記録する
+  ヒット2 = L2でキャッシュラインを探して記録する
+
+  If Hit1 && Hit2:
+    return kL1Hit
+  Else If Hit2:
+    return kL2Hit
+  Else:
+    return kL2Miss
+
+# 動作
+
+- メインループでキーボードショートカットに追跡機構をフックする
+    - フレーム終わりに自動的に無効化する
+
+# 動作
+
+- メインループでキーボードショートカットに追跡機構をフックする
+    - フレーム終わりに自動的に無効化する
+- データ収集は約2〜3分かかる
+    - ワークロードに依存する
+
+# 動作
+
+- メインループでキーボードショートカットに追跡機構をフックする
+    - フレーム終わりに自動的に無効化する
+- データ収集は約2〜3分かかる
+    - ワークロードに依存する
+- バイナリファイルに結果を蓄える
+    - 我々のユースケースでは約100〜150MB
+
+# 動作
+
+- メインループでキーボードショートカットに追跡機構をフックする
+    - フレーム終わりに自動的に無効化する
+- データ収集は約2〜3分かかる
+    - ワークロードに依存する
+- バイナリファイルに結果を蓄える
+    - 我々のユースケースでは約100〜150MB
+- ゲームは収集後にフルフレームレートで動作を再開する！
+    - オフラインでダンプを解析する
+
+# 解析
+
+- 収集した状態は命令に関連付けられる
+    - コールスタックもキャプチャされ、曖昧さをなくすのに使われる
+- 我々のセットアップでキャプチャされる現在の状態:
+    - L1ヒット(I1/D1の追跡とは別)
+    - L2ヒット
+    - L2ミス(命令とデータをそれぞれ追跡する --- ハードウェアができることより優れている！)
+    - D1またはL2にヒットする明示的なプリフェッチの数
+    - 実行された命令数
+
+# ツール群 --- 状態のフラットプロファイル
+
+# ツール群 --- トップダウンツリー
+
+# ツール群 --- 逆ツリー
+
+# ツール群 --- ソース注釈
+
+# ツール群の考慮事項
+
+- "明らかに悪い"データをポップさせたい
+    - 悪さファクタ = L2ミス^2 / 命令数
+- いろんな見方で投資する価値がある
+    - ダンプ上で更なる解析を可能にすることで価値を最大化する
+
+# PushBuffer::SetTextureAssetsに話を戻すと
+
+# PushBuffer::SetTextureAssetsに話を戻すと
+
+# CacheSimの利点
+
+- プログラム中のメモリアクセスごとのデータを収集する
+- 非侵入的
+- 邪魔にならない
+- Windowsで動作する
+    - グラフィクスドライバにさえも深く計装して、OSはシステムコールレベルに呼び出しに行く
+- オープンソース
+    - 更なるシナリオに容易に拡張できる
+
+# CacheSimの欠点
+
+- キャプチャ速度はより良くできるかもしれない
+- Windowsでしか動作しない
+    - 依然としてコンソールのワークフローのためのJaguarのキャッシュをシミュレートできる(OSのものを無視する)
+- 100%ハードウェアに正確ではない(というか、できない)
+    - インオーダーCPUとしてCPUを扱う --- アウトオブオーダーのスケジューリングではない
+    - キャッシュを指すのに仮想アドレスを用いなければならない(マイナーな問題)
+    - 配列プリフェッチャーがシミュレートされていない(配列について過度に悲観的)
+    - MESI/Store forwarding buffers/...
+
+# 今後の課題
+
+- ハードウェアプリフェッチシミュレーション
+- non-temporal storeシミュレーション
+- キャプチャの高速化
+- 拡張
+
+# 謝辞＋質疑応答
+
+- スペシャルサンクス
+    - Mike Acton、Jonathan Adamczewski、Elan Ruskin
+    - Mark Cerny
+- [http://github.com/insomniacgames/ig-cachesim](http://github.com/insomniacgames/ig-cachesim)
+    - 試して改良をサブミットしよう
+- 連絡ください
+    - afredriksson@insomniacgames.com
+    - \@deplinenoise
