@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Fredriksson2017]
-    - キャッシュ効率を測るツール
+- [@Sawicki2018]
+    - VulkanとDirectX12のメモリ管理
 
 ## あとで読む
 
@@ -246,6 +246,8 @@ numberSections: false
 
 - [@Gyrling2017]
     - マルチコア環境におけるキャッシュシステムの動作から学ぶメモリバリアの概要
+- [@Fredriksson2017]
+    - キャッシュ効率を測るツール
 
 ### OIT
 
