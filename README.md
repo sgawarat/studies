@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Sawicki2018]
-    - VulkanとDirectX12のメモリ管理
+- [@Marchalot2018]
+    - "Detroit: Become Human"でのClustered Forard RenderingとAnti-Aliasingについて
 
 ## あとで読む
 
@@ -154,6 +154,8 @@ numberSections: false
     - AZDOなOpenGLとVulkanのtips
 - [@Olson2016]
     - モバイル系メーカーによるVulkan APIの概要
+- [@Sawicki2018]
+    - VulkanとDirectX12のメモリ管理
 - [@Themaister2017]
     - Vulkanベースのフレームグラフの実装とそこからの知見
 - [@Thomas2016]
