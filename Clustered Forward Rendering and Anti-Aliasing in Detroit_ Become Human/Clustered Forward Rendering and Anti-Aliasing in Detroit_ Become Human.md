@@ -61,7 +61,7 @@ Clustered Forward Rendering and Anti-Aliasing in Detroit: Become Human
     - Deferred Shading
     - ガンマ補正
     - 物理ベースレンダリング
-    - Morphologicalアンチエイジング
+    - Morphologicalアンチエイリアシング
 
 # Quantic Dreamの3Dエンジンの歴史
 
@@ -464,4 +464,517 @@ Clustered Forward Rendering and Anti-Aliasing in Detroit: Become Human
 # Clustered forward rendering
 
 - ライトループ最適化
-    - TODO
+    - ライトごとに
+        - 光の減衰を計算する
+        - シャドウを計算する
+        - 投影テクスチャを計算する
+        - マテリアルのBRDFを持つ最終ライティング色を計算する
+
+# Clustered forward rendering
+
+- ライトループ最適化
+    - ライトごとに
+        - 光の減衰を計算する
+        - シャドウを計算する → 太陽の影に対するより高いレジスタ使用率
+        - 投影テクスチャを計算する
+        - マテリアルのBRDFを持つ最終ライティング色を計算する
+
+# Clustered forward rendering
+
+- ライトループ最適化
+    - 太陽の影を計算する → より低いレジスタ使用率
+    - ライトごとに
+        - 光の減衰を計算する
+        - シャドウを計算する
+        - 投影テクスチャを計算する
+        - マテリアルのBRDFを持つ最終ライティング色を計算する
+
+# Clustered forward rendering
+
+- 可視性のライト拒否
+    - 我々の可視性はポータル/ゾーンに基づく
+    - 可視性情報はできるだけ早くにライトを拒否するのに使うことができる
+    - 可視性情報はビットフィールドに格納されている(ゾーンあたり1ビット)
+    - uiObjectVisibility & uiLightVisibility != 0ならば、ライトを拒否できる
+
+# Clustered forward rendering
+
+- ライトループ最適化
+    - 太陽の影を計算する → より低いレジスタ使用率
+    - ライトごとに
+        - ビットフィールドの可視性テスト → 早期脱出
+        - 光の減衰を計算する
+        - シャドウを計算する
+        - 投影テクスチャを計算する
+        - マテリアルのBRDFを持つ最終ライティング色を計算する
+
+# Clustered forward rendering
+
+- 可能性のある他の早期脱出
+    - N dot L
+    - 光の減衰の結果
+    - シャドウの結果
+
+# Clustered forward rendering
+
+- ライトループ最適化
+    - 太陽の影を計算する → より低いレジスタ使用率
+    - ライトごとに
+        - ビットフィールドの可視性テスト → 早期脱出
+        - 光の減衰を計算する → 早期脱出
+        - N dot Lをテストする → 早期脱出
+        - シャドウを計算する → 早期脱出
+        - 投影テクスチャを計算する
+        - マテリアルのBRDFを持つ最終ライティング色を計算する
+
+#
+
+#
+
+#
+
+#
+
+#
+
+#
+
+# Clustered forward rendering
+
+- 透明の最適化
+    - 透明はパフォーマンスキラーとなり得る
+
+# Clustered forward rendering
+
+- 透明の最適化
+    - 透明はパフォーマンスキラーとなり得る
+    - 草
+        - 画像ベースライティングのみ
+
+# Clustered forward rendering
+
+- 透明の最適化
+    - 透明はパフォーマンスキラーとなり得る
+    - 草
+        - 画像ベースライティングのみ
+    - パーティクル
+        - 重心ごと
+        - 球面調和関数
+        - 半解像度
+
+# Clustered forward rendering
+
+- 髪
+    - 完全に透明な髪によるパフォーマンス問題
+
+# Clustered forward rendering
+
+- 髪
+    - 完全に透明な髪によるパフォーマンス問題
+        - 加算ブレンディング
+        - 調整されたアルファ透明度を出力する
+        - 1/16の解像度
+
+#
+
+# Clustered forward rendering
+
+- 髪
+    - 透明度累積パス
+    - 深度パス
+        - 透明度累積パスから計算されるアルファテスト
+
+#
+
+# Clustered forward rendering
+
+- 髪
+    - 透明度累積パス
+    - 深度パス
+    - 後面トライアングルパス
+    - 前面トライアングルパス
+    - モーションベクトルパス
+
+# Clustered forward rendering
+
+- 以下の事は我々のエンジンでは未だにディファードで行われる
+    - スクリーンスペースリフレクション
+    - イメージベースライティング
+    - 両方とも法線とラフネスを必要とする
+
+# Clustered forward rendering
+
+- デバッグ
+    - ディファードシェーディングでは、Gバッファはデバッグに非常に便利
+        - 法線、ラフネス、アルベド、他
+    - デバッグシェーダ
+    - なんでも出力する: 法線、正接、準法線、UV、他
+    - Gバッファのレンダターゲットより強力
+    - デバッグメモリに格納される。ゲームのリテールバージョンには使われない
+
+# Clustered forward rendering
+
+- 鏡
+    - 可視の鏡ごとに一度だけクラスタを埋める
+
+# Clustered forward rendering
+
+- 他の利点
+    - ボリューメトリックライティング
+
+# Clustered forward rendering
+
+- 他の利点
+    - ボリューメトリックライティング
+    - デカール
+
+# Clustered forward rendering
+
+- ライティングのパフォーマンス
+
+#
+
+# Clustered forward rendering
+
+- ライティングのパフォーマンス
+    - 124つのライトと32つのIBL
+    - クラスタ埋めに1.23ms
+    - 深度パスに1.92ms
+    - 不透明パスに8.79ms
+    - 透明パスに3.48ms
+
+# Clustered forward rendering
+
+- 今後の課題
+    - クラスタ埋めのパス数をへらす
+
+# Clustered forward rendering
+
+- 今後の課題
+    - クラスタ埋めのパス数をへらす
+    - より良い深度分布
+
+# Clustered forward rendering
+
+- 今後の課題
+    - クラスタ埋めのパス数をへらす
+    - より良い深度分布
+    - クラスタ埋め中にいくつかのライトを取り除く
+        - シャドウマップとともに
+        - 可視性情報とともに
+
+# Clustered forward rendering
+
+- 今後の課題
+    - クラスタ埋めのパス数をへらす
+    - より良い深度分布
+    - クラスタ埋め中にいくつかのライトを取り除く
+    - VR: 両眼に対して一度にクラスタを埋める
+
+# Temporal anti-aliasing
+
+# Temporal anti-aliasing
+
+- エイリアシング
+    - より良い解像度だけに頼ることはできない
+    - HDRとPBRはエイリアシングを増加させる
+
+# Temporal anti-aliasing
+
+- アンチエイリアシング
+    - マルチサンプリング
+    - ポストプロセッシング
+    - シェーディング
+
+# Temporal anti-aliasing
+
+- マルチサンプリング
+    - ハードウェア
+    - レンダターゲットの大きさが増える(2x、4x、など)
+    - シェーディングがポリゴンのエッジでより多く処理される
+    - パフォーマンスを減少させる
+    - スペキュラエイリアシングを改善しない
+
+# Temporal anti-aliasing
+
+- ポストプロセッシング
+    - Morphological Anti-Aliasing (MLAA)
+    - Fast Approximate Anti-Aliasing (FXAA)
+
+# Temporal anti-aliasing
+
+- ポストプロセッシング
+    - Morphological Anti-Aliasing (MLAA)
+    - Fast Approximate Anti-Aliasing (FXAA)
+    - Temporal Anti-Aliasing (TAA)
+
+# Temporal anti-aliasing
+
+- ポストプロセッシング
+    - Morphological Anti-Aliasing (MLAA)
+    - Fast Approximate Anti-Aliasing (FXAA)
+    - Temporal Anti-Aliasing (TAA)
+        - *Bryan Karis*の"High Quality Temporal Supersampling"に基づく
+        - UnrealのInfiltratorリアルタイムデモ
+
+# Temporal anti-aliasing
+
+- TAA
+    - 異なるオフセットで各フレームをジッターする
+
+# Temporal anti-aliasing
+
+- TAA
+    - 異なるオフセットで各フレームをジッターする
+    - フレームを累積する
+
+# Temporal anti-aliasing
+
+- TAA
+    - 異なるオフセットで各フレームをジッターする
+    - フレームを累積する
+    - 前のピクセル位置を回収するのにモーションベクトルを使う
+
+# Temporal anti-aliasing
+
+- TAA
+    - 異なるオフセットで各フレームをジッターする
+    - フレームを累積する
+    - 前のピクセル位置を回収するのにモーションベクトルを使う
+    - 前のフレームのピクセルを拒否するためにヒューリスティックを用いる
+
+# Temporal anti-aliasing
+
+- TAAを適用する所
+    - 最終画像
+        - ブルーム、DOF、モーションブラーのエイリアシングを防止しない
+    - ポストプロセッシング前
+        - 安定性において最適
+    - 特定のフィーチャのために
+        - SSR、ボリューメトリックライティング
+
+# Temporal anti-aliasing
+
+- ジッタリング
+    - 固定の8タップ
+        - 8xMSAAのような
+
+# Temporal anti-aliasing
+
+- モーションベクトル
+    - オプションとして透明オブジェクトの上に書き込みできる
+
+# Temporal anti-aliasing
+
+- モーションベクトル
+    - オプションとして透明オブジェクトの上に書き込みできる
+    - 布、Skinnedキャラクター
+
+# Temporal anti-aliasing
+
+- モーションベクトル
+    - オプションとして透明オブジェクトの上に書き込みできる
+    - 布、Skinnedキャラクター
+    - 草木(Speedtree)
+
+# Temporal anti-aliasing
+
+- モーションベクトル
+    - オプションとして透明オブジェクトの上に書き込みできる
+    - 布、Skinnedキャラクター
+    - 草木(Speedtree)
+    - 頂点アニメーション
+
+# Temporal anti-aliasing
+
+- ピクセル拒否
+    - 近傍クランプ
+        - *Bryan Karis*のプレゼンテーションに触発される
+
+# Temporal anti-aliasing
+
+- ピクセル拒否
+    - 近傍クランプ
+        - *Bryan Karis*のプレゼンテーションに触発される
+    - 深度のdisocclusion^[遮蔽されていたものが見えるようになること]
+    - 速度の類似性
+
+# Temporal anti-aliasing
+
+- スキンシェーダ
+    - カメラがズームイン/ズームアウトするときにTAAの強さを減らす
+
+# Temporal anti-aliasing
+
+- パフォーマンス
+    - 1.14ms
+
+# Temporal anti-aliasing
+
+- 雨と雪
+    - 雨と雪はTAAで完全に消失する可能性がある
+    - The flags responsive fix missing particles
+    - 雨の表面のエフェクトでは、rain normalの強さに応じてTAAの強さを減らす
+
+#
+
+#
+
+#
+
+#
+
+# Temporal anti-aliasing
+
+- TAAによる問題
+    - いくつかのポストプロセスはTAAとうまく働かない
+    - 深度がジッターされる
+    - 輪郭のピクセルがアンチエイリアスされる
+    - DOFとモーションブラーでの漏れ[leaking]や震え[vibration]
+
+# Temporal anti-aliasing
+
+- 被写界深度
+    - 震えの除去
+        - 深度でTAAを処理する
+    - 漏れの除去
+        - 漏れを避けるために錯乱円をerodeする
+
+#
+
+#
+
+#
+
+#
+
+# Temporal anti-aliasing
+
+- モージョンブラー
+    - 半解像度のモーションブラー(540p)
+    - それぞれ8回のテクスチャフェッチを伴う2つのパス
+    - TAAは深度不連続な部分の近くのピクセルでにじむ
+    - モーションブラーのサンプリング中にこれらのピクセルを拒否する
+        - => 望ましくないTAAのにじみ縞を避ける
+
+#
+
+#
+
+#
+
+#
+
+#
+
+# Temporal anti-aliasing
+
+- PS4 Proの検討事項
+    - Temporal anti-aliasingはcheckerboardと互換性がある
+
+# Temporal anti-aliasing
+
+- PS4 Proの検討事項
+    - Temporal anti-aliasingはcheckerboardと互換性がある
+    - チェッカーボードはtemporal AAとともに解決されるべき
+        - ジッタリングはチェッカーボードのピクセル間で分ける
+
+# Temporal anti-aliasing
+
+- PS4 Proの検討事項
+    - Temporal anti-aliasingはcheckerboardと互換性がある
+    - チェッカーボードはtemporal AAとともに解決されるべき
+    - でも、4Kがポストプロセッシングのパフォーマンスをメチャクチャにする
+
+# Temporal anti-aliasing
+
+- PS4 Proの検討事項
+    - Temporal anti-aliasingはcheckerboardと互換性がある
+    - チェッカーボードはtemporal AAとともに解決されるべき
+    - でも、4Kがポストプロセッシングのパフォーマンスをメチャクチャにする
+    - 我々はポストプロセッシングのあとにチェッカーボードを解決する
+
+#
+
+# Temporal anti-aliasing
+
+- TAAはいくつかのシチュエーションでは十分ではない
+    - 我々は8xのみ
+    - 孤立したピクセルに影響を与える非常に高いスペキュラは依然として問題となり得る
+
+# Temporal anti-aliasing
+
+- シェーディングのアンチエイリアシング
+    - GPU derivativesを用いることで、複数回のシェーディングを行うことができる
+    - 良い結果ではあるが、コストがかかる
+
+# Temporal anti-aliasing
+
+- シェーディングのアンチエイリアシング
+    - 法線分布関数(NDF)のフィルタリング
+    - "Filtering Distributions of Normals for Shading Antialiasing" by A. S. Kaplanyan, S. Hill, A. Patney and A. Lefohn
+
+# Temporal anti-aliasing
+
+- シェーディングのアンチエイリアシング
+    - 法線分布関数(NDF)のフィルタリング
+    - より高速なバージョン: "Error Reduction and Simplification for Shading Anti-Aliasing" by Yusuke Tokuyoshi
+
+# Temporal anti-aliasing
+
+- シェーディングのアンチエイリアシング
+    - 法線分布関数(NDF)のフィルタリング
+        - TAAととてもうまく動作する
+        - 雨のディテールがよりよく見える
+
+#
+
+#
+
+#
+
+# Temporal anti-aliasing
+
+- 他のtemporalエフェクト
+    - シャドウ
+    - HBAO
+    - SSR
+    - 肌のスクリーンスペース表面下散乱
+    - ボリューメトリックライティング
+
+# Temporal anti-aliasing
+
+- ブルーノイズ
+    - 最小の低周波要素を持ち、エネルギー的に集中したスパイクを持たないノイズ
+    - "The rendering of inside" by Mikkel Gjel & Mikkel Svendsen
+    - ブルーノイズ生成器 by Bart Wronski
+
+# Blue noise
+
+# Blue noise (with tiling)
+
+# Temporal anti-aliasing
+
+- Temporalシャドウ
+    - 毎フレーム回転した8タップのポアソンカーネルを使う
+    - 我々は16x16のブルーノイズの2Dテクスチャでピクセルあたりで異なる回転を用いる
+    - その結果はTAAによって平滑化される
+
+# Temporal anti-aliasing
+
+```glsl
+const float fAARotation = pPassSRT->_fAARotation;  // from 1 to 8. Change at each frame.
+const float fScale = 1.f / 4.f + 1.f / 8.f;
+float fRand = tex2Dfetch(BlueNoiseTexture, int2(sSurface.fFragCoord.xy) % 16, 0).x;
+float fAngle = 2.0f * PI * (fRand + fAARotation * fScale);
+```
+
+#
+
+#
+
+#
+
+# Temporal anti-aliasing
+
+TODO
