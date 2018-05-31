@@ -977,4 +977,208 @@ float fAngle = 2.0f * PI * (fRand + fAARotation * fScale);
 
 # Temporal anti-aliasing
 
-TODO
+- Temporalスクリーンスペース表面下散乱
+    - 2パスのクロスブラーフィルタ(7タップ)
+    - 各パスはフレームごとに回転される
+    - 回転はピクセル位置とフレームIDに依存する
+    - 3Dの128x128x8のブルーノイズテクスチャを使う
+    - 結果はTAAで平滑化されるだろう
+
+# Temporal anti-aliasing
+
+```glsl
+float fRand = tex3Dfetch(pConstantData->rBlueNoise, int3(screenCoord % 128, pConstantData->vFrameID.x), 0).x;
+float fAngle = fRand * TWO_PI;
+```
+
+#
+
+#
+
+#
+
+#
+
+# Temporal anti-aliasing
+
+- Temporal SSAO
+    - Horizon Based Ambient Occlusion (HBAO)に基づく
+        - "Image-Space Horizon-Based Ambient Occlusion" by *Louis Bavoil*, *Miguel Sainz* and *Rouslan Dimitrov*
+    - フル解像度 (1080p)
+    - 2ステップ、2方向
+    - 方向はふれーむごとに調整される
+
+# Temporal anti-aliasing
+
+- Temporal SSAO
+    - HBAOの結果はTAAで平滑化できない("疎"なノイズ)
+    - 我々は"grainy(粒度の粗い)"ブラーを使う
+    - HBAO: 0.85ms
+    - "Grainy"ブラー：0.32ms
+
+#
+
+#
+
+#
+
+#
+
+#
+
+#
+
+#
+
+# Temporal anti-aliasing
+
+- Temporal Screen Space Reflection
+    - "Stochastic Screen-Space Reflections" by *Tomasz Stachowiak* (Frostbite)
+    - "Screen Space Reflections in "The Surge"" by *Michele Giacalone*
+
+# Temporal anti-aliasing
+
+- Temporal Screen Space Reflection
+    - 物理ベース
+    - チェッカーボード付きハーフ解像度
+    - smearingを避けるため、レイ交差点でモーションベクトルを使う
+
+# Temporal anti-aliasing
+
+- Temporal Screen Space Reflection
+    - 自身のTAAパス
+        - チェッカーボードとともに近傍クランプを用いる
+
+# Checkerboard neighbor clamping
+
+前フレーム(540p)
+SSRの結果(540p チェッカーボード)
+近傍クランプ
+出力(540p)
+
+アクティブピクセル: 5つの現在のピクセルで前のピクセルをクランプして、TAAのために累積する
+非アクティブピクセル: 4つの現在のピクセルで前のピクセルをクランプする
+
+# Temporal anti-aliasing
+
+- Temporal SSR
+    - 自身のTAAパス
+        - チェッカーボードとともに近傍クランプを用いる
+    - アップサンプリング
+        - (ハーフ解像度により)SSRの2x2ノイズは主なTAAを破壊するだろう
+        - 我々は2x2ピクセルから1x1ピクセルにノイズを変えなければならない
+        - Frostbiteのバージョンよりぼやけ具合が小さいと感じる
+
+# SSR Upsampling
+
+5つのハーフ解像度のサンプルから最小値と最大値を計算する
+
+m = lerp(pixel, min, s);
+M = lerp(pixel, max, s);
+sは小さな値
+
+高解像度ピクセルの平均は時間をかけてピクセルへとなりがちであるだろう
+
+主なTAAの近傍クランプはこれらのピクセルに影響を与えないだろう
+
+主なTAAによって時間をかけて平滑化される
+
+#
+
+#
+
+# Temporal anti-aliasing
+
+- Temporalボリューメトリックライティング
+    - *Sebastien Hillaire*の"Physically based unified volumetric rendering in Frostbite"に触発された
+    - フォグクラスタは3Dチェッカーボードである
+    - チェッカーボードはスポットライトの境界上で無効化される
+    - TAAは3Dでの近傍クランプを使う
+
+# Temporal anti-aliasing
+
+- Temporalボリューメトリックライティング
+    - froxelに沿ってスウィープすることはカメラモーションと同調してenterする可能性がある。これを回避するためブルーノイズを用いる
+    - 解像度: 192x108x64
+    - PS4 Proの解像度: 235x135x64
+    - パフォーマンス: 2～3msの間
+
+#
+
+# Temporal anti-aliasing
+
+- おわりに
+    - 長い開発時間
+        - 完璧なモーションベクトル
+        - TAAそれ自体は微妙な所がたくさんある
+        - ノイズはとても重要
+        - そこかしこに大量のimplications
+
+# Temporal anti-aliasing
+
+- おわりに
+    - 長い開発時間
+    - 改善された画像品質
+        - 画像の安定性
+        - シャドウ
+        - SSAO、SSR、Skin SSSSS
+        - ボリューメトリックライティング
+        -
+
+# Temporal anti-aliasing
+
+- おわりに
+    - 長い開発時間
+    - 改善された画像品質
+    - いくつかの欠点
+        - ゴースト[ghosting]
+        - ピクセルの瞬き[blinking]
+        - DOF、モーションブラー、GUIによる漏れと震え
+
+# Temporal anti-aliasing
+
+- おわりに
+    - 長い開発時間
+    - 改善された画像品質
+    - いくつかの欠点
+    - TAAから戻ることは不可能
+        - 多すぎるほどの機能が今や依存している
+
+# Temporal anti-aliasing
+
+- おわりに
+    - 長い開発時間
+    - 改善された画像品質
+    - いくつかの欠点
+    - TAAから戻ることは不可能
+    - 明らかに価値がある
+
+# Detroit: Become Human
+
+- PS4
+    - 30FPSの1080p
+    - ボリューメトリックライティング: 192x108x64
+    - HDR TV対応
+- PS4 Pro
+    - 30FPSの2160pチェッカーボード
+    - フル2160pでのGUI
+    - ボリューメトリックライティング: 235x135x64
+    - HDR TV対応
+
+#
+
+# 謝辞
+
+- エンジンチーム
+    - **Nicolas Vizerie**、Christophe Bonnet、Guillaume Caurant、Bertrand Cavalie、Thibault Lambert、Gregory Lecot、Eric Lescop、Sylvain Meunier
+- その他の感謝
+    - Quantic Dreamのみんな(ライティング、セット、キャラクター、エフェクト、Maya、その他！)
+    - Jean-Charles Perrier
+    - Christophe Brusseaux
+    - Adam Williams
+    - Julien Merceron
+
+# 質問は？
+
+- 連絡先
+    - ronan.marchalot@live.fr
