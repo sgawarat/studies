@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Marchalot2018]
-    - "Detroit: Become Human"でのClustered Forard RenderingとAnti-Aliasingについて
+- [@Anagnostou2018]
+    - カリング
 
 ## あとで読む
 
@@ -286,6 +286,8 @@ numberSections: false
     - GPU駆動カリングパイプラインとバーチャルテクスチャ
 - [@Lagarde2014]
     - EAが"Frostbite"を物理ベースにするときに採用した方法とその知見
+- [@Marchalot2018]
+    - "Detroit: Become Human"でのClustered Forard RenderingとAnti-Aliasingについて
 - [@ODonnell2017]
     - EAの"Frostbite"が採用した、依存関係を定義するしくみ(FrameGraph)とフレーム内でリソースを共有するしくみ(Transient Resource)
 - [@Rodrigues2017]
