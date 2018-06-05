@@ -152,4 +152,146 @@ Zバッファのレンダリングはレンダリングフレームへの追加�
 
 # Stream compaction
 
-TODO
+- 我々は我々自身の出力を取り扱う必要がある
+- インスタンスデータを出力する代わりに、predicatesを出力する
+
+# Stream compaction
+
+- stream compactionを実装する必要があるだろう
+- Parallel prefix sum (scan) [@Blelloch1993]
+
+# Stream compaction
+
+# Stream compaction
+
+# Stream compaction
+
+# Stream compaction
+
+- コンピュートシェーダで実装され、[@Harris2005]を採用する
+- 1024のスレッドグループひとつで最大2048のインスタンスを処理する
+- インスタンスデータは定期的なメモリアクセスを避けるためにグループ共有メモリにコピーされる
+- この方法は効率的な処理(O(n)の操作)だがグループ共有メモリバンクの衝突を引き起こす
+
+# GPU駆動レンダリング
+
+- stream compactionパスはstructured bufferに可視のインスタンスを書き込む
+- インスタンス数とオフセットでarguments bufferも更新する
+- 1回のDrawIndexedInstancedの呼び出しで可視の小道具を描画できる
+
+# Taking it further
+
+# Batch all the things
+
+- 理想的には、パスあたりひとつのドローコールですべてを描画したい
+- 大きなバッファにすべてのメッシュLODをバッチする
+- マテリアル情報を定数/構造化バッファにバッチする
+- テクスチャをテクスチャ配列にバッチする
+- DirectX 11はMultiDrawIndexedInstancedIndirectをサポートしていない :-(
+- AMDとNVIDIAはドライバ拡張を介してサポートしている(残念ながらIntelはサポートしていない)
+
+# Mesh batching
+
+# Materials
+
+- DX11ではバインドレスにできないので、我々はテクスチャ配列にすべてのテクスチャを追加する必要がある
+- 非標準のテクスチャサイズがこれを難しくするかもしれない
+- 配列あたり最大2048のテクスチャ
+- 定数バッファに格納される、または、頂点シェーダから渡されるあるIDでアクセスされる
+
+# Materials
+
+- ドローコールごとの個別の定数バッファを使う選択肢がない
+- 単一の定数バッファにマテリアル情報をバッチする必要がある
+
+# Manual vertex fetch
+
+- ちょうどその頃、我々はSkySagaにおいてインターリーブでない頂点バッファに切り替えた
+- いくつかのアーキテクチャでパフォーマンスが優れる
+- 個別のストリームが再利用をしやすくする(シャドウパス、Gプリパス、など)
+- 手動頂点フェッチが魅力的な選択肢だった
+    - 属性の頻度の変化
+- 手動頂点フェッチをGPU駆動レンダリングスキームに要素に含めた
+
+# Fetching data in the vertex shader
+
+- 各ドローコールは(Multi)DrawIndexedInstancedIndirectを用いて正しくレンダリングするのに必要なバッチされたバッファにすべてのオフセットを含む
+- SV_VertexIDやSV_InstanceIDには適用されない
+- DX11にはgl_DrawIDがない
+- 頂点シェーダでドローコールIDを読み出す方法が必要となる
+
+# Fetching data in the vertex shader
+
+- インデックスは手動でフェッチされない(オフセットが適用される)
+- インデックスバッファにドローコールIDを格納するアイデアをなんとなく考えていた(16ビット)
+- Skysagaの小道具はcubic meterあたり約1000のトライアングルがある
+- 特に32ビットのインデックスバッファで、範囲全体を使わない場合、実行可能な選択肢となり得るだろう
+- 最終的に、コンピュートシェーダで書き出したドローコールIDを持つper instanceストリームを追加した
+- Input Assemblerにこれをバインドすると、インスタンスのオフセットが正しく適用される
+
+# Rendering more than 2048 instances
+
+- 元のstream compactionテクニックは2048個のインスタンスに制限される
+- これを解決するために、我々は多数のスレッドグループに渡り処理を広げる必要がある
+- segmented scansを用いる[@Blelloch1993; @Harris2005]
+
+#
+
+# Culling and stream compaction
+
+- メッシュLODは通常のメッシュと見なされ、カリングやstream compactionの面では変更はない
+- コンピュートシェーダは可視であるメッシュLODのインスタンス数とインスタンスバッファへのオフセットを埋める
+- そうして、単一のドローコールですべてを描画する
+
+#
+
+#
+
+#
+
+#
+
+# Results for GTX 970
+
+# Results for HD 4000
+
+# Performance improvements
+
+- オクルージョンシステムはほぼ帯域幅で制限される
+- 最も高価なパスはカリングパスとインスタンスデータのコピーパスである
+- これらを改善するために、以下を必要とする
+    - 使用されるメモリ量を削減する
+    - レイテンシーを隠すためにGPUを活用する
+
+# Performance improvements
+
+- システムを改善するためにあなたのゲームについての知識を使う
+- バウンディングボックスをfloat3 bboxMinとuint bboxSizeとして格納する(帯域幅+VGPR)
+- インスタンスごとに4x3行列を格納する(帯域幅とVGPRを節約する)
+- 使い方に応じてインスタンスデータストリームを分ける
+- より小さなスレッドグループに対して可能な2パススキャン
+- インスタンスバッファのオフセットを計算するための並列化された最終パス(GTX970で18倍の高速化)
+- グループ共有メモリの衝突はこのインスタンス数では重大であるように見えない
+- オクルージョンパスは0.5msから0.25msにまで落ちた(GTX 970)
+
+# Performance improvements
+
+# Issues
+
+- MultiDrawIndirectはDX11においてNVIDIAとAMDによってのみサポートされ、Intelではサポートされない
+- IntelのGPUでは、DrawIndexedInstancedIndirectがループ中で使われることができる
+- オクルージョンはper viewであるため、技術的に、シャドウビューごとに返さなければならないだろう
+- メインビューのオクルージョン結果を用いることができるだろう(可視でないオブジェクトにシャドウをキャストしない)
+
+# Occlusion solved then?
+
+- 残念ながら、解決してない
+- 保守的Hi-Zバッファフィルタリングは遮蔽物のジオメトリを大きく"変える"
+- 大きなオブジェクトのオクルージョンは十分に正確でない
+- 大きな遮蔽物がないとしたら？前フレームのZバッファ&再投影[@Haar2015]
+- 大きな遮蔽物、閉じた空間、小さな小道具があるシーンで良好。人によって違うだろうけど[Your mileage may vary!]
+- あなたのゲームに追加するのは比較的簡単
+
+# Thank you for your attention
+
+# References
