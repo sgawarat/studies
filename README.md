@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Anagnostou2018]
-    - カリング
+- [@Drobot2014]
+    - GCNアーキテクチャを対象とした低レベルな最適化
 
 ## あとで読む
 
@@ -15,8 +15,6 @@ numberSections: false
     - SSAOの比較研究
 - [@Cigolle2014]
     - GPUで単位ベクトルを表現する方法について調査
-- [@Drobot2014]
-    - GCNアーキテクチャを対象とした低レベルな最適化
 - [@Heitz2017]
     - 線光源と円光源をリアルタイムで扱う手法
 - [@Jimenez2016]
@@ -278,6 +276,8 @@ numberSections: false
 
 ### レンダリングエンジン
 
+- [@Anagnostou2018]
+    - GPU駆動カリングとMDI
 - [@Carpentier2017]
     - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング
 - [@Drobot2017b]
