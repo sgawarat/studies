@@ -366,4 +366,296 @@ if (!(bitfield & 0x2) && csb_eq2) {v0 = t[2]; v1 = t[0]; v2 = t[1]; }
 
 # 特殊なALU操作: キューブマップ
 
+- キューブマップは統一されたimage_sampleを用いてサンプルされる
+- サンプリングのために面UVや面IDを計算する必要がある
+    - すべてのハードウェアはフルレートの独自の操作で高速化される
+
+```gcn
+v_cubetc_f32 v1, v2, v3, v0  // tc座標を計算する
+v_cubesc_f32 v4, v2, v3, v0  // sc座標を計算する
+v_cubema_f32 v5, v2, v3, v0  // 主軸[major axis]を計算する
+v_cubeid_f32 v8, v2, v3, v0  // 面IDを計算する
+v_rcp_f32 v2, abs(v5)
+s_mov_b32 s0, 0x3fc00000
+v_mad_f32 v7, v1, v2, s0  // 最終的な面UVを計算する
+v_mad_f32 v6, v4, v2, s0  // 最終的な面UVを計算する
+image_sample v[0:3], v[6:9], s[4:11], s[12:15]  // テクスチャ配列
+```
+
+# 特殊なALU操作: 主軸
+
+```hlsl
+// v_cubeid_f32の参考実装
+float CubeMapFaceID(float inX, float inY, float inZ) {
+    float3 v = float3(inX, inY, inZ);
+    float faceID;
+
+    if (abs(v.z) >= abs(v.x) && abs(v.z) >= abs(v.y)) {
+        faceID = (v.z < 0.0) ? 5.0 : 4.0;
+    } else if (abs(v.y) >= abs(v.x)) {
+        faceID = (v.y < 0.0) ? 3.0 : 2.0;
+    } else {
+        faceID = (v.x < 0.0) ? 1.0 : 0.0;
+    }
+    return faceID;
+}
+```
+
+# 特殊なALU操作: 主軸
+
+- 主軸の問題でv_cubeid_f32、v_cubema_f32を使う
+    - 法線圧縮
+    - クオータニオン圧縮
+    - キューブマップの境界での(ユニフォームな)独自のカーネルフィルタリング
+    - アトラス化されたキューブマップ
+    - キューブマップのレイマーチング最適化
+    - レイキャスティングでのいくつかの問題
+
+# 特殊なALU操作: 法線ストレージ精度
+
+- 正規化されたベクトル
+    - $1 = \sqrt[2]{x^2 + y^2 + z^2}$
+- X、Yを格納して、Zを再構築する
+    - $z = \sqrt[2]{1 - (x^2 + y^2)} = \sqrt[2]{1 - d}, d = x^2 + y^2$
+- Zの精度は以下に依存する
+    - $E(z) = dd * Er(x, y)$
+        - ここで、$E(x)$はストレージと再構築の誤差関数
+    - $\frac{d}{dd}(z) = \frac{d}{dd}(\sqrt{1 - d}) = -\frac{1}{2\sqrt{1 - d}}$
+- 精度誤差は以下に起因する
+    - $\lim_{d \to 1} -\frac{1}{2\sqrt{1 - d}} = \infty$
+        - $d = x^2 + y^2 \to 1 \implies E(z) \to \infty$
+
+# 特殊なALU操作: 法線ストレージ精度
+
+- 誤差を最小化する一般的な方法
+    - 境界で誤差関数を制限する
+- $E(z)$を最小化するため、関数$d$を最小化する必要がある
+- 単純な解決法
+    - $d(x, y) = m^2 + n^2$
+        - ここで、$m = \min(x,y,z), n = \text{med}(x,y,z), 1 = \sqrt[2]{x^2+y^2+z^2}$
+- $d(x,y)$は以下よって上限付きになる: $\frac{2}{3}$
+- $\lim_{d \to \frac{2}{3}} -\frac{1}{2\sqrt{1-d}} = -\frac{\sqrt{3}}{2}$
+
+# 特殊なALU操作: 法線ストレージ精度
+
+- $E(n, n') = 1 - n \cdot n'$
+- 標準の再構築
+    - 7ビットSNormのXとY + 1ビットの符号
+    - X、Y領域上で$MSE(n, n') \approx \frac{3.04}{10000}$
+        - ここで、$1 = \sqrt[2]{x^2+y^2+z^2}$
+    - 役に立たない$n'$: $E(n,n') > \frac{1}{1024} \approx 5.4%$
+
+# 特殊なALU操作: 法線ストレージ精度
+
+- $E(n, n') = 1 - n \cdot n'$
+- 主軸(x,y,zからm,nを最小化する)
+    - 7ビットSNormのMとN + 2.5ビットの符号/order index
+    - X、Y領域上で$MSE(n, n') \approx \frac{1.18}{10000}$
+        - ここで、$1 = \sqrt[2]{x^2+y^2+z^2}$
+    - 役に立たない$n'$: $E(n,n') > \frac{1}{1024} \approx 0.022%$
+
+# 特殊なALU操作: 主軸
+
+```hlsl
+float3 PackNormalMajorAxis(float3 inNormal) {
+    uint index = 2;
+    if (abs(inNormal.x) >= abs(inNormal.y) && abs(inNormal.x) >= abs(inNormal.z)) {
+        index = 0;
+    } else if (abs(inNormal.y) > abs(inNormal.z)) {
+        index = 1;
+    }
+
+    float3 normal = inNormal;
+    normal = index == 0 ? normal.yzx : normal;
+    normal = index == 1 ? normal.xzy : normal;
+
+    float s = normal.z > 0.0 ? 1.0 : -1.0;
+    float3 packedNormal;
+    packedNormal.xy = normal.xy * s;
+    packedNormal.z = index / 2.0f;
+    return packedNormal;
+}
+
+// コンパイルすると:
+// フルレートの28つのALU ＋ (16フルレート以上の)2つのBRANCH
+```
+
+# 特殊なALU操作: 主軸
+
+```hlsl
+float3 PackNormalMajorAxis(float3 inNormal) {
+    uint index = CubeMapFaceID(inNormal.x, inNormal.y, inNormal.z) * 0.5f;
+
+    float3 normal = inNormal;
+    normal = index == 0 ? normal.yzx : normal;
+    normal = index == 1 ? normal.xzy : normal;
+
+    float s = normal.z > 0.0 ? 1.0 : -1.0;
+    float3 packedNormal;
+    packedNormal.xy = normal.xy * s;
+    packedNormal.z = index / 2.0f;
+    return packedNormal;
+}
+
+// コンパイルすると:
+// フルレートの17つのALU
+```
+
+# Interpolator: 補間
+
+- GCNでのVS->PSの補間は'手動'である
+    - コンパイラによってアンロールされる
+    - ハードウェアで最適化される
+- LDSはラスタライズされるトライアングルあたりの頂点データが含まれる
+- PSはデータをフェッチして、手動で補間する
+
+# Interpolator: 補間
+
+- P0、P1、P2
+    - 頂点データを保持する
+- Vi Vj
+    - 重心座標
+- 補間式セッティングに依存する
+    - 補間する
+        - 中心で、サンプルで、質量中心[centroid]
+    - 補間なし
+        - INT型でも強制される
+        - V0(頂点0)からデータをフェッチする
+
+```hlsl
+float4 Interpolate(float4 A, float4 B, float4 C, float2 Vij) {
+    return A *  (1.0 - Vij.x - Vij.y) + B * Vij.x + c * Vij.y;
+}
+```
+
+# Interpolator: モード
+
+```hlsl
+struct Interpolants {
+    float4 position : SV_POSITION;
+    float4 color : COLOR0;
+};
+
+float4 main(Interpolants In) : COLOR {
+    float4 Out;
+    Out = In.color;
+    return Out;
+}
+```
+
+```gcn
+v_interp_p1_f32 v2, v0, attr0.x  // LDSからAttr0のためにデータをロードして、Vi(補間の第1パート(V00, V01を使って))処理する
+                                 //
+v_interp_p2_f32 v2, v1, attr0.x  // LDSからAttr0のためにデータをロードして、Vj(補間の第2パート(V01、V10を用いて))を処理する
+v_interp_p1_f32 v3, v0, attr0.y
+v_interp_p2_f32 v3, v1, attr0.y
+v_interp_p1_f32 v4, v0, attr0.z
+v_interp_p2_f32 v4, v1, attr0.z
+v_interp_p1_f32 v0, v0, attr0.w
+v_interp_p2_f32 v0, v1, attr0.w
+```
+
+# Interpolator: モード
+
+```hlsl
+struct Interpolants {
+    float4 position : SV_POSITION;
+    float4 color : COLOR0;
+};
+
+float4 main(Interpolants In) : COLOR {
+    float4 Out;
+    Out = In.color;
+    return Out;
+}
+```
+
+```gcn
+v_interp_mov_f32 v0, p0, attr0.x  // LDSからのAttr0に対して頂点p0からデータをロードする
+v_interp_mov_f32 v1, p0, attr0.y  // LDSからのAttr0に対して頂点p0からデータをロードする
+v_interp_mov_f32 v2, p0, attr0.z  // LDSからのAttr0に対して頂点p0からデータをロードする
+v_interp_mov_f32 v3, p0, attr0.w  // LDSからのAttr0に対して頂点p0からデータをロードする
+```
+
+# 特殊なALU操作: Interpolator圧縮
+
+- GCNはハードウェアラスタライザーのVi、Vj(重心座標)をpollすることができる
+    - セットされたInterpolatorフラグに応じて計算される
+- 独自の補間とパッキングの可能性が開ける
+- ジオメトリシェーダとテッセレーションパイプライン --- データ増幅
+    - 大きな帯域幅が必要
+    - 帯域幅を最適化するためにinterpolator圧縮を使う
+- PSはLDSによってボトルネックともなり得る
+    - 'fat'な頂点データに対して多すぎるLDSを用いる
+- トライアングル定数データを一切補間しない！
+
+# Interpolator: パッキング
+
+- 頂点データを読む
+    - v_interp_mov_f32 v0, p0, attr0.x  // 頂点P00
+    - v_interp_mov_f32 v0, p10, attr0.x  // 頂点P10
+    - v_interp_mov_f32 v0, p20, attr0.x  // 頂点P20
+- 重心座標Vi Vj
+    - VGPRにプリロードされる(コンパイラがよしなにしてくれる)
+
+# Interpolator: パッキング
+
+```hlsl
+float4 Interpolate(float4 A, float4 B, float4 C, floatt3 barycentric) {
+    return A * barycentric.z + B * barycentric.x + C * barycentric.y;
+}
+```
+
+
+```hlsl
+float3 barycentric;
+barycentric.xy = GetBarycentricCoordsPerspectiveCenter();  // ハードウェアからVi Vjを読む
+barycentric.z = 1 - barycentric.x - barycentric.y;
+
+uint rawA = (GetVertexParameterP0(In.color_packed));  // V00から生のUINTデータを読む
+uint rawB = (GetVertexParameterP1(In.color_packed));  // V01から生のUINTデータを読む
+uint rawC = (GetVertexParameterP2(In.color_packed));  // V10から生のUINTデータを読む
+
+float4 decompressedA = UnpackColor(rawA);  // UINTからByteをアンパックして、floatに変換する
+float4 decompressedB = UnpackColor(rawB);  // UINTからByteをアンパックして、floatに変換する
+float4 decompressedC = UnpackColor(rawC);  // UINTからByteをアンパックして、floatに変換する
+
+float4 Out;
+Out = Interpolate(decompressedA, decompressedB, decompressedC, barycentric);
+```
+
+# PSのLDSアクセス: トライアングルデータ
+
+- PSはラスタライズされたトライアングルから頂点データを直接読むことができる
+- 以前はGSのものだった[reserved for]複数のアルゴリズムがPSでできる
+    - 視差曲率の推定[Parallax Curvature estimation]
+    - エッジへの(最も近い)距離
+    - 頂点への(最も近い)距離
+    - スプライン補間された法線/曲率
+
+# PSのLDSアクセス: トライアングルデータ
+
+# PSのLDSアクセス: トライアングルデータ
+
+# PSのLDSアクセス: エッジへの距離
+
+- 例: Distance to Edge AA
+    - 最も近いエッジへの距離を出力する
+    - GSを迂回してPSから直接的に
+    - 複数の解析的AA手法で使われる
+        - GBAA
+        - DEAA
+
+# PSのLDSアクセス: エッジへの距離
+
+# PSのLDSアクセス: エッジへの距離
+
+- すべてのメッシュでの高価なGSにより以前は実践的ではなかった
+- 現在はすっかり実現可能な選択肢である
+    - 素晴らしいパフォーマンス
+- HUMUSのGBAAをチェックしてね
+    - ジオメトリシェーダの部分をピクセルシェーダに移しただけ
+
+# 超越関数
+
 TODO
