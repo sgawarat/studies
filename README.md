@@ -6,9 +6,6 @@ numberSections: false
 
 ## いま読む
 
-- [@Drobot2014]
-    - GCNアーキテクチャを対象とした低レベルな最適化
-
 ## あとで読む
 
 - [@Aalund2013]
@@ -244,6 +241,8 @@ numberSections: false
 
 ### 最適化
 
+- [@Drobot2014]
+    - GCNアーキテクチャを対象とした低レベルな最適化
 - [@Gyrling2017]
     - マルチコア環境におけるキャッシュシステムの動作から学ぶメモリバリアの概要
 - [@Fredriksson2017]
