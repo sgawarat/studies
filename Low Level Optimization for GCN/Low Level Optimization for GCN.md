@@ -658,4 +658,374 @@ Out = Interpolate(decompressedA, decompressedB, decompressedC, barycentric);
 
 # 超越関数
 
-TODO
+- rcp(x)、sqrt(x)、rsqrt(x)
+    - レンダリングにおいて最も一般的な超越関数
+    - クオーターレート --- 各16サイクル
+    - ループでは一般的
+        - ライトの反復
+        - SSAO
+        - マルチサンプリング
+        - レイマーチング
+    - マクロで使われる
+        - Length(x)
+        - Normalize(x)
+
+# 超越関数: 例
+
+```hlsl
+// 低速なコード --- いくつかのコンパイラはマクロを最適化するほどアグレッシブではない
+float3 vector;
+float vectorLength = length(vector);  // コンパイラの最良ケース: sqrt(dot(vector, vector))を展開する
+float3 normalVector = normalize(vector);  // コンパイラの最良ケース: vector * rsqrt(dot(vector, vector))を展開する
+```
+
+```gcn
+// タイミング: (FR --- フルレートサイクル --- 4サイクル)
+v_mov_b32     v0, s2           // 1FR
+v_mul_f32     v1, s2, v0       // 1FR
+v_mov_b32     v2, s1           // 1FR
+v_mac_f32     v1, s1, v2       // 1FR
+v_mov_b32     v3, s0           // 1FR
+v_mac_f32     v1, s0, v3       // 1FR
+v_sqrt_f32    v1, v1           // 4FR
+v_mul_f32     v0, s2, v0       // 1FR
+v_mac_f32     v0, s1, v2       // 1FR
+v_mac_f32     v0, s0, v3       // 1FR
+v_rsq_f32     v0, v0           // 4FR
+v_mov_b32     v2, #0x7f7fffff  // 1FR
+v_mov_b32     s3, #0xff7fffff  // 1FR
+v_med3_f32    v0, v0, s3, v2   // 1FR
+v_mul_f32     v2, s0, v0       // 1FR
+v_mul_f32     v3, s1, v0       // 1FR
+v_mul_f32     v0, s2, v0       // 1FR
+// MOVを含めない合計               // 18FR
+```
+
+# 超越関数: 例
+
+```hlsl
+// 手動でマクロをアンロールすることによりコンパイラを補助する
+// これは常に良いプラクティスである
+float dotVector = dot(inVector, inVector);
+float vectorLength = sqrt(dotVector);
+float3 normalVector = inVector * rcp(vectorLength);
+```
+
+```gcn
+// タイミング : (FR - フルレートサイクル - 4サイクル):
+v_mov_b32     v0, s2       // 1 FR
+v_mul_f32     v0, s2, v0   // 1 FR
+v_mov_b32     v1, s1       // 1 FR
+v_mac_f32     v0, s1, v1   // 1 FR
+v_mov_b32     v1, s0       // 1 FR
+v_mac_f32     v0, s0, v1   // 1 FR
+v_rsq_f32     v1, v0       // 4 FR
+v_sqrt_f32    v0, v0       // 4 FR
+v_mul_f32     v2, s0, v1   // 1 FR
+v_mul_f32     v3, s1, v1   // 1 FR
+v_mul_f32     v1, s2, v1   // 1 FR
+// MOVを含めない合計           //14 FR
+```
+
+# 超越関数: 例
+
+```hlsl
+// FR数と悪用[exploiting]によるパイプライン化でより良くできる
+// sqrt(x) = rsqrt(x) * x
+// rcp(x) = rsqrt(x) * rsqrt(x)  // Xが正のときのみ
+float dotVector = dot(inVector, inVector);
+float rcpVectorLength = rsqrt(dotVector);
+float vectorLength = rcpVectorLength * dotVector;
+float3 normalVector = inVector * rcpVectorLength;
+```
+
+```gcn
+// この結果は:
+v_mov_b32     v0, s2       // 1 FR
+v_mul_f32     v0, s2, v0   // 1 FR
+v_mov_b32     v1, s1       // 1 FR
+v_mac_f32     v0, s1, v1   // 1 FR
+v_mov_b32     v1, s0       // 1 FR
+v_mac_f32     v0, s0, v1   // 1 FR
+v_rsq_f32     v1, v0       // 4 FR
+v_mul_f32     v0, v0, v1   // 1 FR
+v_mul_f32     v2, s0, v1   // 1 FR
+v_mul_f32     v3, s1, v1   // 1 FR
+v_mul_f32     v1, s2, v1   // 1 FR
+// MOVを含めない合計           //11 FR
+```
+
+# 近似的な超越関数
+
+- HWでの超越関数は約1の精度の最小桁単位[ULP]をもたらす
+- 我々は常にそこまで必要としていない
+    - 特にF16、F11、UNorm8データでは
+- クオーターレートのハードウェアより良い処理ができるか？
+
+# 特殊なALU操作: 整数の計算
+
+- 汎用用途レジスタ
+    - 整数の計算
+    - 再翻訳コストがない
+- 整数のサポート
+    - 整数ベースの浮動小数点数の計算を許可する
+
+```c++
+// asint() / asfloat()はreinterpret_castとして動作する
+// タダ --- 異なる命令セットを用いるデータを扱うためにコンパイラにヒントを与えるだけ
+
+#define asint(_x) *reinterpret_cast<int*>(&_x);
+#define asfloat(_x) *reinterpret_cast<float*>(&_x);
+```
+
+# 0x5f3759df WTF?
+
+- 高速な平方根の逆数
+    - 整数の計算を用いてSGIで実装された
+    - Quake 3のソースコードのために有名
+
+```c
+float Q_rsqrt(float number) {
+    long i;
+    float x2, y;
+    const float threehalfs = 1.5f;
+
+    x2 = number * 0.5f;
+    y = number;
+    i = *(long*)&y;                       // floatからintへの再翻訳
+    i = 0x5f3759df - (i >> 1);            // WTF?
+    y = *(float*)&i;                      // intからfloatへの再翻訳
+    y = y * (threehalfs - (x2 * y * y));  // ニュートン・ラフソン法の1回目
+
+    return y;
+}
+```
+
+# 0x5f3759df WTF?
+
+- 高速な平方根の逆数
+    - 浮動小数点数の二進表現により動作する
+- 速度を大切にする
+    - ニュートン・ラフソン法を取り除く
+- GCNで速くなるだろうか？
+    - rsqrt()より2倍速い
+
+```hlsl
+int x = asint(inX);
+x = 0x5f3759df - (x >> 1);
+return asfloat(x);
+```
+
+```gcn
+v_ashr_i32 v0, v0, 1
+v_sub_i32 v0, # 0x5f3759df, v0
+```
+
+# More Magic!
+
+- Using original idea derive
+    - $x^n \approx qpow(x,n) = K+n(asInt(x) - K), n:[-1, 1]$
+    - $K$は定数
+- $E(x,n)=|x^n - qpow(x,n)|$
+- $(x,n)$領域上で$E(x,n)$を最小化するために$K$を探す
+- $E(K) = \sum_x E(x,n)$、$n$は定数 --- 停留点[stationary point]を持つ
+- asInt(x)は対数関数に近い
+    - $E(K)$は与えられた$x$領域と$n$に対して最小値[global minima]を持つ
+
+# More Magic!
+
+- gradient binary searchの使用
+    - 以下に対する最適なKを見つける
+        - n
+        - x --- 領域
+    - すべてに対して理にかなうKを見つけることができる
+- 誤差関数を最小化するために推奨される特殊化
+    - sqrt()、rsqrt()、rcp()に対する最適なKを見つける
+    - 領域を制限する
+        - つまり、カメラ空間での距離計算用 --- ファー面で上限を設ける
+
+# 0x5f3759dfのrsqrt()に打ち勝とう
+
+- 0x5f3759df --- rsqrt()に対する普遍的なKとして見つかった
+- 我々の領域はx(0,1000)に制限される
+- %でのRMSE(K): x(0, 1000), n = -1/2
+
+# 0x5f3759dfのrsqrt()に打ち勝とう
+
+- E(0x5f33aa52), x(0, 1000), n = -1/2
+
+# 高速なシェーダライブラリ
+
+```hlsl
+// 2フルレート
+float rcpSqrtIEEEIntApproximation(float inX, const int inRcpSqrtConst) {
+    int x = asint(inX);
+    x = inRcpSqrtConst - (x >> 1);
+    return asfloat(x);
+}
+
+// 2フルレート
+float sqrtIEEEIntApproximation(float inX, const int inSqrtConst) {
+    int x = asint(inX);
+    x = inSqrtConst + (x >> 1);
+    return asfloat(x);
+}
+
+// 1フルレート
+float rcpIEEEIntApproximation(float inX, const int inRcpConst) {
+    int x = asint(inX);
+    x = inRcpConst - x;
+    return asfloat(x);
+}
+```
+
+# ユースケース: Kのやつの例
+
+- rsqrt()
+    - 0x5f341a43 RME:1.72% (0.0, 1.0)
+    - 0x5f33e79f RME:1.62% (0.0, 1000.0)
+- sqrt()
+    - 0x1FBD1DF5 RME:1.42% (0.0, 1.0)
+    - 0x1FBD22DF RME:1.44% (0.0, 1000.0)
+- rcp()
+    - 0x7EEF370B RME:2.92% (0.0, 1.0)
+    - 0x7EF3210C RME:3.20% (0.0, 1000.0)
+
+# ユースケース: SSAO/バイラテラルフィルタ
+
+- SSAO
+    - Distance() sqrt()
+    - Normalize() rsqrt()
+- バイラテラルフィルタ
+    - Divide() rcp()
+    - Normalize() rsqrt()
+- すべて高速シェーダライブラリに切り替えると
+    - コンソールで13%の合計時間の改善
+    - 見た目に差はない
+
+#
+
+#
+
+#
+
+# クリエイティブなコードNinjaになろう！
+
+- GPUはCPUに相当近い
+- SPU/CPUのNinjaスキルを使おう！
+- 古の事物に驚かされることもある
+- 帯域幅のためにALUを差し出す
+- 氷山の一角
+    - スケジューリング
+    - 非同期コンピュート
+    - レイテンシー隠蔽
+    - キャッシング
+    - 我々のまだ知らないたくさんのこと
+    - fun ahead!
+
+# 質疑応答
+
+- 更なるTips&Tricks:
+- MICHALDROBOT.COM
+- TWITTERで宜しく
+- \@MichalDrobot
+- emailはこちら
+- HELLO@DROBOT.ORG
+
+# 参考文献
+
+- GCN
+    - "Low-level Shader Optimization for Next-Gen and DX11" --- Emil Persson
+    - "The AMD GCN Architecture: A Crash Course" --- Layla Mah
+    - "GCN - Two ways of latency hiding and wave occupancy" --- Bart  Wronski
+    - "Compute Shader Optimizations for AMD GPUs: Parallel Reduction" --- Wolfgang Engel
+    - GCN Performance Tweets
+- Inverse Sqrt
+    - "Fast inverse Square Root" --- Chris Lomont
+    - "The Mathematics Behind the Fast Inverse Square Root Function Code" --- Charles McEniry
+    - Quake 3 Source Code --- github.com/id-Software/Quake-III-Arena
+
+# 謝辞
+
+- Ubisoftの3Dチーム
+- 特に:
+    - Bart Wronski
+    - Jeremy Moore
+    - Steve McAuley
+    - Stephen Hill
+- AMDのDeveloper Relationチーム
+- 特に:
+    - Layla Mah
+    - Chris Brennan
+
+# ボーナススライド
+
+# IEEEパフォーマンスモード
+
+- IEEE準拠[compliance] (-fastmath)を無効化する
+    - IEEE strictとも
+    - コンパイラは以下を扱わないだろう
+        - 非正規数
+        - QNaN
+        - 0除算
+        - 他の安全でないケース
+    - 近似的な超越関数を使うだろう
+        - cleanupまたはaccuracy操作なしで
+        - 精度は変化するが約1ULPであることが保証される(IEEEは0.5ULPを必要とする)
+
+# IEEE Strict 対 非Strict: X/Y
+
+```hlsl
+float r = inV.x / inV.y;
+```
+
+```gcn
+// IEEE strictなし
+// xはv1、yはv2
+v_rcp_f32 v0, v1  // 安全でないrcp()はNaNが生成され得る
+v_mul_f32 v0, v2, v0
+```
+
+```gcn
+// IEEE strict安全な-fastmath
+// xはv1、yはv2
+v_rcp_f32 v0, v1  // 安全でないrcp()はNaNが生成され得る
+v_mov_b32 v1, #0x7f7fffff  // MAX_FLT
+v_mov_b32 s1, #0xff7fffff  // MIN_FLT
+v_med3_f32 v0, v0, s1, v1  // NaNを消去するための安全なクランピング
+v_mul_legacy_f32 v0, v2, v0
+```
+
+# IEEE Strict 対 非Strict: X/Y
+
+```hlsl
+float r = inV.x / inV.y;
+```
+
+```gcn
+// IEEE strict safe accurateは非正規数を洗い流す
+// xはv1、yはv2
+v_rcp_f32 v0, v1
+v_mul_f32 v0, v0, v2
+v_div_fixup_f32 v3, v0, v1, v2  // -/+INF NaN QNaNを直す
+```
+
+# IEEE Strict 対 非Strict: X/Y
+
+```hlsl
+float r = inV.x / inV.y;
+```
+
+```gcn
+// IEEE strict safe accurateは非正規数に対応する
+// 丸めモードや非正規数の出力に応じて
+// コンパイラは以下を追加できる
+v_rcp_f32
+v_mul_f32
+v_div_scale_f32
+nop
+nop
+nop
+nop
+v_div_fmas_f32
+```
