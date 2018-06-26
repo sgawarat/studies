@@ -396,4 +396,99 @@ xy.y += gl_WorkGroupID.y << 4;  // v_lshl_add_u32
 
 # ダイナミクスGCN Workgroup起動
 
-TODO
+- Vキャッシュあたり1つ(CUあたり1つ)が起動されるworkgroupsは仕事をディスパッチできるCUsに渡ってラウンドロビンする
+    - つまり、Vキャッシュのキャッシュ局所性には主な2つの選択肢がある: <font color="red">workgroupsを多くする、</font>または、**ひとつのwaveで多く仕事をする**
+- 各SEでは、waveひとつは4クロックごとに起動できるが、wavesはそれより速く終了する可能性がある
+    - 高速にマシンを再fillできるとは限らない
+- workgroupsはLDSの連続ブロックを必要とし、wavesは起動するのにVGPRs/SGPRsの連続ブロックを必要とする
+    - <font color="orange">小さなworkgroups = 起動しやすい</font>、<font color="red">{サイズ、wave実行時間、など}における不規則性が実行時間の空白を生み出す可能性がある</font>
+
+**ライトプロブを適用する** --- workgroupあたり1waveがより高速
+
+**ライトプロブを適用する** --- workgroupあたり8waveだが、SIMDあたり6wavesのみが一致
+
+# 半永続的waves
+
+# 半永続的wavesの目標
+
+- しばしば、大きなCSのworkgroupsを使うことは結果として起動問題となる(特に非同期コンピュートで)
+- **メモリ局所性の利益を得、単一waveのworkgroupで維持する他の方法が好ましい**
+    - 前のセクションでの良好な2x2クアッドに対するwave-sizedな{64, 1, 1}から8x8へのリマップを用いたい
+- 現在のPCのグラフィクスAPIはマシンを一度だけfillするためにディスパッチする機能が欠けている
+- なので、完全に永続的なworkgroupsはまだ実践的ではない
+- しかしながら、半永続的なwavesは興味深い妥協案[middle ground]となり得る
+
+# 半安定状態[semi-steady-state]の実行時における短いシェーダの解剖
+
+- waveの再起動
+    - 仕事を分解[factor]する能力を破壊する(例えば、定数をリロードする代わりに再使用したい)
+    - シェーダの終わりでのレイテンシーを隠蔽する能力を破壊する
+    - 再起動はwaveリソースが使われない、多大な影響を及ぼす時間となる可能性がある
+- 半永続的なwave --- 代わりに、ひとつのwaveでN個のシェーダのインスタンスのいたるところでループできる
+    - waveの開始/終了/再起動のオーバーヘッドを償却できる
+
+# データ局所性と起動粒度を成り行きに任せない
+
+- {8, 8, 1}のworkgroup、水平ののち垂直カーネル、実行の後にヒットが起こる
+- {64, 1, 1}から8x8へのリマップ、同じカーネル、同じ占有率、若干異なる実行、より良いキャッシュレート
+
+# 半永続的なwaveの起動
+
+- 多waveのworkgroupを単wave-sizedのworkgroupにループのアンロールを介して変換する
+    - groupの次元はデータ局所性を最大化するために設定する(すなわち、垂直ブラーには垂直グルーピングを用いる)
+    - ディスパッチサイズを減らす
+- 水平ブラーシェーダの例
+
+# waveの実行とスケジューリングを理解する
+
+- 一番古いwaveが最初にスケジューリングされる優先度の効果を示す
+- wave起動順とテクスチャフェッチの大半が発生するときを強調する
+- 一番古いwaveが最初にスケジューリングされる優先度はあるwaveでのキャッシュが再利用される機会を最大化しようとする
+    - **半永続的なworkgroupに対するアンロールとの良いペアリング**
+
+# 単純な水平ブラーの例
+
+- 8x8タイルが単純な9タップのボックスブラーと1回のストアを行う
+- 半永続的なwavesのunrollingはフィルタタップを共有する --- コンパイラは再フェッチを回避するようにこれを最適化する
+
+unroll間の8テクセル間隔
+
+- VMEM命令の数によって初期のスケーリングを推定できる(キャッシュヒット率が変化する可能性を無視する)
+    - 1.00 ops : 8x8 unroll 8 times = 10 VMEM ops + 9 VMEM ops * 7 times = 73 VMEM ops / 8 tiles =  9.125 ops/tile
+    - 1.01 ops : 8x8 unroll 4 times = 10 VMEM ops + 9 VMEM ops * 3 times = 37 VMEM ops / 4 tiles =  9.250 ops/tile
+    - 1.04 ops : 8x8 unroll 2 times = 10 VMEM ops + 9 VMEM ops * 1 times = 19 VMEM ops / 2 tiles =  9.500 ops/tile
+    - 1.10 ops : 8x8 no unroll . . . . = 10 VMEM ops . . . . . . . . . . . . . . . . . . . . . = 10 VMEM ops / 1 tiles = 10.000 ops/tile
+
+# 単純な水平ブラーの例 --- 実行時間の計測
+
+- **半永続的はVMEM ops数のみに基づく期待より良く動作している**
+    - キャッシュヒット率の上昇に成功したことを示唆している
+- 1.00 time : 1.00 ops : Semi-persistent 8x8 running 64x8 (aka unroll 8x)
+- 1.04 time : 1.01 ops : Semi-persistent 8x8 running 32x8 (aka unroll 4x)
+- 1.10 time : 1.04 ops : Semi-persistent 8x8 running 16x8 (aka unroll 2x)
+- 1.22 time : 1.10 ops : Classic 8x8 linear
+
+大幅なdrain効果 --- パイプライン化することを確実にする
+
+# 単純な水平ブラーの例 --- RX580のwave制限時の結果
+
+- 半永続的なwaveの例
+    - いずれの非パイプライン化よりも高速
+    - または、最適なパイプライン化された実行よりも
+
+# workgroup最適化＋半永続的なwaves --- Takeaway
+
+- 最適化のための2つの有用なツール
+- **完全にメモリ限界の状況でもゲインを提供できる**
+- 半永続的なwavesを介するレーンマッピングにwork-itemをun-pinningすることはwhat we have time to dive into today以上の利点がある…
+
+# おわり
+
+# XOR RAX, RAX; XOR [RAX], RAX;
+
+- トーク後のフォローアップ: timothy.lottes@amd.com
+- ...
+
+# 免責＆帰属
+
+# AMD
