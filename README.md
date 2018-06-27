@@ -6,6 +6,9 @@ numberSections: false
 
 ## いま読む
 
+- [@Mintus2018]
+    - Middle-earth: Shadow of Warのパフォーマンスとメモリに関するpost-mortem
+
 ## あとで読む
 
 - [@Aalund2013]
@@ -151,18 +154,18 @@ numberSections: false
     - モバイル系メーカーによるVulkan APIの概要
 - [@Sawicki2018]
     - VulkanとDirectX12のメモリ管理
-- [@Themaister2017]
-    - Vulkanベースのフレームグラフの実装とそこからの知見
-- [@Thomas2016]
-    - DirectX12のプラクティス
-- [@Thomas2017]
-    - バリアとキューについてのD3D12とVulkanの横断的なtips
 - [@Schott2016]
     - OpenGLとVulkanのtips
 - [@Sellers2016]
     - Vulkanのメモリ管理についてのtips
 - [@Sellers2016b]
     - GCNアーキテクチャにおけるVulkanのデスクリプタ、レンダパス、バリアのtips
+- [@Themaister2017]
+    - Vulkanベースのフレームグラフの実装とそこからの知見
+- [@Thomas2016]
+    - DirectX12のプラクティス
+- [@Thomas2017]
+    - バリアとキューについてのD3D12とVulkanの横断的なtips
 - [@Witczak2016]
     - Vulkanのプラクティス集
 - [@Worcester2016]
@@ -243,10 +246,12 @@ numberSections: false
 
 - [@Drobot2014]
     - GCNアーキテクチャを対象とした低レベルな最適化
-- [@Gyrling2017]
-    - マルチコア環境におけるキャッシュシステムの動作から学ぶメモリバリアの概要
 - [@Fredriksson2017]
     - キャッシュ効率を測るツール
+- [@Gyrling2017]
+    - マルチコア環境におけるキャッシュシステムの動作から学ぶメモリバリアの概要
+- [@Lottes2018]
+    - GCNアーキテクチャのキャッシュレベルの最適化
 
 ### OIT
 
@@ -268,10 +273,10 @@ numberSections: false
 
 ### レイトレージング
 
-- [@Zsolnai-Feher2015]
-    - レイトレーシング技術の概要
 - [@McGuire2014]
     - スクリーンスペースで効率的にレイトレースするアルゴリズム
+- [@Zsolnai-Feher2015]
+    - レイトレーシング技術の概要
 
 ### レンダリングエンジン
 
@@ -297,14 +302,14 @@ numberSections: false
     - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど
 - [@Sousa2016]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム
-- [@Wihlidal2016]
-    - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化
-- [@Vale2017]
-    - Decima Engineの可視性
 - [@Tatarchuk2015]
     - Destinyのマルチスレッド化されたゲームエンジン
 - [@Tatarchuk2017]
     - グラフィクスエンジンから見るプログラミングモデルの進化
+- [@Vale2017]
+    - Decima Engineの可視性
+- [@Wihlidal2016]
+    - "Frostbite"における、大規模なカリングパイプラインとGCNアーキテクチャへの最適化
 
 ### シェーディング技術
 
