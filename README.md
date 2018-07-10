@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Mintus2018]
-    - Middle-earth: Shadow of Warのパフォーマンスとメモリに関するpost-mortem
+- [@Mattausch2008]
+    - コヒーレントな階層的カリングアルゴリズム
 
 ## あとで読む
 
@@ -292,6 +292,8 @@ numberSections: false
     - EAが"Frostbite"を物理ベースにするときに採用した方法とその知見
 - [@Marchalot2018]
     - "Detroit: Become Human"でのClustered Forard RenderingとAnti-Aliasingについて
+- [@Mintus2018]
+    - Middle-earth: Shadow of Warのパフォーマンスとメモリに関するpost-mortem
 - [@ODonnell2017]
     - EAの"Frostbite"が採用した、依存関係を定義するしくみ(FrameGraph)とフレーム内でリソースを共有するしくみ(Transient Resource)
 - [@Rodrigues2017]
@@ -340,6 +342,8 @@ numberSections: false
     - Moment Shadow Maps
 - [@Peters2017]
     - Moment Shadow Mapsの応用([@Peters2016]の拡張版)
+- [@Scherzer2011]
+    - シャドウイング技術の包括的な調査
 - [@Yang2010]
     - Variance Soft Shadow Maps
 
