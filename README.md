@@ -6,13 +6,11 @@ numberSections: false
 
 ## いま読む
 
-- [@Mattausch2008]
-    - コヒーレントな階層的カリングアルゴリズム
+- [@Aalund2013]
+    - SSAOの比較研究
 
 ## あとで読む
 
-- [@Aalund2013]
-    - SSAOの比較研究
 - [@Cigolle2014]
     - GPUで単位ベクトルを表現する方法について調査
 - [@Heitz2017]
@@ -214,6 +212,11 @@ numberSections: false
     - マイクロフレーク理論
 - [@Jakob2010b]
     - [@Jakob2010]の補足資料
+
+### オクルージョンカリング
+
+- [@Mattausch2008]
+    - コヒーレントな階層的カリングアルゴリズム
 
 ### 光学エフェクト
 
