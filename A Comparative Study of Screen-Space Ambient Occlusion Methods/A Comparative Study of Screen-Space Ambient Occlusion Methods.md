@@ -23,4 +23,68 @@ title: A Comparative Study of Screen-Space Ambient Occlusion Methods [@Aalund201
 
 ## レンダリング理論 {#sec:2.1}
 
+光と表面の間の相互作用は複合的であり、故に、リアルタイム用途ではかなり近似される。それを行う歴史的に有名な方法は光を*ディフューズ[diffuse]*、*スペキュラ[specular]*、*アンビエント[ambient]*の構成要素に分けることである[@Cook1982]。この議論では、前者2つ(ディフューズとスペキュラ)を*直接光[direct light]*、光源から直接来る光とすれば事足りる。アンビエント光はすべての*間接光[indirect light]*、すなわち、任意の回数の反射または屈折を経験した光のような、直接光でないものすべて光である。
+
+与えられた表面点[surface point]と方向に対して物理的に正しい間接光を計算することは計算的に難しい。各表面点$\boldsymbol{p}$と方向$\omega$の対は以下の関連する量を持つ。
+
+- $L_o$、与えられた方向$\omega$に対する$\boldsymbol{p}$における出射する[outgoing]放射輝度。
+- $L_i$、与えられた方向$\omega$に対する$\boldsymbol{p}$における入射する[incomming]放射輝度。
+- $f$、$\boldsymbol{p}$における$\omega$に沿った出射する放射輝度と入射方向$\omega_i$に沿った入射する放射照度[incident irradiance]の比。双方向反射率分布関数[bidirectional reflectance distribution function] (BRDF)として知られている。
+
+一般的に、…。3つすべての量の間の相互作用はずっと複雑である[@Kajiya1986]。
+
+$$
+L_o = \int f L_i \cdot (n \cdot \omega) d\omega
+$$ {#eq:2.1}
+
+## アンビエントオクルージョン {#sec:2.2}
+
+アンビエント光は*すべて*の入射方向に対して集約された間接光である。これは、アンビエント光を決定するためには[@eq:2.1]の積分を計算しなければならない、ということである。これはアンビエント光を更なる仮定なしに扱いづらい量にしている。そこで、状況を改善するため、かなり大量の仮定が作られている[@Cook1982]。
+
+- アンビエント光は一様に入射する。すなわち、入射する放射輝度はすべての方向で同じになる($L_i$は定数)。
+- アンビエント光は見ている角度に依存しない。すなわち、反射した光の比はすべての方向で同じになる($f$は定数であり、その表面は*ランバート[Lambertian]*である)。
+
+合わせて、これらの近似はアンビエント光のより単純なモデルをもたらす。
+
+$$
+L_{oa} = f L_{ia} \int (n \cdot \omega) d\omega
+$$ {#eq:2.2}
+
+[@eq:2.2]の積分は$\boldsymbol{p}$における半球の可視性であり、まずは以下のように書き表すとする。
+
+$$
+A(\boldsymbol{p}) = \frac{1}{\pi} \int (n \cdot \omega) d\omega
+$$ {#eq:2.3}
+
+ここで、$\boldsymbol{p}$は照らされている点であり、$n$は$\boldsymbol{p}$における表面の法線であり、$\omega$は積分の方向である。この積分は$\boldsymbol{p}$と$n$によって定義される半球の*遮蔽されていない[unoccluded]*部分に対してである。内積$n \cdot \omega$はこの文脈においてその意味が変化し、浅い角度でのオクルーダーが大きな範囲に投影されるという事実を考慮するために可視性を調整する。
+
+$A$はアンビエント光のオクルージョンを計算に入れる。古典的な単純化では積分計算を回避するために$A=1$を用いる。モダンな実装では[@eq:2.3]によるオリジナルの定義を用いて、$\boldsymbol{p}$から可視である方向に入射するアンビエント光$L_{ia}$を制限する。
+
+### 半球の定義 {#sec:2.2.1}
+
+関数$V(\boldsymbol{p}, \omega)$を方向$\omega$における$\boldsymbol{p}$からのレイの*可視性[visibility]*とすると、$V$は以下のように定義される。
+
+$$
+V(\boldsymbol{p}, \omega) = \begin{cases}
+0 & \text{方向} \omega \text{における} \boldsymbol{p} \text{からのレイがなにかに当たる場合} \\
+1 & \text{その他}
+\end{cases}
+$$
+
+すると、半球全体で計算するために$A$を拡張できる。その新しい積分は以下となる。
+
+$$
+AO(\boldsymbol{p}) = \frac{1}{\pi} \int_{\Omega} V(\boldsymbol{p}, \omega) (n \cdot \omega) d\omega
+$$ {#eq:2.4}
+
+ここで、$\Omega$は$\boldsymbol{p}$と$\omega$によって定義される半球である。アンビエントオクルージョン(AO)[@Landis2002]という用語は基本の式の長らく後に新造された。離散的な方向数をテコ入れすることでレイトレーサーでのモンテカルロ積分によって定めることができる[@Landis2002]。
+
+$$
+AO \approx \frac{1}{N} \sum_{n=1}^{N} V \cdot (n \cdot \omega_n)
+$$
+
+ここで、$N$は調査用[probe]のレイの数であり、$\omega_n$は各$n$に対して一様に無作為に選ばれた方向である。
+
+## Ambient Obscurance {#sec:2.3}
+
 TODO
