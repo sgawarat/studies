@@ -578,4 +578,153 @@ horizon-based AO手法はまったくアルゴリズム的に異なるアプロ�
 
 # 実装 {#sec:5}
 
+## 全体 {#sec:5.1}
+
+SSAO手法が実装される所のアプリケーションはC++で書かれる。これは他のリアルタイムレンダリングの実験のためにこの論文の著者のひとりが初期に使っていた研究課題[project]である。これは自由に手に入れることができ、GitHubのhttps://github.com/frederikaalund/sfjに見つけることができる。これは標準の実装、とりわけ、OpenGLのAPIに基づいている。それ故に、SSAO手法は関連するシェーダ言語であるGLSLでシェーダとして実装される。シェーダもまた前述のGitHubのアドレスで手に入れることができる。これらはこの報告書の付録にそのままの形で[in full length]見つけることができる。
+
+### 接頭辞 {#sec:5.1.1}
+
+我々は[@sec:2.5.1]に見られる座標(空間)の略語を変数への接頭辞として用いる。これは関連する変数がどの空間に属しているかを理解しやすくする。
+
+## 候補手法 {#sec:5.2}
+
+### [@Mittring2007a] {#sec:5.2.1}
+
+#### ランダムなベクトル
+
+シェーダはSPMD原則に従っており、データセットごとに異なる乱数を生成するのは困難である。我々はテクスチャに事前計算されたランダムなベクトルを提供することで状況を改善する。ベクトルは円上に一様に分布する(rejection samplingで生成される)。これらは続いて精度を維持する[preserve]ために$[0;1]^3$の範囲に変換される。故に、我々がテクスチャからランダムな方向を読み出すとき、我々は$[-1;1]^3$の範囲にスケールし直すことを覚えておかなければならない。
+
+```glsl
+vec3 random_direction = texture(random_texture, tc_random_texture).xyz;
+random_direction = normalize(random_direction * 2.0, - 1.0);
+```
+
+#### サンプリング
+
+サンプリングそれ自体はforループで上手く動作する。
+
+```glsl
+for (int i = 0; i < samples; ++i) {
+    // サンプルiを用いる
+}
+```
+
+ここで、`samples`は用いられるサンプル数である。すべてのサンプルはランダムな方向を必要とする。すなわち、我々は$サンプル数 \times ピクセル数$個のランダムな方向を必要とする。ランダムテクスチャは、このような多くのエントリを持った場合、あまりにも多くのメモリを消費する。代わりに、その手法の著者らはフラグメント毎のランダムな方向によって定義される平面において各サンプルのランダムな方向を反射させることを提案する。
+
+```glsl
+vec3 sample_random_direction = // iに基づいてランダムテクスチャをフェッチする
+sample_random_direction = sample_random_direction * 2.0 - 1.0;
+sample_random_direction = reflect(sample_random_direction, random_direction);
+```
+
+ここで、`reflect`関数はすでにGLSLの仕様の一部である。そして、我々はスクリーン座標で球をサンプルするためにランダムな方向を続けて用いる。これは、バッファサンプラ関数が期待するものであるので、むしろ*テクスチャ座標*であるべきである。スクリーン座標(範囲$[0; 横幅], [0; 縦幅], [0; 1]$)とテクスチャ座標(範囲$[0;1]^3$)の間の差異は単なるスケーリングに関する問題であることを思い出して欲しい。サンプル位置は以下のように見つかる。
+
+```glsl
+vec3 tc_sample_pos = vec3(tc_depths.xy, scene_depth) + vec3(sample_random_direction.xy * projection_scale_xy, sample_random_direction.z * scene_depth * projection_scale_z) * radius;
+```
+
+ここで、`projection_scale`ファクタはサンプル半径がワールド座標で与えられるために存在する。すなわち、サンプル半径は投影を計算に入れてスケールされなければならない。それは以下のように行われる。
+
+```glsl
+float projection_scale_xy = 1.0 / ec_depth_negated;
+float projection_scale_z = 100.0 / z_far * projection_scale_xy;
+```
+
+ここで、`ec_depth_negated`は深度バッファから読み出された深度である。これは、アイ座標がout of screenを指す$z$軸を持つので、否定[negated]である。
+
+そうすると、我々はサンプル位置を持ち、それ以上か以下にある表面の実際の深度$s_d$を見つけるための準備が完了する。それは深度バッファからの読み出しによって見つけることができる。
+
+```glsl
+float sample_depth = texture(depths, tc_sample_pos.xy).x;
+```
+
+残っているものは単純に$V'$のテストを作り、寄与を加えることである。
+
+```glsl
+ambient_occlusion.a += float(sample_depth > tc_sample_pos.z);
+```
+
+すべてのサンプルが集められると、その実行はforループから戻り、[@eq:3.1]で行われるそのままの通りに、寄与の合計がサンプル数で除算される。
+
+```glsl
+ambient_occlusion.a /= float(samples);
+```
+
+### [@FilionMcNaughton2008] {#sec:5.2.2}
+
+この手法は上記と同じ特性を多く共有する。違いのひとつは円ではなく$p$周りの半球でサンプルを見つけることである。これは正の半球への表面法線で定義される平面の周りの負の半球のサンプルを鏡映しすることで達成される。
+
+```glsl
+sample_random_direction = faceforward(sample_random_direction, sample_random_direction, -wc_normal);
+```
+
+ここで、`faceforward`関数はGLSLの仕様の一部である。サンプルはワールド座標で選択される。しかし、これは各サンプルが後続の深度バッファ探索でテクスチャ座標に投影されなければならないことを暗に示している。OpenGLの変換パイプラインを模倣することで行われる。
+
+```glsl
+vec3 wc_sample = wc_position + sample_random_direction * radius;
+vec3 ec_sample = (view_matrix * vec4(wc_sample, 1.0)).xyz;
+vec4 cc_sample = view_projection_matrix * vec4(wc_sample,
+1.0);
+vec3 ndc_sample = cc_sample.xyz / cc_sample.w;
+vec2 tc_sample = (ndc_sample.xy + vec2(1.0)) * 0.5;
+```
+
+我々は以下のようにフォールオフ関数$\rho$付きのこの手法も実装する。
+
+```glsl
+float rho = clamp((depth_difference - radius) / depth_difference, 0.0, 1.0);
+ambient_occlusion.a += rho;
+```
+
+実際の実装では使わないが、bent normals[@Klehm2011]の概念を統合するのが容易であろうことに触れておく。
+
+```glsl
+bent_normal += normalize(sample_random_direction) * rho;
+```
+
+### [@Bavoil2008a] {#sec:5.2.3}
+
+この場合、サンプル数はアルゴリズムが1つのレイに沿ってマーチングする所の方向の数を参照する。ビューベクトル周りの角度$\theta$を選択するとき、我々は$z$座標を単純に破棄する以外を以前と同じくするランダムな方向を用いる。つまり、我々はまず角度を選択してそれを方向に変換するのではなく、前もって[up front]ランダムな方向ベクトルのひとつを単純に用いる。アルゴリズムは方向$\theta$における$p$からのレイに沿ってマーチングする所の増加分を続けて見つける。
+
+```glsl
+const int steps = 6;
+vec2 tc_step_size = tc_sample_direction * projected_radius / float(steps);
+vec2 ec_step_size = tc_sample_direction * radius / float(steps);
+```
+
+我々は6ステップが我々の場合で十分に良好であることを発見した。これはオリジナルの著者らが見つけたものと似ている[@BavoilSainz2008]。我々は2つのステップ増分を維持しなければならないことに注意する。ひとつはテクスチャ座標用、ひとつはアイ座標用である。タンジェントはアイ座標で再構築されなければならない。これは位置情報から法線を再構築する方法と似ている。
+
+我々は今やレイマーチングを始める準備が整っている。我々はラジアン角$\alpha$を使って直接的には一切行っておらず、代わりに、変換関数`tan_to_sin`などと共に$\tan(\alpha)$と$\sin(\alpha)$を使って直接的に行っている。これはさもなければ高価な`tan`や`sin`関数の計算に費やされるであろう多くの計算時間を節約する。レイマーチングは以下のように(角度$\theta$全体で)最初のforループ内でネストされる。
+
+```glsl
+float tan_tangent_angle = ec_tangent.z / length(ec_tangent.xy) + tan(bias);
+float tan_horizon_angle = tan_tangent_angle;
+float_sin_horizon_angle = tan_to_sin(tan_horizon_angle);
+
+for (float j = 1.0; j <= float(steps); j += 1.0) {
+    vec2 tc_sample = vec2(tc_depth + tc_step_size * j);
+    vec3 ec_horizon = vec3(ec_step_size * j, ec_depth(tc_sample) - ec_position_depth);
+    float ec_horizon_length_squared = dot(ec_horion, ec_horizon);
+    float tan_sample = ec_horizon.z / length(ec_horizon.xy);
+
+    // サンプルを計算する
+}
+```
+
+ここで、`tan_sample`はhorizon angleに適用した`tan`関数である。似たようなconventionsが他の変数に適用される。どれだけのレイがテクスチャ*および*アイ座標で実際にマーチングされるかに注意する。後者は単位をサンプル半径と矛盾のないように保つために使われる。サンプルの計算は[@sec:3.2.4]で説明されたように動作する。
+
+```glsl
+if (radius_squared >= ec_horizon_length_squared && tan_sample > tan_horizon_angle) {
+float sin_sample = tan_to_sin(tan_sample);
+float weight = 1.0 - ec_horizon_length_squared / radius_squared;
+ambient_occlusion.a += (sin_sample - sin_horizon_angle) * weight;
+tan_horizon_angle = tan_sample;
+sin_horizon_angle = sin_sample;
+}
+```
+
+各サンプルは以前のhorizon_angleをrememberingすることによって寄与する。AO計算が[@eq:3.4]で求まる式とどれだけ似ているかに注意する。
+
+### [@Szirmay-Kalos2009] {#sec:5.2.4}
+
 TODO
