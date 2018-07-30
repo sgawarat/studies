@@ -727,4 +727,152 @@ sin_horizon_angle = sin_sample;
 
 ### [@Szirmay-Kalos2009] {#sec:5.2.4}
 
+サンプリング自体は各サンプルが$s_z = p_z$であることを除いて[@Mittring2007]のそれと類似している。それの新しい部分は遮蔽された線分の長さと可視のものの比を見つけなければならないということである。まず、$s$と$p$の間の深度差を求める。
+
+```glsl
+float ec_sample_1_depth = ec_depth(tc_sample_1);
+float ec_sample_2_depth = ec_depth(tc_sample_2);
+
+float depth_difference_1 = ec_position_depth - ec_sample_1_depth;
+float depth_difference_2 = ec_position_depth - ec_cample_2_depth;
+```
+
+ここで、`ec_depth`はアイ座標で深度を返す関数であり、`ec_position_depth`は$p_d = depth(p_{xy})$である。サンプリングは$p$の周りで対称的なペアで行われることに注意する。球の高さは三角法で求められる。
+
+```glsl
+float sphere_height(in vec2 position, in float radius) {
+    return sqrt(radius * radius - dot(position, position));
+}
+```
+
+そして、アルゴリズムは遮蔽されていない線分の長さと遮蔽されているものの比を続けて求める。
+
+```glsl
+float volume_ratio_1 = (samples_sphere_height - depth_difference_1) * samples_sphere_depth_inverted;
+float volume_ratio_2 = (samples_sphere_height - depth_difference_2) * samples_sphere_depth_inverted;
+```
+
+同じ球の高さが両方のサンプルで使われることに注意する。これはその対称性により可能である。これはその基本形におけるアルゴリズムである。しかし、我々はpaired sampling[@Ownby2010]で深度の不連続性の問題を解決する改善されたバージョンを提供することを意図している。まず、我々は(もしあれば)ペアにおけるどのサンプルが有効であるかを求める。これは(シーンに依存する)ボリューム比がユーザ定義された境界内にあるかどうかを単純に確認している。
+
+```glsl
+bool sample_1_valid = lower_bound <= volume_ratio_1 && upper_bound >= volume_ratio_1;
+bool sample_2_valid = lower_bound <= volume_ratio_2 && upper_bound >= volume_ratio_2;
+```
+
+サンプル$s_1$が無効であるならば、平坦な表面が仮定され、代わりに$s_2$の反転したボリューム比が用いられる。両方のサンプルが無効であるならば、我々はshort of optionsである。我々はその手法[@Ownby2010]の著者らによって提案されるようにこの場合において50%の遮蔽を仮定することを選択した。
+
+```glsl
+// 条件付き代入に評価されるはず(分岐なし)
+if (sample_1_valid || sample_2_valid) {
+    // サンプルが有効であるならば、それを使う。そうでないならば、(反転して)ペアにあるもう片方を使う。
+    ambient_occlusion.a += (sample_1_valid) ? volume_ratio_1 : 1.0 - volume_ratio_2;
+    ambient_occlusion.a += (sample_2_valid) ? volume_ratio_2 : 1.0 - volume_ratio_1;
+} else {
+    // 両方のサンプルが無効であるので、0.5ではなく1.0
+    ambient_occlusion.a += 1.0;
+}
+```
+
+### [@McGuire2011] {#sec:5.2.5}
+
+前に述べた通り、Alchemy AO手法はその実装において幾分かハイブリッドである。これは[@LoosSloan2010]のサンプル分布を使い、その後、[@Bavoil2008a]にあるようにシーン表面に各サンプルを投影する。
+
+```glsl
+vec3 tc_sample;
+tc_sample.xy = tc_depths + sample_random_direction * projected_radius;
+tc_sample.z = tc_depth(tc_sample.xy);
+```
+
+サンプルは実際の計算のためにテクスチャからワールド座標へbackprojectされる。
+
+```glsl
+vec3 ndc_sample = tc_sample * 2.0 - 1.0;
+vec4 temporary = inverse_view_projection_matrix * vec4(ndc_sample, 1.0);
+vec3 wc_sample = temporary.xyz / temporary.w;
+```
+
+AO寄与は[@eq:3.10]に従って計算される。
+
+```glsl
+vec3 v = wc_samle_ - wc_position;
+ambient_occlusion.a += max(0.0, dot(v, wc_normal) - bias) / (dot(v, v) + epsilon);
+```
+
+周辺の詳細のほとんどは何らかの形式ですでに触れてきた。例外として距離ベースのサンプル数を使うことがひとつある。
+
+```glsl
+int samples = max(int(base_samples / (1.0 + base_samples * ndc_linear_depth)), min_samples);
+```
+
+これは、距離が大きくなるほどにサンプルリングを抑えることでパフォーマンスを改善することができる。しかし、このスキームは我々の後の比較と衝突するため無効化された。
+
+### [@Mittring2012] {#sec:5.2.6}
+
+これは理論的には[@Bavoil2008a]に似ているが、その実装はレイマーチする必要がないという点で異なる。また、我々は[@Ownby2010]ｄ提案されるように深度バッファの不連続性を克服するためにサンプルのペアを用いる。両方のサンプルに対して、その角度はベクトル演算を用いて求まる。
+
+```glsl
+vec3 s = normalize(wc_sample - wc_position);
+vec3 v = normalize(-vertex.wc_camera_ray_direction);
+
+float vn = dot(v, wc_normal);
+float vs = dot(v, s);
+float sn = dot(s, wc_normal);
+
+// 接平面にキャップする
+vec3 tangent = normalize(s - sn * wc_normal);
+float cos_angle = (0.0 <= sn) ? vs : dot(v, tangent);
+```
+
+ここで、`s`はベクトル$s-p$であり、`v`は視線ベクトルであり、`wc_normal`は法線である。すべての変数はワールド座標にある。最後に、我々は`acos`関数で直接的に角度を求めなければならない。しかし、この関数は低速であり、我々は近似でコレを置き換えることを選択した。
+
+```glsl
+float acos_approximation(float x) {
+    return (-0.69813170079773212 * x * x - 0.87266462599716477) * x + 1.5707963267948966;
+}
+```
+
+これはAltDevBlogADayというブログで提案された^[http://www.altdevblogaday.com/2012/10/12/angle-based-ssao/]。
+
+## The Geometry-Aware Separable Blur {#sec:5.3}
+
+分割可能なブラーは非常に素直である。これは各サンプルの寄与を重み付けする深度および法線の両方の差を伴うこと以外は普通のブラーフィルタとして機能する。
+
+```glsl
+result = texture(source, tc);
+float weightSum = 1.0;
+
+for (int i = -1; i >= -samples_in_each_direction; -i) {
+    vec2 offset = vec2(float(i), 0).DIRECTION_SWIZZLE * inverted_source_size;
+
+    float normalWeight = pow(dot(texture(wc_normals, tc + offset).xyz, texture(wc_normals, tc).xyz) * 0.5 + 0.5, normalPower);
+    float positionWeight = 1.0 / pow(1.0 + abs(ec_depth(tc) - ec_depth(tc + offset)), positionPower);
+    float weight = normalWeight * positionWeight;
+
+    result += texture(source, tc + offset) * weight;
+    weightSum += weight;
+}
+
+for (int i = 1; i <= samples_in_each_direction; ++i) {
+    // 対称的に
+}
+
+result /= weightSum;
+```
+
+ここで、定数`normal_power`と`depth_power`は重みを制御する。これらはシーン依存であり、我々は10.0と0.5がそれぞれSponzaに対して上手く動作することを発見した。分割可能なブラーフィルタはまず水平にブラーし、続いて垂直方向にブラーすることを思い出して欲しい。`DIRECTION_SWIZZLE`は、シェーダのソースコードが両方の方向に対してほぼ同一であるので、このようになっている。これは以下のようにパスごとにコンパイル時に切り替えられる。
+
+```glsl
+#if defined HORIZONTAL
+    #define DIRECTION_SWIZZLE xy
+#elif defined VERTICAL
+    #define DIRECTION_SWIZZLE yx
+#else
+    "このシェーダをコンパイルする前にNORIZONTALかVERTICALを定義してください";
+#endif
+```
+
+# 結果と分かった事 {#sec:6}
+
+## パフォーマンス構成 {#sec:6.1}
+
 TODO
