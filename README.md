@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Aalund2013]
-    - SSAOの比較研究
+- [@Hecher2013]
+    - ソフトシャドウの比較研究
 
 ## あとで読む
 
@@ -83,6 +83,8 @@ numberSections: false
 
 ### グローバル・イルミネーション
 
+- [@Aalund2013]
+    - SSAOの比較研究
 - [@Loos2010]
     - Volumetric Obscurance
 - [@Mara2016]
