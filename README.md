@@ -6,9 +6,6 @@ numberSections: false
 
 ## いま読む
 
-- [@Hecher2013]
-    - ソフトシャドウの比較研究
-
 ## あとで読む
 
 - [@Cigolle2014]
@@ -339,6 +336,8 @@ numberSections: false
     - Cascaded Shadow Maps
 - [@Donnelly2006]
     - Variance Shadow Maps
+- [@Hecher2013]
+    - ソフトシャドウの知覚に関する比較
 - [@Lauritzen2010]
     - Sample Distribution Shadow Maps
 - [@McGuire2011b]
