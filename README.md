@@ -6,12 +6,13 @@ numberSections: false
 
 ## いま読む
 
+- [@Hill2016]
+    - [@Heitz2016]を実装する際のいろいろなこと
+
 ## あとで読む
 
 - [@Cigolle2014]
     - GPUで単位ベクトルを表現する方法について調査
-- [@Heitz2017]
-    - 線光源と円光源をリアルタイムで扱う手法
 - [@Jimenez2016]
     - Filmic SMAA
 - [@Lottes2016]
@@ -184,6 +185,8 @@ numberSections: false
 
 - [@Heitz2016]
     - 多角形の面光源をリアルタイムで扱う手法
+- [@Heitz2017]
+    - LTCを用いて線光源、楕円光源、楕円体光源をリアルタイムで扱う手法の概略
 - [@Lecocq2016]
     - @Arvo1995 のIrradiance Tensorsをもとに多角形の面光源をリアルタイムで扱う手法
 
