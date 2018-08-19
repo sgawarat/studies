@@ -507,4 +507,118 @@ vec2 uv = vec2(roughness, dot(n, v));
 
 # 多角形→*プロキシ*球
 
-TODO
+多角形の代わりに、同じform factorを持つ球を使うことができる。
+
+注意: このアプローチへのインスピレーションに対してBrian Karisに感謝したい。(事実、彼はすでにこれを実際に完了していて、エリアライティングに関する一般的なEメールのやり取りの中で最終的な近似を快く共有してくれたが、これが同じ発想に基づいていたことはこの時点では明確ではなかった。基本的に我々はこれを再導出した。)
+
+# angular extent = asin(sqrt(length(F)))
+
+我々はFからの球のangular extentを計算することができる。
+
+(これは球のform factorは$sin(angular_extent)^2$であるという事実に由来する)
+
+# 仰角[elevation angle] = dot(n, normalize(F))
+
+その方向(または、仰角)も同様に
+
+# 水平線クリッピングを伴う球[@Snyder1996]
+
+$$
+I_{hemi-sub}(\omega, \sigma) \equiv \frac{1}{\pi} \begin{cases}
+\pi \cos \omega \sin^2 \sigma, & \omega \in [0, \frac{\pi}{2} - \sigma] \\
+\pi \cos \omega \sin^2 \sigma + G(\omega, \sigma, \gamma) - H(\omega, \sigma, \gamma), & \omega \in [\frac{\pi}{2} - \sigma, \frac{\pi}{2}] \\
+G(\omega, \sigma, \gamma) + H(\omega, \sigma, \gamma), & \omega \in [\frac{\pi}{2}, \frac{\pi}{2} + \sigma] \\
+0, & \omega \in [\frac{\pi}{2} + \sigma, \pi]
+\end{cases}
+$$
+
+$$
+\gamma \equiv \sin^{-1} \left( \frac{\cos \sigma}{\sin \omega} \right)
+$$
+
+$$
+G(\omega, \sigma, \gamma) \equiv -2 \sin \omega \cos \sigma \cos \gamma + \frac{\pi}{2} - \gamma + \sin \gamma \cos \gamma
+$$
+
+$$
+H(\omega, \sigma, \gamma) \equiv \cos \omega \left[ \cos \gamma \sqrt{\sin^2 \sigma - \cos^2 \gamma} + \sin^2 \sigma \sin^{-1} \left( \frac{\cos \gamma}{\sin \sigma} \right) \right]
+$$
+
+なぜこれが役立つのか？水平線でクリップされる球のform factorsに対する2、3つの(同等の)解析解がある。これはその1つである。
+
+これを使うと、異なるangular extents(0からpi/2)と仰角の球に対するクリップされたform factorsを含む2DのLUTを事前計算できる。
+
+実行時に、Fから計算されたextentと角度でこのテクスチャをルックアップすることができ、多角形のクリップされたform factorの近似がもたらされる。
+
+
+# クリッピング
+
+ここに元々の高価なクリッピングを用いた結果がある。
+
+# クリッピングなし
+
+いずれのクリッピングも行わない場合、(他の問題も一緒になって)光源の近くで暗くなる。
+
+# プロキシ球
+
+ここにプロキシ球を用いた結果がある。正しい結果にかなり近い。
+
+# クリッピング
+
+比較のために、元々のやつをもう一度
+
+# 非常に安価な近似
+
+```hlsl
+float SphereIntegral(float3 F) {
+    float l = length(F);
+    return max((l * l + F.z) / (l + 1), 0);
+}
+```
+
+精度的な理由から、代わりに、元のform factorで除算し、LUTに乗数[multiplier]を格納する方が良い。
+
+LUTを完全に排除する可能性もある。John Snyderは三次Hermite曲線を組み込む2、3つの選択肢をもたらすが、これらは高価な方である。Fからのクリップされた球のform factorの近似を計算する上記の関数は幾分か荒削りだが、効果的な代替案である。その名前は実際には`PolygonVectorFormFactorToHorizonClippedSphereFormFactor`とすべきだが、余白が足りなかった。:)
+
+# おまけ: テクスチャリング
+
+論文では、事前にフィルタされたテクスチャによるテクスチャエリアライトを行う方法もカバーした。様々な理由から、我々が用いるために選択するルックアップ方向は変換された多角形に垂直な方向である。これは上手く振る舞うが、常に正確な結果をもたらさない(例は論文を参照)。
+
+# フィルタされた境界領域
+
+我々はルックアップが元のテクスチャの外となるケースを扱うためにテクスチャに境界領域も追加しなければならない。
+
+# テクスチャフェッチの方向にFを使う
+
+Brian Karisによって提案された魅力的な代替案はルックアップ方向にFを使うことである。
+
+これはFが常に多角形と交差するという利点を持つ。そのため、我々は事前フィルタされたテクスチャに境界を追加する必要はもはやない！
+
+# まとめ
+
+- 数値計算の問題を克服した
+- ディフューズ＋スペキュラに対する現在のパフォーマンス: 0.9ms, PS4 @ 1080p
+- 実装の暗黒の塔を踏破した？
+- 今後: コード(Github)と注釈の更新
+
+これらの変更のすべてを通して、我々は見た目の品質の問題と戦うことや大幅にパフォーマンスを向上させることが可能となった。
+
+曰く、エリアライティングは依然としてポイントライティングと比べて比較的高価である。そのため、さらなる改良の余地が常にある。
+
+我々は、より詳細な注釈でこのトークのフォローアップ --- (Fresnelのような)いくつかの追加のトピックや最適化を含む --- やソースコードの更新を行うだろう。
+
+# 室内象[elephant in the room]
+
+論文の焦点はエリアライトにあったが、依然として登るべき他の塔がある。
+
+#
+
+…エリアライトシャドウ！これは未解決の研究課題である。
+
+#
+
+誰かはこれを解いてくれるはず！:)
+
+# 謝辞
+
+# 参考文献
