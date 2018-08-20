@@ -6,8 +6,10 @@ numberSections: false
 
 ## いま読む
 
-- [@Hill2016]
-    - [@Heitz2016]を実装する際のいろいろなこと
+- [@Caurant2018]
+    - "Detroit: Become Human"におけるライティング技術
+- [@Sawicki2018b]
+    - VulkanまたはDX12へのポーティングのためのtips
 
 ## あとで読む
 
@@ -187,6 +189,8 @@ numberSections: false
     - 多角形の面光源をリアルタイムで扱う手法
 - [@Heitz2017]
     - LTCを用いて線光源、楕円光源、楕円体光源をリアルタイムで扱う手法の概略
+- [@Hill2016]
+    - [@Heitz2016]を実装する際の問題の解決法
 - [@Lecocq2016]
     - @Arvo1995 のIrradiance Tensorsをもとに多角形の面光源をリアルタイムで扱う手法
 
