@@ -6,10 +6,12 @@ numberSections: false
 
 ## いま読む
 
-- [@Caurant2018]
-    - "Detroit: Become Human"におけるライティング技術
+- [@Hillaire2015]
+    - 物理ベースボリューメトリックレンダリング
 - [@Sawicki2018b]
     - VulkanまたはDX12へのポーティングのためのtips
+- [@Wronski2014]
+    - ボリューメトリックフォグ
 
 ## あとで読む
 
@@ -293,6 +295,8 @@ numberSections: false
     - GPU駆動カリングとMDI
 - [@Carpentier2017]
     - Guerrilla Gamesの"Decima Engine"のライティングとアンチエイリアシング
+- [@Caurant2018]
+    - "Detroit: Become Human"におけるライティング技術
 - [@Drobot2017b]
     - Call of Duty: Infinite Warfareのレンダリングエンジン
 - [@Haar2015]
