@@ -482,6 +482,165 @@ float3 finalPixelColor = pixelColorWithoutFog * transmittance.xxx + inScattering
 
 そのような情報がエンジンで使えなかったり、見積もられる[projected]パフォーマンス上の利益が十分に大きくないであろう(例えば、屋外の長距離シーンが多くある)場合には、ボリューメトリックフォグ計算に対して次世代コンソールの非同期コンピュート能力を使えるだろう。カリングのないアルゴリズムはシーンのジオメトリに依存しないので、シャドウマップが準備でき次第計算できる。ボリューメトリックフォグは帯域およびALUの両方に関して極めて重くなり得る。そのため、Gバッファ埋めのような頂点ヘビーなパスと並列に行うことは理に適っている。
 
-# ディファードのようなライト注入
+# ディファードライクなライトの注入
 
-TODO
+似た方法で、ライティングもフォワードベースのライティング技術の代替としてボリュームに注入できるだろう。
+それは、ライトのボリューム境界ボックスを計算し、それと交差するセルでのみライティングを処理できるだろう。これは非常に簡単であり、DX11/次世代コンソールの間接ディスパッチ機能を用いて行うことができるだろう。
+この最適化は計算に多くのVGPRを使う、つまり、エリアライトのような非常に複雑なライトに対して有用となり得るだろう。
+
+# AC4の先へ
+
+最後のプレゼンテーションのセクションでは、AC4の後に開発したボリューメトリックフォグへの拡張機能を説明したい。
+
+1. エフェクトをさらに物理ベースにする方法 --- 解析的光源やSHベースの光源に対する物理ベースの位相関数のサポートのような欠けたピース
+2. テンポラルリプロジェクションとジッタリングを導入することによってエフェクトをさらに安定にする
+
+# アンビエント/GIのサポート
+
+フォグのアンビエント/空ライティングのサポートが足りないと、影付けされる範囲でシーンが暗くなりすぎてしまう。
+いくつかの光はout-scatteredされるが、ライティング不足のためにin-scatterdされる光が一切なく、現実感のない結果を生み出す。故に、幾らかのGIを追加する必要がある。
+
+# アンビエント/GIのサポート
+
+この比較では、追加した空ライティングが結果を改善し、影付けされる範囲に適切なフォグを追加するかを確認できる。
+
+# 誇張された[exaggerated]GI
+
+最後に、この(フォグとGIを誇張した)スクリーンショットでは、GIの色が最終的なフォグ色に寄与し、適切な色の空間的な変化を追加することを確認できる。
+
+# アンビエント/GIのサポート
+
+- Henyey-Greensteinの位相関数に対してZonal SHを計算する
+    - ビュー方向によってそれを回転する
+    - 2次のSHで同等
+    - `float4(1.0f, dir.y, dir.z, dir.x) * float4(1.0f, g, g, g);`
+- 与えられた点と位相関数でアンビエントライティングのSHの乗法的積分[product integral]を計算する
+    - …色チャネルあたりひとつのdot project^[訳注:dot productのtypo?]
+
+アンビエントライティングやGIに対する非常に一般的なりんティングストレージ基底のひとつは球面調和関数である。
+これらはこれらをとても有用にする複数の数学的特性(正規直交性、回転不変性、など)を持つが、もうひとつはZonal球面調和関数の使用の容易さである。
+これらは(特に低次のSHに対して)自明に回転でき、同様にボリューメトリックフォグに対して有用である。
+HGの位相関数はZonal SHへの自明な拡張を持ち、2次のそれに対して、容易に回転させることができる(コードはスライドにある)。
+そして、ボリューメトリックフォグの応答を計算するため、…。
+
+# テンポラルリプロジェクション
+
+- アンダーサンプリングとエイリアシングが依然として発生するかもしれない
+- テンポラルジッタリングおよびリプロジェクションを使う
+- 一般的なモダンなAA技術
+    - (Crysis 2/3、Killzone: Shadowfall、Assassin's Creed 4、Unreal Engine 4、Infamous: Second Son、などなど！)
+- 2Dの場合よりさらに簡単！
+
+ダウンサンプリングされたSM表現を用いることによってボリューメトリックフォグに関するエイリアシングおよびアンダーサンプリング問題を取り除くためにかなりの時間を費やす一方で、依然として幾らかのアンダーサンプリングアーティファクトが存在するかもしれない。
+それを直すためのアイデアのひとつは毎フレームサンプルパターンをジッタリングし、複数のフレームからそのようなパターンを組み合わせるためのテンポラル平滑化とリプロジェクションを用いることによってテンポラルスーパーサンプリングを用いることである。
+これはますます多くのゲームにおいて一般的なAA技術として使われるが、同様にボリューメトリックフォグに対して使うことができる --- リプロジェクションは2Dの場合より3Dのほうがさらに簡単である。
+
+# 2Dにおける再投影での問題
+
+再投影は、シーン上のオブジェクトが動くときにocclusion/disocclusionの問題があるので、2Dにおいて通常では問題となる。(特にジッタリング時の)そのような動きを検出し、結果の穴を埋めるための適切なデータを見つけることの両方は難しい。
+故に、通常、アルゴリズムは起こり得るshakingと動的なオブジェクトのblurring/tracing/ghostingとの間のスイートスポットを見つけるようと奮闘する。
+
+# ボリューメトリックリプロジェクション
+
+3Dではより簡単である。移動後に動的オブジェクトによって占められる空間は依然として無効である一方で、その背後にあるデータのすべては適切である(いずれかの早期カリング最適化を用いない場合)。錐台と並行なボリュームの外側であったデータのみ無効である。(ただし、未だに、明らかな再投影問題は強力に視点依存で異方的な位相関数で起こり得る。)
+
+# サンプルのジッタリング
+
+- ノイズとエイリアシングをトレードする
+- ノイズはフィルタし易い
+- テンポラル領域でジッタリングおよびフィルタリングできる！
+
+もうひとつのエイリアシングに対抗する技術は空間的なグリッドでのサンプルのジッタリングである。通常のグリッドサンプリングは対処しづらいエイリアシングを生み出す(ソース信号で見えない低周波要素が現れるので)一方で、ジッタリングされたグリッドサンプリングは高周波ノイズとエイリアシングをトレードする。
+ノイズや高周波信号は低解像度カーネルを用いて容易にフィルタリングおよびブラーすることができる。
+さらに、時間的および空間的領域の両方においてジッタリングおよびフィルタリングが可能である。
+
+# サブセルのジッタリング/スーパーサンプリング
+
+この2つのスクリーンショットは、どれだけより良い結果が最も単純な1サンプルのテンポラルジッタリングおよびリプロジェクションのみによって達成されるかを示す --- ほぼすべてのエッジアーティファクトはなくなった！
+我々はいずれの複雑な3Dのジッタリングされたグリッドサンプリングパターンも確認しなかったが、結果がさらに良くなる可能性があるので、今後に調査する価値がある。
+
+# スペシャルサンクス
+
+# ご質問は？
+
+# 参考文献
+
+# ボリューメトリックフォグで使うExponential Shadow Maps
+
+1. シャドウマップのダウンサンプリング/指数空間への変換
+
+```hlsl
+float4 accum = 0.0f;
+accum += exp(ImputTextureShadowmap.GatherRed(pointSampler, samplingPos, int2(0, 0)) * EXPONENT);
+accum += exp(ImputTextureShadowmap.GatherRed(pointSampler, samplingPos, int2(2, 0)) * EXPONENT);
+accum += exp(ImputTextureShadowmap.GatherRed(pointSampler, samplingPos, int2(0, 2)) * EXPONENT);
+accum += exp(ImputTextureShadowmap.GatherRed(pointSampler, samplingPos, int2(2, 2)) * EXPONENT);
+```
+
+2. 分離可能な11ピクセル幅のボックスフィルタ(2つの自明なパス)
+3. シャドウマップを適用
+
+```hlsl
+float receiver = exp(shadedPointShadowSpacePosition.z * EXPONENT);
+float occluder = InputESM.SampleLevel(BilinearSampler, shadedPointShadowSpacePosition.xy, 0);
+shadow = saturate(occluder / receiver);
+```
+
+# 散乱方程式を解く
+
+```hlsl
+void RayMarchThroughVolume(uint3 dispatchThreadID) {
+    float4 currentSliceValue = InputTexture[uint3(dispatchThreadID.xy, 0)].rgba;
+    WriteOutput(uint3(dispatchThreadID.xy, 0), currentSliceValue);
+
+    for (uint z = 1; z < VOLUME_DEPTH; ++z) {
+        float4 nextValue = InputTexture[uint3(dispatchThreadID.xy, z)].rgba;
+        currentSliceValue = AccumulateScattering(currintSliceValue, nextValue);
+        WriteOutput(uint3(dispatchThraedID.xy, z), currentSliceValue);
+    }
+}
+```
+
+ブルートフォースなレイマーチング
+
+# 散乱方程式を解く
+
+Beer-Lambertの法則から方程式を適用する
+
+```hlsl
+// 光散乱方程式への数値計算的な解法の1ステップ
+float AccumulateScattering(float4 colorAndDensityFront, float4 colorAndDensityBack) {
+    // rgb = これまでの累積されたin-scatteredされた光、a = 累積された散乱係数
+    float3 light = colorAndDensityFront.rgb + saturate(exp(-colorAndDensityFront.a)) * colorAndDensityBack.rgb;
+    return float4(light.rgb, colorAndDensityFront.a + colorAndDensityBack.a);
+}
+```
+
+散乱方程式への反復的な数値計算的解法の1ステップ
+
+```hlsl
+// 最終的な散乱の値の書き出し
+void WriteOutput(in uint3 pos, in float4 colorAndDensity) {
+    // 最終値 rgb = これまでの累積されたin-scatteredされた光、a = out-scatteringで発生したシーンの光の消散
+    float4 finalValue = float4(colorAndDensity.rgb, exp(-colorAndDensity.a));
+    OutputTexture[pos].rgba = finalValue;
+}
+```
+
+最終的な散乱の値の書き出し
+
+# 制御可能な密度
+
+- 密度はアーティストが制作できる
+- レベルでの密度マップ
+    - 例: 沼地、ホコリまみれの建物
+- パーティクル注入
+    - 煙の雲
+- ボリューメトリック形状の注入
+- …CGI/映画ではすでに行われる
+    - Wrenninge et al., SIGGRAPH 2010を参照
+
+我々の場合では、密度は単純なアニメーションするパーリンノイズの関数であった一方で、いずれかの方法ではアーティストによって制御できるだろう。
+密度は、一部の非常に霞がかったオブジェクトや沼地(霧)やホコリまみれの建物のような散乱する粒子に対するレベルで制作したり、描いたりすることができるだろう。
+これはパーティクルシステムかいくつかの解析的ボリューム形状/力場によって動的にボリュームへ注入できるだろう。
+映画/CGI業界でとうの昔に行われた方法を確認するにはSIGGRAPH2010でのWrenninge et al.を参照のこと☺
