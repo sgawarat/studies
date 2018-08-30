@@ -6,12 +6,10 @@ numberSections: false
 
 ## いま読む
 
-- [@Hillaire2015]
-    - 物理ベースボリューメトリックレンダリング
+- [@Persson2015]
+    - 実践的なClustered Shading
 - [@Sawicki2018b]
     - VulkanまたはDX12へのポーティングのためのtips
-- [@Wronski2014]
-    - ボリューメトリックフォグ
 
 ## あとで読む
 
@@ -375,6 +373,13 @@ numberSections: false
     - 肌のための半透明レンダリング
 - [@Jimenez2015]
     - Separable Subsurface Scattering
+
+# ボリューメトリクス
+
+- [@Hillaire2015]
+    - 物理ベースボリューメトリックレンダリング
+- [@Wronski2014]
+    - ボリューメトリックフォグ
 
 ## 保留文献
 
