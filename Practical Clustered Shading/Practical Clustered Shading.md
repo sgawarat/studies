@@ -148,4 +148,154 @@ title: Practical Clustered Shading [@Persson2015]
 
 # Avalancheのソリューション
 
+- 未だにディファードシェーディングエンジンである
+    - ただし、フォワードパス付きの統一されたライティングソリューション
+- 空間的クラスタリングのみ
+    - 64x64ピクセル、16深度スライス
+- CPUのライト割り当て
+    - DX10ハードウェアで動作する
+    - コンパクトなメモリ構造にしやすい
+- 暗黙的クラスタ境界のみ
+    - シーン非依存
+    - ディファードパスでは明示的クラスタ境界が使えそう[could potentially use]
+
+# Avalancheのソリューション
+
+- 指数関数的な深度スライシング
+    - 広大な深度範囲！[0.1m〜50,000m]
+    - 既定のリスト
+        - [0.1, 0.23, 0.52, 1.2, 2.7, 6.0, 14, 31, 71, 161, 365, 828, 1880, 4270, 9696, 22018, 50000]
+        - 活用不十分
+    - ファーを500に制限する
+        - それ以降のライトを可視化するための"遠方ライト[distant light]"システムがある
+        - [0.1, 0.17, 0.29, 0.49, 0.84, 1.43, 2.44, 4.15, 7.07, 12.0, 20.5, 35, 59, 101, 172, 293, 500]
+    - 特別なニアの0.1〜5.0のクラスタ
+        - 平坦な地面に立っているプレイヤーからビジュアル的に調整される
+        - [0.1, 5.0, 6.8, 9.2, 12.6, 17.1, 23.2, 31.5, 42.9, 58.3, 79.2, 108, 146, 199, 271, 368, 500]
+
+# Avalancheのソリューション
+
+- 別個の遠方ライトシステム
+
+# Avalancheのソリューション
+
+# Avalancheのソリューション
+
+# Avalancheのソリューション
+
+- 既定の指数関数的なもの
+- 特別なニアクラスタ
+
+# データ構造
+
+- 3Dテクスチャにクラスタ"ポインタ"
+    - R32G32_UINT
+        - R=オフセット
+        - G=[ポイントライト数, スポットライト数]
+- テクスチャバッファにライトインデックスリスト
+    - R16_UINT
+    - タイトにパックされる
+- 定数バッファにライトとシャドウのデータ
+    - ポイントライト: 3つのfloat4
+    - スポットライト: 4つのfloat4
+
+# シェーダ
+
+```hlsl
+int3 tex_coord = int3(In.Position.xy, 0);  // スクリーン空間の位置…
+float depth = Depth.Load(tex_coord);  // …と深度
+
+int slice = int(max(log2(depth * ZParam.x + ZParam.y) * scale + bias, 0));  // クラスタを探す
+int4 cluster_coord = int4(tex_coord >> 6, slice, 0);  // TILE_SIZE = 64
+
+uint2 light_data = LightLookup.Load(cluster_coord);  // ライトリストをフェッチする
+uint light_index = light_data.x;  // パラメータを抽出する
+const uint point_light_count = light_data.y & 0xffff;
+const uint spot_light_count = light_data.y >> 16;
+
+for (uint pl = 0; pl < point_light_count; pl++) {  // ポイントライト
+    uint index = LightIndices[light_index++].x;
+
+    float3 LightPos = PointLights[index].xyz;
+    float3 Color = PointLights[index + 1].rgb;
+    // ここでポイントライトを計算する…
+}
+
+for (uint sl = 0; sl < spot_light_count; sl++) {  // スポットライト
+    uint index = LightIndices[light_index++].x;
+
+    float3 LightPos = SpotLights[index].xyz;
+    float3 Color = SpotLights[index + 1].rgb;
+    // ここでスポットライトを計算する…
+}
+```
+
+# データ構造
+
+- メモリ最適化
+    - ナイーブなアプローチ: 理論上の最大値を割り当てる
+        - すべてのクラスタがすべてのライトにアドレスする
+            - それほど起こらない
+        - 数メガバイトになるかも
+        - ほとんどが一切使われない
+    - 準保守的なアプローチ
+        - 大規模なワーストケースシナリオを構築する
+            - 2の倍数、または、安心できるくらいの数
+            - 理論上の最大値のほんの一部に過ぎない[still only a small fraction of]可能性が高い
+    - 過剰な割り当てをしていないことを実行時にアサートする
+        - 近づいただけでも警告する
+
+# クラスタリングと深度
+
+- 深度で錐台をサンプルする
+
+# クラスタリングと深度
+
+- タイル化された錐台
+
+# クラスタリングと深度
+
+- Tiled Deferred/Forward+用の深度範囲
+
+# クラスタリングと深度
+
+- 2.5Dカリング付きTiled Deferred/Forward+用の深度範囲[@Harada12]
+
+# クラスタリングと深度
+
+- クラスタ化された錐台
+
+# クラスタリングと深度
+
+- Clustered shading用の暗黙的な深度範囲
+
+# クラスタリングと深度
+
+- Clustered shading用の明示的な深度範囲
+
+# クラスタリングと深度
+
+- 明示的な深度範囲 対 暗黙的な深度範囲
+
+# クラスタリングと深度
+
+Tiled 対 暗黙的な深度範囲 対 明示的な深度範囲
+
+# 広範囲の深度
+
+- AからFまでの深度の不連続性の範囲
+    - 既定のTiled: A+B+C+D+E+F
+    - 2.5D付きTiled: A+F
+    - Clustered: 約max(A, F)
+- AからFまでの深度の傾斜[slope]の範囲
+    - 既定のTiled: A+B+C+D+E+F
+    - 2.5D付きTiled: A+B+C+D+E+F
+    - Clustered: 約max(A, B, C, D, E, F)
+
+# データ一貫性
+
+# データ一貫性
+
+# カリング
+
 TODO
