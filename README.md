@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Persson2015]
-    - 実践的なClustered Shading
+- [@Olsson2015b]
+    - 大量のライトからのシャドウイングを効率的に行う方法
 - [@Sawicki2018b]
     - VulkanまたはDX12へのポーティングのためのtips
 
@@ -334,10 +334,12 @@ numberSections: false
     - "Uncharted 4"で用いたDeferred LightingとSpecular Occlusion
 - [@Olsson2012]
     - Clustered Shading
-- [@Olsson2014]
+- [@Olsson2015]
     - Forward ShadingからTiled Shadingまでのメジャーどころを総ざらい
 - [@Oosten2015]
     - Forward Shading、Deferred Shading、Forward+それぞれに対する実装の解説とパフォーマンスの比較
+- [@Persson2015]
+    - 実践的なClustered Shading
 
 ### シャドウイング技術
 
