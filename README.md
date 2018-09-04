@@ -6,8 +6,8 @@ numberSections: false
 
 ## いま読む
 
-- [@Olsson2015b]
-    - 大量のライトからのシャドウイングを効率的に行う方法
+- [@Lagarde2018]
+    - Unityのレンダリングパイプライン
 - [@Sawicki2018b]
     - VulkanまたはDX12へのポーティングのためのtips
 
@@ -353,6 +353,8 @@ numberSections: false
     - Sample Distribution Shadow Maps
 - [@McGuire2011b]
     - 色付き確率的シャドウマップ
+- [@Olsson2015b]
+    - 大量のライトからのシャドウイングを効率的に行う方法
 - [@Peters2015]
     - Moment Shadow Maps
 - [@Peters2017]
