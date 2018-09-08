@@ -545,6 +545,8 @@ Normal orientation fadingは引き伸ばされてしまうエッジに沿った�
 
 DバッファはUnreal Engine 4で用いられるデカールバッファのアプローチである(私が知る限りこれに関するプレゼンテーションはない)。これはGバッファに似ているがデカール用である。
 
+#
+
 |機能:|ディファードデカール|Dバッファ|クラスタデカール|
 |-|-|-|-|
 |任意のGバッファレイアウト|<font color="red">No</font>|<font color="green">YES</font>|<font color="green">YES</font>|
@@ -730,5 +732,373 @@ Dバッファアプローチでは、我々は多少のパフォーマンスを�
 # マテリアル
 
 # HDRPのBRDF
+
+- Litシェーダ
+    - HDRPのデフォルトシェーダ
+    - ディファードマテリアル(フォワードマテリアルに切り替え可能)
+    - マテリアル機能のまとめ
+
+# HDRPのBRDF
+
+- Litシェーダ
+    - ディフューズ項: Disneyディフューズとして知られるBurleyのディフューズ[@Burley2012]
+    - ベース色/メタリックによるパラメータ化
+
+# HDRPのBRDF
+
+- Litシェーダ
+    - ディフューズ項: Disneyのディフューズとして知られるBurleyのディフューズ[@Burley2012]
+    - ディフューズ色/スペキュラ色によるパラメータ化
+
+# HDRPのBRDF
+
+- Litシェーダ
+    - SSS項: DisneyのSSS
+
+# HDRPのBRDF
+
+- Litシェーダ
+    - 半透明項: Disneyのディフューズに基づく
+
+# HDRPのBRDF
+
+- Litシェーダ
+    - スペキュラ項: 多重散乱[multiscattering]の等方的GGX[@Heitz2016]
+
+# HDRPのBRDF
+
+- Litシェーダ
+    - スペキュラ項: 多重散乱の異方的GGX[@Heitz2014]
+        - ハック
+
+# HDRPのBRDF
+
+- Litシェーダ
+    - 玉虫色[iridescence]項: フレネル項を置き換える[@Belcour2017]
+
+# HDRPのBRDF
+
+- Litシェーダ
+    - クリアコートのスペキュラ項: 多重散乱の等方的GGX
+        - ハック
+
+# HDRPのBRDF
+
+- Litシェーダ
+    - HDRPにおけるマテリアルID: マテリアル機能のビットマスク
+    - 例: 標準＋半透明
+    - 例: 標準＋クリアコート＋異方性
+    - 例: 標準＋玉虫色＋表面下散乱
+- Gバッファ制約
+    - ストレージ容量のための排他的なマテリアル機能
+    - 玉虫色、異方性、表面下散乱/半透明
+
+# Gバッファのデザイン
+
+- 標準
+
+|標準|R|G|B|A|
+|-|-|-|-|-|
+|RT0 RGBA8 sRGB|ベース色.rgb|←|←|スペキュラオクルージョン|
+|RT1 RGBA8|法線.xy(八面体 12/12)|←|←|知覚的smoothness|
+|RT2 RGBA8|フレネル0.rgb|←|←|機能マスク(3)/塗装マスク(3)|
+
+- クリアコートはすべてのバリアントで利用可能
+- メタリックなし --- フレネル0に展開する[decompress]
+    - 最適化＋両方のパラメータ化(メタリック/スペキュラ色)を扱う
+
+# 異方性
+
+- 異方的GGX[@Heitz2014]
+    - 高さ相関の可視性項付き
+    - 単純化[@McAuley2015]＋最適化
+
+```hlsl
+// roughnessT -> tangent方向におけるラフネス
+// roughnessB -> bitangent方向におけるラフネス
+float D_GGXAnisoNoPI(float TdotH, float BdotH, float NdotH, float roughnessT, float roughnessB) {
+    float a2 = roughnessT * roughnessB;
+    float3 v = float3(roughnessB * TdotH, roughnessT * BdotH, a2 * NdotH);
+    float s = dot(v, v);
+
+    return INV_PI * a2 * (a2 / s) * (a2 / s);
+}
+
+float V_smithJointGGXAniso(float TdotV, float BdotV, float NdotV, float TdotL, float BdotL, float NdotL, float roughnessT, float roughnessB) {
+    real lambdaV = NdotL * length(float3(roughnessT * TdotV, roughnessB * BdotV, NdotV));
+    real lambdaL = NdotV * length(float3(roughnessT * TdotL, roughnessB * BdotL, NdotL));
+
+    return 0.5 / (lambdaV + lambdaL);
+}
+```
+
+# 異方性
+
+- [@Kulla2017]の異方性パラメータ化を用いる
+
+```hlsl
+roughnessT = roughness * (1 + anisotropy);
+roughnessB = roughness * (1 - anisotropy);
+```
+
+- [@Revie2011; @McAuley2015]由来の法線ベクトルのハックを再検討する
+    - tangentおよびbitangentの伸縮[stretching]をサポートする
+    - IBLテクスチャMIPをフェッチするためにラフネスの使い方を修正する
+    - マジックナンバーを目測する[eye-ball]
+
+```hlsl
+// 異方比[anisotropic ratio](0 -> 等方性なし、1 -> tangent方向における完全な異方性) --- 正だとbitangentWSを使う --- 負だとtangentWSを使う
+void GetGGXAnisotropicModifiedNormalAndRoughness(float3 bitangentWS, float3 tangentWS, float3 N, float3 V, float anisotropy, float perceptualRoughness) {
+    // 正の異方性の値では: tangent = highlight stretch(異方性)の方向、bitangent = grain (brush)の方向
+    float3 grainDirWS = (anisotropy >= 0.0) ? bitangentWS : tangentWS;
+    // (perceptualRoughness < 0.2)で伸縮を減らす
+    float stretch = abs(anisotropy) * saturate(1.5 * sqrt(perceptualRoughness));
+    // grain方向(例、髪やbrushの方向)は法線と直交すると仮定する
+    float3 B = cross(grainDirWS, V);
+    float3 grainNormal = cross(B, grainDirWS);
+    iblN = normalize(lerp(N, grainNormal, stretch));
+    iblPerceptualRoughness = perceptualRoughness * saturate(1.2 - abs(anisotropy));
+}
+```
+
+ハックは純粋に経験則的である☺
+
+# 法線ベクトルのハック
+
+伸縮を確認するためにこの較正キューブマップを用いる。
+異方性は左から右へ: -1から1
+知覚的smoothnessは下から上へ: 1から0
+
+# リファレンス(エンジン内)
+
+かなり不正確に見えるが、高周波なキューブマップでは…
+
+# 法線ベクトルのハック
+
+大丈夫そうであり、(遠くから)リファレンスのように見ることができるであろうものがほとんどである。
+
+# リファレンス(エンジン内)
+
+将来的に、我々はこのハックの代わりに異方的フィルタリングで行いたいと考えている。
+
+# Gバッファのデザイン
+
+- 異方性
+
+|異方性|R|G|B|A|
+|-|-|-|-|-|
+|RT0 RGBA8 sRGB|ベース色.rgb|←|←|スペキュラオクルージョン|
+|RT1 RGBA8|法線.xy(八面体 12/12)|←|←|知覚的smoothness|
+|RT2 RGBA8|異方性|tangent frame angle(11)/メタリック(5)|←|機能マスク(3)/塗装マスク(3)|
+
+- 実際のtangent frameとデフォルトのそれとの間の角度を用いる
+
+```hlsl
+// tangent frameをエンコードする
+// デフォルトのtangent frameを再構築する
+float3x3 frame = GetLocalFrame(normalWS);
+// デフォルトのそれに関して実際のtangent frameの回転角を計算する
+float sinFrame = dot(tangentWS, frame[1]);
+float cosFrame = dot(tangetnWS, frame[0]);
+uint storeSin = abs(sinFrame) < abs(cosFrame) ? 4 : 0;
+uint quadrant ((sinFrame < 0) ? 1 : 0) | ((cosFrame < 0) ? 2 : 0);
+// sin[とcos]は最大で[後の]45度で近似的に線形である
+float sinOrCos = min(abs(sinFrame), abs(cosFrame)) * sqrt(2);
+outGBuffer2.rgb = float3(surfaceData.anisotropy * 0.5 + 0.5, sinOrCos, PackFloatInt8bit(metallic, storeSin | quadrant, 8));
+```
+
+```hlsl
+// tangent frameをデコードする
+float unused;
+uint tangentFlags;
+UnpackFloatInt8bit(inGBuffer2.b, 8, unused, tangentFlags);
+// デフォルトのそれに関して実際のtangent frameの回転角を得る
+uint quadrant = tangentFlags;
+uint storeSin = tangentFlags & 4;
+float sinOrCos = inGBuffer2.g * rsqrt(2);
+float cosOrSin = sqrt(1 - sinOrCos * sinOrCos);
+float sinFrame = storeSin ? sinOrCos : cosOrSin;
+float cosFrame = storeSin ? cosOrSin : sinOrCos;
+sinFrame = (quadrant & 1) ? -sinFrame : sinFrame;
+cosFrame = (quadrant & 2) ? -cosFrame : cosFrame;
+// 法線のまわりで再構築されたtangentを回転する
+tangentWS = sinFrame * frame[1] + cosFrame * frame[0];
+bitangentWS = cross(frame[2], frame[0]);
+```
+
+# クリアコート
+
+- 物理的でない --- 単純化されたアプローチ
+    - ベースの上にある等方的GGX
+    - 1.5の固定された屈折率(0.04のF0)と0.03のラフネス
+    - 塗装の界面を計算に入れたF0でベースのスペキュラを計算する
+        - ゲームでは入力のF0(つまり、スペキュラ色)によるSchlick Fresnelを使った
+            - ゲームにおけるF0は空気の界面(屈折率1)で計算される
+
+# クリアコート
+
+- 誘電体では、以下で塗装の界面(屈折率1.5)に対してベースのF0を適合させられる
+
+```hlsl
+float IorToFresnel0(float transmittedIor, float incidentIor) {
+    return Sq((transmittedIor - incidentIor) / (transmittedIor + incidentIor));
+}
+
+float Fresnel0ToIor(float f0) {
+    return ((1.0 + sqrt(f0)) / (1.0 - sqrt(f0)));
+}
+
+float ConvertF0ForAirInterfaceToF0ForClearCoat15(float f0) {
+    return IorToFresnel0(Fresnel0ToIor(f0), 1.5);
+}
+
+// 最適化: 範囲[0.04(0を返すべき), 1(1を返すべき)]に対する関数(3 mad)のフィッティング
+float ConvertF0ForAirInterfaceToF0ForClearCoat15Fast(float f0) {
+    return saturate(-0.0256868 + f0 * (0.326846 + (0.978946 - 0.283835 * f0) * f0));
+}
+```
+
+- 導体では、スペクトル的複素屈折率[spectral complex IOR]の畳み込みを必要とする
+- アイデア
+    - 屈折率1.5の界面に対するリファレンスを計算する[@Lagarde2011]
+    - 導体に対して上記の式と比較してみる
+
+# クリアコート
+
+- そのコストが実行時パフォーマンスに対してそれほど悪くないと仮定すれば
+    - より低い値で誤差が増加する
+    - クリアコートが有効化されるときにベースのF0を更新するためにこのアプローチを使う
+
+# クリアコート
+
+- すべてのライトタイプに対して
+    - 塗装の界面を計算に入れたF0を持つベースのスペキュラを計算する
+    - クリアコートに対してフレネル項を計算する
+    - ベースに関する近似的なエネルギー保存則を適用する
+    - ベースのスペキュラに塗装のスペキュラ寄与を追加する
+
+```hlsl
+baseF0 = ConvertF0ForAirInterfaceToF0ForClearCoat15Fast(fresnel0);
+(...)  // BaseSpecularの計算
+
+float coatF = F_Schlick(CLEAR_COAT_F0, LdotH);
+baseSpecular *= Sq(1.0 - coartF);  // 交差する界面の出入りに対してベースのスペキュラをスケールする
+float DV = DV_SmithJointGGX(NdotH, NdotL, NdotV, CLEAR_COAT_ROUGHNESS);
+baseSpecular += coatF * DV;
+```
+
+- IBL: NdotVによるSchlick Fresnelを使う＋追加のIBLフェッチ
+
+エリアライトは追加のLTC計算を使う。
+将来的に、我々は、我々のstacklitシェーダアプローチに基づいた、より物理的な方法を用いるだろう。
+
+#
+
+# 多重散乱GGX
+
+- エネルギー保存を改善する
+    - GGX式における多重散乱の欠落
+        - furnace test(一様なHDRI)における最大60%の光の喪失(rough case)
+- 現在のトレンドは追加の埋め合わせ[compensation]項で近似することである
+    - [@Kulla2017; @Hill2018]
+
+# 多重散乱GGX
+
+- [@Heitz2016]はground truthな挙動をもたらす
+    - より荒くなると、ディフューズとスペキュラの両方がより飽和する
+    - シミュレーションはバウンスローブが似ていることを示している
+        - 単一散乱GGXでのスケールファクタで十分であることを暗示している
+
+# 多重散乱GGX
+
+- Emmanuel Turquinの功績
+- スケールファクタはFresnelに依存しなければならない
+- $\rho(\omega_o, \omega_i) = \rho_{ss}(\omega_o, \omega_i) + F_{ms} k_{ms}(\omega_o) \rho_{ss}(\omega_o, \omega_i)$
+- ここで、$k_{ms}(\omega_o) = \frac{1 - E_{ss}(\omega_o)}{E_{ss(\omega_o)}}$であり、$E_{ss}(\omega_o) = \int_{\Omega_i} \rho(\omega_o, \omega_i) |\omega_i \cdot n| d\omega_i$である
+- フレネル項はHDRPにおいてコサイン加重平均Schlick Fresnelである
+    - $F_{ms} \approx F_{ss} = 2 \int_0^1 F(\mu) \mu d\mu = \frac{(1+20F_0)}{21} \approx F_0$
+
+$$
+F_{ms} \approx F_{ss} = 2 \int_{0}^{1} F(\mu)\mu \mathrm{d}{\mu} = \frac{(1 + 20 F_0)}{21} \approx F_0 \\
+E_{ss}({\omega_o}) = \int_{\Omega_i} \rho({\omega_o}, {\omega_i}) |{\omega_i \cdot n}| \mathrm{d}{\omega_i} \\
+k_{ms}({\omega_o}) = {\frac{1 - E_{ss}({\omega_o})}{E_{ss}({\omega_o})}} \\
+\rho(\omega_o, \omega_i) = \rho_{ss}(\omega_o, \omega_i) + F_{ms} k_{ms}(\omega_o) \rho_{ss}(\omega_o, \omega_i)
+$$
+
+# 多重散乱GGX
+
+- 直接および間接の両方のスペキュラにライトループの最後でファクタを適用する
+    - オリジナルのGGXローブのスケールとして機能する
+    - $E_{ss}(\omega_o)$をテクスチャに格納する。キューブマップの事前統合で共有する
+
+```hlsl
+specularLighting = lighting.direct.specular + lighting.indirect.specularReflected;
+// y = Integral{(BSDF / F) * <N, L> dw}
+float3 preFGD = SAMPLE_TEXTURE2D_LOD(_PreIntegratedFGD_GGXDisneyDiffuse, s_linear_clamp_sampler, float2(NdotV, perceptualRoughness), 0).xyz;
+// 多重散乱を計算に入れるためにGGXを再スケールする
+specularLighting *= 1.0 + fresnel0 * ((1.0 / reflectivity) - 1.0);
+```
+
+- ディフューズ項に対しては多重散乱はない
+    - Disneyのディフューズは経験則的であり、エネルギー保存的ではない
+        - ラフネスを増やしても暗くならない
+
+#
+
+多重散乱なし
+１行目は純白の誘電体 --- ここでディフューズ項はDisneyのディフューズである
+２行目はF0 = 1 --- 導体
+３行目はF0 = 金 --- 導体
+４行目はF0 = 銅 --- 導体
+
+#
+
+多重散乱あり
+１行目は純白の誘電体 --- ここでディフューズ項はDisneyのディフューズである
+２行目はF0 = 1 --- 導体
+３行目はF0 = 金 --- 導体
+４行目はF0 = 銅 --- 導体
+
+#
+
+多重散乱なし
+１行目は純白の誘電体 --- ここでディフューズ項はDisneyのディフューズである
+２行目はF0 = 1 --- 導体
+３行目はF0 = 金 --- 導体
+４行目はF0 = 銅 --- 導体
+
+#
+
+多重散乱あり
+１行目は純白の誘電体 --- ここでディフューズ項はDisneyのディフューズである
+２行目はF0 = 1 --- 導体
+３行目はF0 = 金 --- 導体
+４行目はF0 = 銅 --- 導体
+
+#
+
+多重散乱なしでの異方性
+
+#
+
+多重散乱ありでの異方性
+
+#
+
+多重散乱なしでの異方性 => 伸縮ハック付きの偽の異方性を用いているので、上記の見た目は異方性なしの場合ときっかり同じである。
+
+#
+
+多重散乱ありでの異方性は完璧にエネルギー保存している！全体としては偽物であるが、見た目は悪くない。
+
+# 多重散乱GGX
+
+- 検証のためにMitsubaと比較させた
+- 注意: Mitsubaは金のスペクトル的複素屈折率を使う＋相互反射がある
+
+上がHDRP、下がMitsuba
+Mitsubaとの比較はそれほど悪くない。しかし、Mitsubaはより正確で光輸送(球の中での球の反射)を含む方法であるので、公平な比較を行うことはそう単純ではない。
+
+# マテリアル最適化
 
 TODO
