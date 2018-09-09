@@ -1101,4 +1101,278 @@ Mitsubaとの比較はそれほど悪くない。しかし、Mitsubaはより正
 
 # マテリアル最適化
 
+- $E_{ss}(\omega_o)$は他のアルゴリズムと共有できる
+- キューブマップ事前統合FGD項を再設計する[@Karis2013]
+    - $FGD = \int_{\Omega_i} (F_0 + (1 - F_0) * (1 - |V \cdot H|)^5) \rho(V, L)|L \cdot N| dL$
+    - $FGD = (1 - F_0) * \int_{\Omega_i} (1 - |V \cdot H|)^5 \rho(V, L)|L \cdot N| dL + F_0 * \int_{\Omega_i} \rho(V, L)|L \cdot N| dL$
+    - $FGD = (1 - F_0) * x + F_0 * y$
+- FGD.yは以下のために使う
+    - 事前統合されたFGD
+    - 多重散乱
+    - エリアライト: LTCフレネル近似[@Hill2016]
+
+# 玉虫色
+
+- Unity Labsの研究に基づく
+    - Laurent Belcour: A Practice Extension to Microfacet Theory for the Modeling of Varying Iridescence
+    - コードはBRDF Explorerに提供される
+    - リアルタイムで計算するには高コストであり、近似が必要である
+
+# 玉虫色
+
+- リアルタイム用の近似(功績: Laurent Belcour)
+    - Schlick Fresnelを使う
+        - Schlick Fresnelは屈折率が1.4〜2.2の範囲の外だと誤ったものになる[@Lagarde2013]
+        - 屈折率1.0は効果を取り消すことを想定する --- 代わりにマスクパラメータを使う
+    - RGB色空間のみを使う
+        - オリジナルのコードはXYZ色空間を使う
+    - 位相変位[phase shift]を単純化する
+    - より小さい反射率項を使う
+
+# 玉虫色
+
+```hlsl
+// 誘電体の媒質の上部にある薄膜層[thin-film layer]に対する反射率を計算する
+float EvalIridescence(float eta_1, float cosTheta1, float iridesenceThickness, float3 baseLayerFresnel0) {
+    // iridescenceThicknessの単位はここのこの式ではマイクロメートルである。0.5は500nmを意味する。
+    float Dinc = 3.0 * iridesenceThickness;
+    float eta_2 = lerp(2.0, 1.0, iridesenceThickness);
+    float sinTheta2 = Sq(eta_1 / eta_2) * (1.0 - Sq(cosTheta1));
+    float cosTheta2 = sqrt(1.00 - sinTHeta2);
+
+    // 第１界面
+    float R0 = IorToFresnel0(eta_2, eta_1);
+    float R12 = F_Schlick(R0, cosTheta1);
+    float R21 = R12;
+    float T121 = 1.0 - R12;
+    float phi12 = 0.0;
+    float phi21 = PI - phi12;
+
+    // 第２界面
+    float R23 = F_Schlick(baseLayerFresnel0, cosTheta2);
+    float phi23 = 0.0;
+
+    // 位相変位
+    float OPD = Dinc * cosTheta2;
+    float phi = phi21 + phi23;
+
+    // 項を混ぜ合わせる
+    float3 R123 = R12 * R23;
+    float3 r123 = sqrt(R123);
+    float3 Rs = Sq(T121) * R23 / (float3(1.0, 1.0, 1.0) - R123);
+
+    // m = 0に対する反射率項(DC項の増幅)
+    float3 C0 = R12 + Rs;
+    float3 I = C0;
+
+    // m > 0に対する反射率項(ディラックのペア)
+    float3 Cm = Rs - T121;
+    for (int m = 1; m <= 2; ++m) {
+        Cm *= r123;
+        float3 Sm = 2.0 * EvalSensitivity(m * OPD, m * phi);
+        I += Cm * Sm;
+    }
+
+    return I;
+}
+```
+
+コードはリファレンスとして提供する。EvalSensitivityは論文のオリジナルコードと同じ関数である。
+
+# 玉虫色
+
+- EvalIridescenceはベースのFresnel0を置き換えるために呼び出される
+    - すべてのライトタイプで行われる
+    - 理論上パンクチュアルライトごとこれを呼び出すようになっている --- 高価すぎる
+- クリアコートと組み合わせる(ハックな方法[hacky way])
+
+```hlsl
+float topIor = 1.0;  // デフォルトでは空気
+if (HasFlag(bsdfData.materialFeatures, MATERIALFEATUREFLAGS_LIT_CLEAR_COAT)) {
+    topIor = CLEAR_COAT_IOR;
+    // HACK: 事前畳み込みされた環境マップに対するフレネル係数を特定するために反射方向を使う
+    NdotV = sqrt(1.0 + Sq(1.0 / topIor) * (Sq(dot(bsdfData.normalWS, V)) - 1.0));
+}
+fresnel0 = EvalIridescence(topIor, NdotV, iridescenceThickness, fresnel0);
+```
+
+- パラメータ化は依然としてフレンドリーではない
+
+# Gバッファのデザイン
+
+- 玉虫色
+
+|玉虫色|R|G|B|A|
+|-|-|-|-|-|
+|RT0 RGBA8 sRGB|ベース色.rgb|←|←|スペキュラオクルージョン|
+|RT1 RGBA8|法線.xy(八面体 12/12)|←|←|知覚的smoothness|
+|RT2 RGBA8|屈折率|厚さ|未使用(3)/メタリック(5)|機能マスク(3)/塗装マスク(3)|
+
+- 3ビットは最適化目的のために未使用
+    - メタリックを異方性のエンコーディングと合わせる
+
+# 表面下散乱
+
+- このセッションの次のトークを参照ください！
+    - Efficient Screen-Space Subsurface Scattering Using Burley's Normalized Diffusion
+
+# 半透明
+
+- このセッションの次のトークを参照ください！
+    - Efficient Screen-Space Subsurface Scattering Using Burley's Normalized Diffusion
+- 表面下散乱からの別個のマテリアル機能
+- HDRPのサポート:
+    - 表面下散乱＋半透明
+    - 表面下散乱のみ
+    - 半透明のみ
+        - foliage
+
+# Gバッファのデザイン
+
+- 表面下散乱および/または半透明
+
+|SSS+透過|R|G|B|A|
+|-|-|-|-|-|
+|RT0 RGBA8 sRGB|ベース色.rgb|←|←|拡散プロファイル(4)/サブサーフェスマスク(4)|
+|RT1 RGBA8|法線.xy(八面体 12/12)|←|←|知覚的smoothness|
+|RT2 RGBA8|スペキュラオクルージョン|厚さ|拡散プロファイル(4)/サブサーフェスマスク(4)|機能マスク(3)/塗装マスク(3)|
+
+- SSSSSパスはRT0のみを必要とする
+    - 帯域幅を節約するためにスペキュラオクルージョンの位置を入れ替える
+- 最適化目的のために拡散プロファイル/サーフェスマスクを複製する
+
+この奇妙な配置は帯域幅を節約し、SSSに必要なすべての情報をRT0ひとつに格納することを可能とするためにある。ライティングコードはかなり最後になるまでRT0を読むことを必要としないので、拡散プロファイルとサブサーフェスマスクは先にRT0を読まなくて良いように複製される。
+
+# Litシェーダのパフォーマンス
+
+- 基本のPS4 --- 1080p --- 単純な入力を持つマテリアルでのフルスクリーンクアッド
+- 単一のライト＋空によって影響を受ける --- シャドウなし
+    - マテリアルとライトの分類を用いる
+    - 表面下散乱機能は2つのレンダターゲットに書き込む
+    - フォワードパスは大域照明をサンプルする(追加コスト)
+
+認められることは、我々のエリアライトのコストはパンクチュアルライトの価格の倍あることである。
+反射プロブは複合的なマテリアルでよいパフォーマンスを持つ(我々が行う様々な近似のため)。
+
+# StackLitシェーダ
+
+- VFX/映像/映画を対象とする
+    - Litの正確なバージョン
+        - いくつかの近似を取り除く
+    - 同時にすべてのマテリアル機能をサポートする
+        - 例: 玉虫色＋SSS＋半透明＋塗装
+    - 常にフォワードマテリアル
+- 垂直な2レイヤシェーダ
+    - ベース＋塗装レイヤ
+
+# StackLitシェーダ
+
+- Unity Labsの研究に基づく --- Laurent Belcour
+    - Efficient Rendering of Layered Materials using an Atomic Decomposition with Statistical Operators
+        - 10月14日(火) 午前10:45
+
+# キャラクター
+
+- キャラクターシェーダ
+    - 常にフォワードマテリアル
+        - 髪
+        - 布
+        - 目
+
+# LayeredLit
+
+- いくつかのLitマテリアルを一緒にミックスするための設備[facilities]
+    - マスキングに対する様々な重みをサポートする
+    - フォトグラメトリを対象とする*influence mode*
+- "Photogrammetry workflow Layered Shader"という電子書籍で詳しく述べる
+- 複合的でリッチな環境を作りたい
+    - 法線マップの複合的なレイヤリングを意味する
+    - しかし…
+
+# 法線マッピングの問題
+
+- しかし、法線マッピングは多くの問題がある
+    - UVごとにtangent frameを1つ必要とする、プロシージャルなUVでさえ
+    - ボリュームバンプマッピングを扱いづらい(triplanar/ノイズ)
+    - 複数ブレンディングの定式化[@Brisebois2012]
+        - ある程度の順序依存
+    - プロシージャルなジオメトリで実践的でない
+        - 多くのブレンドシェイプを扱いづらい
+
+# 法線マッピング
+
+- 位置、法線、UVから構築されるオンザフライなタンジェント基底[@Mikkelsen2010]
+
+通常のタンジェント基底^[訳注:MikkTSpace = Morten S. Mikkelsenの修士論文中に登場するタンジェント空間を扱うコードを指す。]
+```hlsl
+// これはmikktspace変換である(正規化済みでない属性を使う)
+float3x3 worldToTangent = CreateWorldToTangent(unnormalizedVertexNormalWS, vertexTangentWS.xyz, flipSign);
+
+// 定式化に基づく表面の勾配は単位長の初期法線を必要とする。我々は、摂動する法線[perturbed normal]の正規化が打ち消されるので、すべての3つのベクトルを一様にスケーリングすることによってmikktsによる整合性[compliance]を維持できる。
+float renormFactor = 1.0 / length(unnormalizedNormalWS);
+worldToTangent[0] = worldToTangent[0] * remormFactor;
+worldToTangent[1] = worldToTangent[1] * remormFactor;
+worldToTangent[2] = worldToTangent[2] * remormFactor;  // 保管された頂点法線を正規化する
+
+float3 vertexNormalWS = worldToTangent[2];
+// UVに対するタンジェント基底を0に設定する
+vertexTangetWS0 = input.worldToTangent[0];
+vertexBitangetWS0 = input.worldToTangent[1];
+```
+
+オンザフライなタンジェント基底
+```hlsl
+// PositionWSはカメラに相対的[camera-relative]である
+float3 dPdx = ddx_fine(positionWS);
+float3 dPdy = ddy_fine(positionWS);
+
+float3 sigmaX = dPdx - dot(dPdx, vertexNormalWS) * vertexNormalWS;
+float3 sigmaY = dPdy - dot(dPdy, vertexNormalWS) * vertexNormalWS;
+float flipSign = dot(dPdy, cross(vertexNormalWS, dPdx)) < 0.0 ? -1.0 : 1.0;
+
+// 複数のUVセット(1〜3)に対するタンジェント基底を計算する
+SurfaceGradientGenBasisTB(vertexNormalWS, sigmaX, sigmaY, flipSign, texCoord1, out vertexTangentWS1, out vertexBitangentWS1);
+SurfaceGradientGenBasisTB(vertexNormalWS, sigmaX, sigmaY, flipSign, texCoord2, out vertexTangentWS2, out vertexBitangentWS2);
+SurfaceGradientGenBasisTB(vertexNormalWS, sigmaX, sigmaY, flipSign, texCoord3, out vertexTangentWS3, out vertexBitangentWS3);
+```
+
+# 法線マッピング
+
+- 各UVセットはGPUコスト[ALUs]を追加する
+
+```hlsl
+// これはプロシージャルに生成されるものを含めたいずれかのUVに対して頂点レベルの正接/従正接なしで正接および従正接の正規直交基底をもたらす
+void SurfaceGradientGenBasisTB(real3 nrmVertexNormal, real3 sigmaX, real3 sigmaY, real flipSign, real2 texST, out real3 vT, out real3 vB) {
+    real2 dSTdx = ddx_fine(texST), dSTdy = ddy_fine(texST);
+
+    real det = dot(dSTdx, real2(dSTdy.y, -dSTdy.x));
+    real sign_det = det < 0 ? -1 : 1;
+
+    // invC0は(dXds, dYds)を表すが、我々は行列式で除算しない(代わりに符号でスケールする)
+    real2 invC0 = sign_det * real2(dSTdy.y, -dSTdx.y);
+    vT = sigmaX * invC0.x + sigmaY * invC0.y;
+    if (abs(det) > 0.0) vT = normalize(vT);
+    vB = (sign_det * flipSign) * cross(nrmVertexNormal, vT);
+}
+```
+
+# 法線マッピング
+
+- 実践では
+    - UV0に基づくタンジェント基底はMikktspaceを使う[@Mikkelsen2008]
+        - オンザフライなTBNはhardな表面を持つローポリメッシュを扱う点で良くない
+            - つまり、法線マップがメッシュの正確な形状へ使われるとき
+    - 他のUV1〜3ではオンザフライな基底を生成する
+    - 法線マッピングの問題のごく一部のみを解決するにすぎない…
+
+# 表面勾配フレームワーク
+
+- 表面勾配ベースのアプローチ[@Mikkelsen2010]
+    - 表面勾配は表面の傾きの方向におけるベクトルである
+    - 高さの微分から作る
+
+スカラの高さフィールドがあるとすると、そのフィールドの勾配は各ベクトルが最も大きな変化の方向を指す2Dベクトル場である。ベクトルの長さは変化率[rate of change]に対応する。
+
+# 表面勾配フレームワーク
+
 TODO
