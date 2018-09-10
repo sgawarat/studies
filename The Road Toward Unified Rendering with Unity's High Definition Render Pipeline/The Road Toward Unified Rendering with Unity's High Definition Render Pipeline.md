@@ -1308,7 +1308,7 @@ fresnel0 = EvalIridescence(topIor, NdotV, iridescenceThickness, fresnel0);
 // これはmikktspace変換である(正規化済みでない属性を使う)
 float3x3 worldToTangent = CreateWorldToTangent(unnormalizedVertexNormalWS, vertexTangentWS.xyz, flipSign);
 
-// 定式化に基づく表面の勾配は単位長の初期法線を必要とする。我々は、摂動する法線[perturbed normal]の正規化が打ち消されるので、すべての3つのベクトルを一様にスケーリングすることによってmikktsによる整合性[compliance]を維持できる。
+// 定式化に基づく表面の勾配は単位長の初期法線を必要とする。我々は、摂動法線[perturbed normal]の正規化が打ち消されるので、すべての3つのベクトルを一様にスケーリングすることによってmikktsによる整合性[compliance]を維持できる。
 float renormFactor = 1.0 / length(unnormalizedNormalWS);
 worldToTangent[0] = worldToTangent[0] * remormFactor;
 worldToTangent[1] = worldToTangent[1] * remormFactor;
@@ -1374,5 +1374,184 @@ void SurfaceGradientGenBasisTB(real3 nrmVertexNormal, real3 sigmaX, real3 sigmaY
 スカラの高さフィールドがあるとすると、そのフィールドの勾配は各ベクトルが最も大きな変化の方向を指す2Dベクトル場である。ベクトルの長さは変化率[rate of change]に対応する。
 
 # 表面勾配フレームワーク
+
+- 摂動法線はn' = n - SurfGrad(Height)として表現できる
+
+```hlsl
+float3 SurfaceGradientResolveNormal(float3 normalizedVertexNormal, float3 surfGrad) {
+    return normalizedVertexNormal - surfGrad;
+}
+```
+
+- SurfGrad()は線形な操作である
+    - いずれのバンプの影響度の重み付き組み合わせに対しても機能する
+- すべては表面の勾配に変換できる
+    - 通常のタンジェント基底
+    - UV、位置、法線から作られるオンザフライなタンジェント基底
+    - オブジェクト空間の法線
+    - ボリュームバンプマップ
+
+1. 表面勾配ベースのアプローチ[@MM2010 - sfgrad]はひとつのフレームワークにこのすべてを統一することを可能にする。
+2. Blinnの摂動法線はn' = n - SurfGrad(H)で表現できる、と[@MM2010 - sfgrad]に示されている。
+3. SurfGrad(H)は線形操作であり、任意のバンプ影響度の重み付き組み合わせに対して機能するだろう。
+    - オブジェクト空間の法線はオンザフライに(ピクセルシェーダで)表面の勾配へ変換できる。
+    - 因習的なmikktspace対応の頂点レベルのタンジェント空間はオンザフライに表面法線へ変換できる。
+        - 我々は頂点のタンジェント空間なしでUV、位置、法線からオンザフライに表面法線を生成することもできる。
+        - ボリュームバンプマップに対して、我々はオンザフライに表面法線を生成できる。これは[@MM2010 - sfgrad]に示されるように正しい結果をもたらす。
+
+# 表面法線フレームワーク
+
+```hlsl
+// オンザフライなTBN(tspaceNormalToDerivative()を用いて得られるderiv)から、または
+// 因習的な頂点レベルのTBN(mikktspace対応およびtspaceNormalToDerivative()を用いて得られるderiv)からの表面勾配
+float3 SurfaceGradientFromTBN(float2 deriv, float3 vT, float3 vB) {
+    return deriv.x * vT + deriv.y * vB;
+}
+
+// オブジェクトまたはワールド空間の法線マップからのような、すでに生成された"法線"からの表面勾配
+// vは、それが方向を立証[establish]している限り、単位長である必要はない
+float3 SurfaceGradientFromPerturbedNormal(float3 nrmVertexNormal, float3 v) {
+    float3 n = nrmVertexNormal;
+    float s = 1.0 / max(FLT_EPS, abs(dot(n, v)));
+    return s * (dot(n, v) * n - v);  // 訳注:画像が不明瞭で判別できない
+    // return s * (dot(n, v) * n + v);
+}
+
+// パーリンノイズのボリュームのようなボリュームバンプ関数の勾配から表面勾配を生成するのに使われる
+// "bump mapping unparametrized surfaces on the GPU"の式2
+// 図2ではその勾配を使う場合とバンプマッピングを行うための表面勾配を使う場合との間の差異を確認できる(オリジナルの手法は論文中では誤って証明されている！)
+float3 SurfaceGradientFromVolumeGradient(float3 nrmVertexNormal, float3 grad) {
+    return grad - dot(nrmVertexNormal, grad) * nrmVertexNormal;
+}
+
+// ボリュームバンプマップの特例を考慮したtriplanar投影
+// deriv等はtspaceNormalToDerivative()を用いて得られ、computeTriplanarWeights()を用いて重み付けする
+float3 SurfaceGradientFromTriplanarProjection(float3 nrmVertexNormal, float3 triplanarWeights, float2 deriv_xlane, float2_deriv_yplane, float2 deriv_zplane) {
+    const float w0 = triplanarWeights.x, w1 = triplanarWeights.y, w2 = triplanarWeights.z;
+
+    // driv_xplane、deriv_yplane、derive_zplaneが個々に(z,y)、(z,x)、(x,y)を用いてサンプルされると仮定する
+    // ルックアップ座標の正のスケールは同様に機能するだろうが、微分要素の負のスケールは適宜に否定を取る必要があるだろう
+    float volumeGrad = float3(w2 * deriv_zplane.x + w1 * deriv_yplane.y, w2 * deriv_zplane.y + w0 * deriv_xplane.y, w0 * deriv_xplane.x + w1 * deriv_yplane.x);
+
+    return SurfaceGradientFromVolumeGradient(nrmVertexNormal, volumeGrad);
+}
+```
+
+# 表面勾配フレームワーク
+
+```hlsl
+// この128は微分が数値的に128より大きくならないであろうことを意味する(1は45度なので、128は非常に急勾配)
+// 基本的にはtan(angle)を128に制限する
+// なので、最大角度は89.55度となり、90度の垂直限界に十分近いと考える
+// vTは[-1; 1]にあるタンジェント空間の法線のchannels.xyである
+// 出力: vTを微分に変換する
+float2 tspaceNormalToDerivativeRGB(float4 packedNormal, float scale = 1.0) {
+    const float fS = 1.0 / (128.0 * 128.0);
+    float3 vT = packedNormal.xyz * 2.0 - 1.0;
+    float3 vTsq = vT * vT;
+    float maxcompxy_sq = fS * max(vTsq.x, vTsq.y);
+    float z_inv = rsqrt(max(vTsq.z, maxcompxy_sq));
+    float2 deriv = -z_inv * float2(vT.x, vT.y);
+    return deriv * scale;
+}
+```
+
+タンジェント空間の法線から微分への変換は、一様なスケーリングを表現するので、表面勾配としてTBN変換を書き換えることが可能になる。
+
+n = (nx, ny, nz)の微分はd = (-nx/nz, -ny/nz)
+
+なので、最後の正規化の後、vT*n.x+vB*n.y+vN*n.zはvN-(d.x*vT+d.y*vB)と同じであるTBN変換を得る。ここで、括弧内の部分は基本的にTBNが一様にスケールされるあなたの他のスライドと一緒に使われるときのTBNスタイルの表面勾配である。
+worldToTangetを含むコードを伴う法線マッピングのスライド。つまり、前者では、vT、vB、vNは補間以降すべて正規化されていない。後者の表面勾配のバリアントでは、一様にスケールされる(表面勾配の式が必要とするのでvNを正規化するためのトリックとして)。このファクタは一様なスケーリングである微分を作るためにnzでの除算と共に最終的な正規化では打ち消される。
+
+# 表面勾配フレームワーク
+
+- triplanar法線マッピングは実装するにはトリッキーとなり得る
+    - しばしば誤った向きになる
+
+# 表面勾配フレームワーク
+
+- 表面勾配はより単純でこの問題を示さない
+
+# 表面勾配フレームワーク
+
+- 法線マッピング問題に対する良い解法
+    - 使用例
+        - レイヤー化したマテリアル
+            - ベース＋３レイヤ
+            - ベースのUV0
+            - レイヤのUV0〜2またはplanar
+            - ディテールマップのためのUV3
+        - 様々なブレンドマスクモード
+
+# 表面勾配フレームワーク
+
+- パフォーマンス数値
+    - オンザフライなタンジェント基底によって暗示されるコスト
+    - 複合的なマテリアル、木、foliage、地面を持つシーン
+
+# ライティング
+
+# 物理的な光の単位
+
+- [@Lagarde2014]に基づく --- 同じ定式化
+
+|||
+|-|-|
+|パンクチュアルライト|光量(lm)、光度(cd)|
+|エリアライト|光量(lm)、輝度(cd/m^2)またはEV値(K=12.5)|
+|発光|輝度(cd/m^2)|
+|環境|上半分の半球の照度(lux)|
+|太陽|天頂[zenith]の太陽によるグラウンドレベルの照度(lux)|
+
+- スポットライトの絞りに対する2つのモード
+- Occlusion
+- Reflector
+    - 光度が絞りで変化する
+
+```cs
+// Occlusion
+public static float ConvertPointLightLumenToCandela(float intensity) {
+    return intensity / (4.0f * Mathf.PI);
+}
+
+// Reflector
+public static float ConvertPointLightLumenToCandela(float intensity, float angle) {
+    return intensity / (2.0f * (1.0f - Mathf.Cos(angle / 2.0f)) * Mathf.PI);
+}
+```
+
+皆[people]は気付いていないかもしれないが、逆二乗の減衰を用いることは物理単位を用いることを意味する。すなわち、それはカンデラであり、ディレクショナルライトではルクス(PIで割れば)であり、その他ではPI*ルクスである
+
+# 物理的な光の単位
+
+- パンクチュアルライトおよび太陽光の色
+    - フィルタ＋色温度
+    - 正確なフィッティング近似(最大誤差: 0.008)
+
+```cs
+// 相関のある色温度(ケルビン)として、等価なRGBを推定する。曲線フィッティング誤差は最大0.008
+// 線形RGB空間における色を返す
+public static Color CorrelatedColorTemperatureToRGB(float temperature) {
+    float r, g, b;
+
+    // 温度は1000から40000度の間になければならない
+    // フィッティングはケルビンを1000で割る必要がある(より高い精度を可能にする)
+    float kelvin = Mathf.Clamp(temperature, 1000.0f, 40000.0f) / 1000.f;
+    float kelvin2 = kelvin * kelvin;
+
+    // ピボットは近似であるので、6570を用いる。pivot pointは赤で約6580であり、青と緑で6560である
+    // 順次各色を計算する(注、すべての値は[0,1]に属するので、クランプは本当は必要ないが、局地で役に立つ可能性がある)
+    // 赤
+    r = kelvin < 6.57f ? 1.0f : Mathf.Clamp((1.35651f + 0.216422f * kelvin + 0.000633715f * kelvin2) / (-3.24223f + 0.918711f * kelvin), 0.0f, 1.0f);
+    // 緑
+    g = kelvin < 6.570f ? Mathf.Clamp((-399.809f + 414.271f * kelvin + 111.543f * kelvin2) / (2779.24f + 164.143f * kelvin + 84.7356f * kelvin2), 0.0f, 1.0f) : Mathf.Clamp((1370.38f + 734.616f * kelvin + 0.689955f * kelvin2) / (-4625.69f + 1699.87f * kelvin), 0.0f, 1.0f);
+    // 青
+    b = kelvin > 6.570f ? 1.0f : Mathf.Clamp((348.963f - 523.53f * kelvin + 193.62f * kelvin2) / (2848.82f - 214.52f * kelvin + 78.8614f * kelvin2), 0.0f, 1.0f);
+
+    return new Color(r, g, b, 1.0f);
+}
+```
+
+# 物理的な光の単位
 
 TODO
