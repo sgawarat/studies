@@ -6,10 +6,12 @@ numberSections: false
 
 ## いま読む
 
-- [@Lagarde2018]
-    - Unityのレンダリングパイプライン
-- [@Sawicki2018b]
-    - VulkanまたはDX12へのポーティングのためのtips
+- [@Dutre2002]
+    - 光輸送の基礎とGIアルゴリズムの解説
+- [@Golubev2018]
+    - Burleyの正規化済み拡散を用いた効率的なスクリーン空間表面下散乱
+- [@Novak2018]
+    - ボリューメトリックな光輸送シミュレーションに対するモンテカルロ的手法のまとめ
 
 ## あとで読む
 
@@ -19,8 +21,12 @@ numberSections: false
     - Filmic SMAA
 - [@Lottes2016]
     - AMDの次世代カラーグレーディング
+- [@Mikkelsen2010]
+    - GPUでのパラメタライズされていない表面のバンプマッピング
 - [@True2017]
     - NVIDIAの次世代カラーグレーディング
+- [@Sawicki2018b]
+    - VulkanまたはDX12へのポーティングのためのtips
 
 ## 注目人物
 
@@ -301,6 +307,8 @@ numberSections: false
     - GPU駆動カリングパイプラインとバーチャルテクスチャ
 - [@Lagarde2014]
     - EAが"Frostbite"を物理ベースにするときに採用した方法とその知見
+- [@Lagarde2018]
+    - Unityの新しいレンダリングパイプラインである"HDRP"の解説
 - [@Marchalot2018]
     - "Detroit: Become Human"でのClustered Forard RenderingとAnti-Aliasingについて
 - [@Mintus2018]
