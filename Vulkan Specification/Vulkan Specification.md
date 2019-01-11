@@ -675,10 +675,10 @@ VK_DEFINE_HANDLE(VkCommandBuffer)
 : [vkEndCommandBuffer](#)はコマンドバッファの記録を終わらせ、記録状態から*実行可能状態*に移行させる。実行可能なコマンドバッファは[サブミット](#)、リセット、または、[他のコマンドバッファに記録させる](#)ことが**できる**。
 
 保留[Pending]
-: コマンドバッファの[キューサブミッション](#)はコマンドバッファの状態を実行可能状態から*保留状態*に変更する。保留状態にある間、アプリケーションはいかなる方法でもコマンドバッファを修正しようと**してはならない**--- デバイスはそれに記録されたコマンドを処理してい**てもよい**。一度コマンドバッファの実行が完了すれば、そのコマンドバッファは実行可能状態に戻る。[同期](#)コマンドはいつこれが発生するかを検出するのに使われる**必要がある**。
+: コマンドバッファの[キューサブミッション](#)はコマンドバッファの状態を実行可能状態から*保留状態*に変更する。保留状態にある間、アプリケーションはいかなる方法でもコマンドバッファを修正しようと**してはならない** --- デバイスはそれに記録されたコマンドを処理してい**てもよい**ので。一度コマンドバッファの実行が完了すれば、そのコマンドバッファは*実行可能状態*に、または、`VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT`で記録されていれば*無効状態*に戻る。[同期](#)コマンドはいつこれが発生するかを検出するのに使われる**必要がある**。
 
 無効[Invalid]
-: コマンドバッファに記録されたコマンドで使われたリソースの修正や消去のようないくつかの操作はコマンドバッファの状態を*無効状態*に遷移させるだろう。無効状態にあるコマンドバッファは、リセットして*記録状態*に移行させること、または、解放することのみ行うことが**できる**。
+: コマンドバッファに記録されたコマンドで使われた[リソースの修正や消去](#)のようないくつかの操作はコマンドバッファの状態を*無効状態*に遷移させるだろう。無効状態にあるコマンドバッファはリセットまたは解放のみ行うことが**できる**。
 
 コマンドバッファ上で操作するいずれかの与えられたコマンドは、そのコマンドの有効な使い方の制約にて詳しく述べられる、コマンドバッファがい**なければならない**状態に関するそれ自身の要件を持つ。
 
@@ -1400,157 +1400,45 @@ TODO: `vkUnmapMemory`
 
 # リソースデスクリプタ {id="sec:13"}
 
-シェーダはAPIを介してバッファおよびイメージビューに間接的にバインドされる特別なシェーダ変数を用いることでバッファおよびイメージリソースにアクセスする。これらの変数はセットにまとめられる。ここでは、バインディングの各セットがAPIにおいて*デスクリプタセット[descriptor set]*によって表現され、デスクリプタセットは一度にすべてバインドされる。*デスクリプタ[descriptor]*はバッファビュー、イメージビュー、サンプラ、複合イメージサンプラ[combined image sampler]のようなシェーダリソースを表す不透明データ構造である。各セットの内容はその*デスクリプタセットレイアウト[descriptor set layout]*によって決定され、パイプライン内のシェーダにおけるリソース変数によって使われることが**できる**そのセットレイアウトの列は*パイプラインレイアウト*で指定される。
+*デスクリプタ[descriptor]*はバッファ、バッファビュー、イメージビュー、サンプラ、複合イメージサンプラ[combined image sampler]のようなシェーダリソースを表す不透明データ構造である。デスクリプタは*デスクリプタセット[descriptor set]*に組織化される。これは、後続のドローコマンドで使うためのコマンドを記録している間にバインドされる。各デスクリプタセットの内容の配置は*デスクリプタセットレイアウト[descriptor set layout]*によって決定される。それは、何のデスクリプタがその中に格納できるかを決定する。パイプラインによって使用**できる**デスクリプタセットレイアウトの列は*パイプラインレイアウト[pipeline layout]*に指定される。
 
-各シェーダは最大`maxBoundDescriptorSets`([制限](#)を参照)個のデスクリプタセットを使用**でき**、各デスクリプタセットはすべてのデスクリプタタイプのデスクリプタのためのバインディングを含めることが**できる**。各シェーダリソース変数はデスクリプタセットレイアウト内のそのロケーションを定義する(セット番号、バインディング番号、配列要素)のタプルに割り当てられる。GLSLでは、セット番号とバインディング番号はlayout修飾子を介して割り当てられ、配列要素は連続的に配列の最初の要素が0に等しいインデックスから始まって暗黙的に割り当てられる(そして、配列でない変数に対して配列要素は0である)。
-
-```glsl
-// セット番号 = M、バインディング番号 = N、配列要素 = 0を割り当てる。
-layout (set=M, binding=N) uniform sampler2D variableName;
-// すべての配列要素に対して、セット番号 = M、バインディング番号 = Nを割り当て、そして
-// I番目の配列のメンバーに配列要素 = Iを割り当てる。
-layout (set=M, binding=N) uniform sampler2D variableNameArray[I];
-```
-: GLSLの例
-
-```spir-v
-// Assign set number = M, binding number = N, array element = 0
-               ...
-          %1 = OpExtInstImport "GLSL.std.450"
-               ...
-               OpName %10 "variableName"
-               OpDecorate %10 DescriptorSet M
-               OpDecorate %10 Binding N
-          %2 = OpTypeVoid
-          %3 = OpTypeFunction %2
-          %6 = OpTypeFloat 32
-          %7 = OpTypeImage %6 2D 0 0 0 1 Unknown
-          %8 = OpTypeSampledImage %7
-          %9 = OpTypePointer UniformConstant %8
-         %10 = OpVariable %9 UniformConstant
-               ...
-// Assign set number = M, binding number = N for all array elements, and
-// array element = I for the I'th member of the array.
-               ...
-          %1 = OpExtInstImport "GLSL.std.450"
-               ...
-               OpName %13 "variableNameArray"
-               OpDecorate %13 DescriptorSet M
-               OpDecorate %13 Binding N
-          %2 = OpTypeVoid
-          %3 = OpTypeFunction %2
-          %6 = OpTypeFloat 32
-          %7 = OpTypeImage %6 2D 0 0 0 1 Unknown
-          %8 = OpTypeSampledImage %7
-          %9 = OpTypeInt 32 0
-         %10 = OpConstant %9 I
-         %11 = OpTypeArray %8 %10
-         %12 = OpTypePointer UniformConstant %11
-         %13 = OpVariable %12 UniformConstant
-               ...
-```
-: SPIR-Vの例
+シェーダはデスクリプタセットとデスクリプタセットにおいてデスクリプタと接続されるバインディング番号で修飾された変数を介してリソースにアクセスする。
+バインドされるデスクリプタセットに対応するシェーダインターフェイスは[シェーダリソースインターフェイス](#)に述べられる。
 
 ## デスクリプタタイプ {id="sec:13.1"}
 
-以下の節はVulkanによってサポートされる様々なデスクリプタタイプの概要を述べる。各節はデスクリプタタイプを定義し、各デスクリプタタイプはデスクリプタセットにおいてと同様にシェーダ言語とSPIR-Vにおける表明[manifestation]を持つ。デスクリプタタイプとシェーダ言語における不透明型のクラスの間には1対1対応がほぼ存在する。ここで、シェーダ言語における不透明型は対応するデスクリプタタイプのパイプラインレイアウトにおけるデスクリプタを参照**しなければならない**。ただし、[複合イメージサンプラ](#)に述べられるようにこの規定には例外が存在する。
+リソースや使い方に対応して、Vulkanによってサポートされる多種多様なデスクリプタの種類がある。以下の節では各デスクリプタタイプのAPI定義を述べる。SPIR-Vと各タイプの対応は[シェーダインターフェイス]
+(#)章の[シェーダリソースとデスクリプタタイプの対応関係とシェーダリソースとストレージクラスの対応関係](#)の表にリスト化される。
 
 ### ストレージイメージ {id="sec:13.1.1"}
 
-*ストレージイメージ[storage image]*(`VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`)はパイプラインにバインドされたシェーダ内でロード、ストア、イメージメモリでのアトミック操作に使われるデスクリプタタイプである。
+*ストレージイメージ[storage image]*(`VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`)はロード、ストア、アトミック操作を処理**できる**[イメージビュー](#)を介する[イメージリソース](#)に関連付けられるデスクリプタタイプである。
 
-ストレージイメージからのロードはサンプラを使わず、フィルタされず、座標のラッピング[wrapping]やクランピング[clamping]をサポートしない。ロードは[vkGetPhysicalDeviceFormatProperties](#)を介した`VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`でサポートを報告するイメージフォーマットに対してすべてのシェーダステージにおいてサポートされる。
+ストレージイメージのロードは(線形タイリングのイメージの場合)[VkFormat](#)::`linearTilingFeatures`、または、(最適タイリングのイメージの場合)[VkFormat](#)::`optimalTilingFeatures`において[vkGetPhysicalDeviceFormatProperties](#)を介した`VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`でサポートを報告するイメージフォーマットに対してすべてのシェーダステージにおいてサポートされる。
 
-ストレージイメージへのストアは`VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`でサポートを報告するイメージフォーマットに対してコンピュートシェーダにおいてサポートされる。
+ストレージイメージへのストアは(線形タイリングのイメージの場合)[VkFormat](#)::`linearTilingFeatures`、または、(最適タイリングのイメージの場合)[VkFormat](#)::`optimalTilingFeatures`において[vkGetPhysicalDeviceFormatProperties](#)を介した`VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT`でサポートを報告するイメージフォーマットに対してコンピュートシェーダにおいてサポートされる。
+
+ストレージイメージでのアトミック操作は(線形タイリングのイメージの場合)[VkFormat](#)::`linearTilingFeatures`、または、(最適タイリングのイメージの場合)[VkFormat](#)::`optimalTilingFeatures`において[vkGetPhysicalDeviceFormatProperties](#)を介した`VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT`でサポートを報告するイメージフォーマットに対してコンピュートシェーダにおいてサポートされる。
 
 ストレージイメージでのロードおよびストア操作は`VK_IMAGE_LAYOUT_GENERAL`にあるイメージでのみ行うことが**できる**。
 
 `fragmentStoresAndAtomics`機能が有効化されているとき、ストアおよびアトミック操作はコンピュートシェーダでサポートされるのと同じイメージフォーマット一式によるフラグメントシェーダにおけるストレージイメージに対してもサポートされる。`vertexPIpelineStoresAndAtomics`機能が有効化されているとき、ストアおよびアトミック操作はコンピュートシェーダでサポートされるのと同じイメージフォーマット一式による頂点、テッセレーション、ジオメトリシェーダにおいてもサポートされる。
 
-ストレージイメージ宣言はその変数がアトミック操作で用いられる場合にはシェーダでイメージフォーマットを指定**しなければならない**。
-
-`shaderStorageImageReadWithoutFormat`機能が有効化されていないならば、ストレージイメージ宣言はその変数がロード操作で用いられる場合にはシェーダでイメージフォーマットを指定**しなければならない**。
-
-`shaderStorageImageWriteWithoutFormat`機能が有効化されていないならば、ストレージイメージ宣言はその変数がストア操作で用いられる場合にはシェーダでイメージフォーマットを指定**しなければならない**。
-
-ストレージイメージはGLSLシェーダソースでは(必要ならば)フォーマットレイアウト修飾子と一緒に適切な次元のユニフォームな`image`変数を用いて宣言される。
-
-```glsl
-layout (set=m, binding=n, r32f) uniform image2D myStorageImage;
-```
-: GLSLの例
-
-```spir-v
-               ...
-          %1 = OpExtInstImport "GLSL.std.450"
-               ...
-               OpName %9 "myStorageImage"
-               OpDecorate %9 DescriptorSet m
-               OpDecorate %9 Binding n
-          %2 = OpTypeVoid
-          %3 = OpTypeFunction %2
-          %6 = OpTypeFloat 32
-          %7 = OpTypeImage %6 2D 0 0 0 2 R32f
-          %8 = OpTypePointer UniformConstant %7
-          %9 = OpVariable %8 UniformConstant
-               ...
-```
-: SPIR-Vの例
+ストレージイメージのイメージサブリソースはシェーダにおいてそのデータにアクセスするために`VK_IMAGE_LAYOUT_GENERAL`にい**なければならない**。
 
 ### サンプラ {id="sec:13.1.2"}
 
-*サンプラ[sampler]*(`VK_DESCRIPTER_TYPE_SAMPLER`)は*sampled image*([Sampled Image](#)を参照)からフィルタされたロードを処理するために使われることが**できる**、アドレスの計算、フィルタの挙動、その他の特性を制御するパラメータ一式を表現する。
-
-サンプラは`sampler`変数を用いてGLSLシェーダソースで宣言される。ここで、サンプラ型は関連するテクスチャ次元を持たない。
-
-```glsl
-layout (set=m, binding=n) uniform sampler mySampler;
-```
-: GLSLの例
-
-```spir-v
-               ...
-          %1 = OpExtInstImport "GLSL.std.450"
-               ...
-               OpName %8 "mySampler"
-               OpDecorate %8 DescriptorSet m
-               OpDecorate %8 Binding n
-          %2 = OpTypeVoid
-          %3 = OpTypeFunction %2
-          %6 = OpTypeSampler
-          %7 = OpTypePointer UniformConstant %6
-          %8 = OpVariable %7 UniformConstant
-               ...
-```
-: SPIR-Vの例
+*サンプラデスクリプタ[sampler descriptor]*(`VK_DESCRIPTER_TYPE_SAMPLER`)は[サンプラ](#)オブジェクトに関連付けられるデスクリプタタイプであり、[sampled image](#)で処理される[サンプリング操作](#)の振る舞いを制御するために使われる。
 
 ### Sampled Image {id="sec:13.1.3"}
 
-*sampled image*(`VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`)はサンプルされたイメージデータを取得するために(通常ではサンプラと共に)使うことが**できる**。シェーダはsampled imageハンドルとサンプルデータへのサンプラハンドルを用いる。ここで、イメージハンドルは形状とメモリのフォーマットを一般に定義し、サンプラは座標アドレッシングの処理方法を一般に定義する。同じサンプラは複数のイメージからサンプルするのに使用**でき**、それぞれが異なるサンプリングパラメータ一式を持つ複数のサンプラを持つ同じsampled imageからサンプルすることができる。
+*sampled image*(`VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`)は[サンプリング操作](#)を処理**できる**[イメージビュー](#)を介する[イメージリソース](#)に関連付けられるデスクリプタタイプである。
 
-sampled imageは適切な次元のユニフォームな`texture`変数を用いてGLSLシェーダソースに宣言される。
+シェーダはサンプリング操作を行うためにsampled image変数とサンプラ変数を組み合わせる。
 
-```glsl
-layout (set=m, binding=n) uniform texture2D mySampledImage;
-```
-: GLSLの例
+sampled imagesは(線形タイリングのイメージの場合)[VkFormat](#)::`linearTilingFeatures`、または、(最適タイリングのイメージの場合)[VkFormat](#)::`optimalTilingFeatures`において[vkGetPhysicalDeviceFormatProperties](#)を介した`VK_FORMAT_FEATURE_SAMPLED_IMAGE_ATOMIC_BIT`でサポートを報告するイメージフォーマットに対してすべてのシェーダステージにおいてサポートされる。
 
-```spir-v
-               ...
-          %1 = OpExtInstImport "GLSL.std.450"
-               ...
-               OpName %9 "mySampledImage"
-               OpDecorate %9 DescriptorSet m
-               OpDecorate %9 Binding n
-          %2 = OpTypeVoid
-          %3 = OpTypeFunction %2
-          %6 = OpTypeFloat 32
-          %7 = OpTypeImage %6 2D 0 0 0 1 Unknown
-          %8 = OpTypePointer UniformConstant %7
-          %9 = OpVariable %8 UniformConstant
-               ...
-```
-: SPIR-Vの例
+sampled imageのイメージサブリソースはシェーダにおいてそのデータにアクセスするために`VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL`か`VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`か`VK_IMAGE_LAYOUT_GENERAL`に**なければならない**。
 
 ### 複合イメージサンプラ {id="sec:13.1.4"}
 
@@ -1831,4 +1719,24 @@ TODO: API example
 
 ### デスクリプタセットの割り当て {id="sec:13.2.3"}
 
-TODO
+*デスクリプタプール*はデスクリプタのプールを維持し、デスクリプタセットがそこから割り当てられる。デスクリプタプールは外部同期される。これは、アプリケーションが複数のスレッドで同時に同じプールからデスクリプタセットを割り当て、および/または、解放**してはならない**ことを意味する。
+
+デスクリプタプールは`VkDescriptorPool`ハンドルによって表される。
+
+```c
+VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkDescriptorPool)
+```
+
+TODO: `vkCreateDescriptorPool`
+
+TODO: `VkDescriptorPoolCreateInfo`
+
+`pPoolSizes`配列に複数の`VkDescriptorPoolSize`が現れるならば、そのプールは各タイプのデスクリプタの総数に対して十分なストレージと一緒に生成されるだろう。
+
+デスクリプタプールのフラグメンテーションが発生する可能性があり、デスクリプタセットの割り当て失敗を引き起こし**てもよい**。フラグメンテーションによる失敗は、そのプールからのすべての未解決のデスクリプタセット割り当てと要求された割り当てを合わせた数がプール生成時に要求したデスクリプタの総数より大きくないにも関わらず、デスクリプタセットの割り当てを失敗することとして定義される。実装は、以下に示されるように、割り当ての失敗を引き起こし**てはならない**時のある保証を提供する。
+
+デスクリプタプールは、それが生成されて、または、最も最近にリセットされて以降、解放されたデスクリプタセットを持っていなかったならば、フラグメンテーションは割り当て失敗を引き起こし**てはならない**(これは常に`VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT`なしで生成されたプールの場合であることに注意)。加えて、そのプールから割り当てられたすべてのセットが、それが生成されて、または、最も最近にリセットされて以降、同じ(各タイプの)デスクリプタ数を用い、そして、要求された割り当てもそれと同じ(各タイプの)デスクリプタ数を用いるならば、フラグメンテーションは割り当て失敗を引き起こし**てはならない**。
+
+割り当て失敗がフラグメンテーションによって発生するならば、アプリケーションは更なるデスクリプタセット割り当てを処理するために追加のデスクリプタプールを生成**できる**。
+
+TODO:
