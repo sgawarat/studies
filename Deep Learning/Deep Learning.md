@@ -488,7 +488,101 @@ $$
 
 ## 特異値分解
 
-[@sec:2.7]では、***。
+[@sec:2.7]では、行列を固有ベクトルと固有値に分解する方法を確認した。特異値分解[singular value decomposition; SVD]は行列を特異ベクトルと特異値に分解するもうひとつの方法をもたらす。SVDは固有値分解が明らかにするようないくつかの同種の情報を見つけることができる。しかし、SVDはより一般に適用できる。すべての実行列は特異値分解を持つが、固有値分解でも同様に真であるとは限らない。例えば、行列が正方でないならば、固有値分解は定義されず、代わりに、特異値分解を使わなければならない。
+固有値分解が、以下のように$\mathbf{A}$を書き直せるような、固有ベクトルの行列$\mathbf{V}$と固有値のベクトル$\mathbf{\lambda}$を見つけるために行列$\mathbf{A}$を解析することを伴うことを思い出してほしい。
+
+$$
+\mathbf{A} = \mathbf{V} \text{diag}(\mathbf{\lambda}) \mathbf{V}^{-1}
+$$
+
+特異値分解は、今度は3つの行列の積として$\mathbf{A}$を記述しようとすることを除いて、似ている。
+
+$$
+\mathbf{A} = \mathbf{U} \mathbf{D} \mathbf{V}^\top
+$$
+
+$\mathbf{A}$が$m \times n$行列であるとする。すると、$\mathbf{U}$は$m \times m$行列、$\mathbf{D}$は$m \times n$行列、$\mathbf{V}$は$n \times n$行列として定義される。
+これらの行列のそれぞれは特別な構造を持つように定義される。行列$\mathbf{U}$および$\mathbf{V}$は両方とも直交行列として定義される。行列$\mathbf{D}$は対角行列として定義される。$\mathbf{D}$は正方である必要はないことに注意する。
+$\mathbf{D}$の対角に沿った要素は行列$\mathbf{A}$の特異値[singular values]として知られる。$\mathbf{U}$の列は左特異ベクトル[left-singular vectors]として知られる。$\mathbf{V}$の列は右特異ベクトル[right-singular vectors]として知られる。
+我々は$\mathbf{A}$の関数の固有値分解に関して$\mathbf{A}$の特異値分解を読み替えることができる。$\mathbf{A}$の左特異ベクトルは$\mathbf{A} \mathbf{A}^\top$の固有ベクトルである。$\mathbf{A}$の右特異ベクトルは$\mathbf{A}^\top \mathbf{A}$の固有ベクトルである。$\mathbf{A}$の非ゼロの特異値は$\mathbf{A}^\top \mathbf{A}$の固有値の平方根である。$\mathbf{A} \mathbf{A}^\top$についても同様に真である。
+おそらく、SVDの最も有用な特徴は、次の章で見ていくが、正方でない行列への行列の逆を部分的に一般化するのに使えることである。
+
+## Moore-Penroseの擬似逆行列
+
+逆行列は正方出ない行列に対して定義されない。以下の一次方程式を解くことができるような、行列$\mathbf{A}$の左逆行列$\mathbf{B}$を作りたいとする。
+
+$$
+\mathbf{A} \mathbf{x} = \mathbf{y}
+$$
+
+両辺に左から掛けることで、以下を得る。
+
+$$
+\mathbf{x} = \mathbf{B} \mathbf{y}
+$$
+
+問題の構造に依存して、$\mathbf{A}$から$\mathbf{B}$へのユニークなマッピングを設計できないかもしれない。
+$\mathbf{A}$が縦長の場合、この式が解を持たない可能性がある。$\mathbf{A}$が横長の場合、取り得る複数の解が存在する。
+Moore-Penroseの擬似逆行列はこれらの場合にいくらかの進展をもたらすことを可能とする。$\mathbf{A}$の擬似逆行列は以下の
+行列として定義される。
+
+$$
+\mathbf{A}^+ = \lim_{\alpha \searrow 0} (\mathbf{A}^\top \mathbf{A} + \alpha \mathbf{I})^{-1} \mathbf{A}^\top
+$$
+
+擬似逆行列を計算するための実践的なアルゴリズムはこの定義ではなく以下の式に基づく。
+
+$$
+\mathbf{A}^+ = \mathbf{V} \mathbf{D}^+ \mathbf{U}^\top
+$$
+
+ここで、$\mathbf{U}$、$\mathbf{D}$、$\mathbf{V}$は$\mathbf{A}$の特異値分解であり、対角行列$\mathbf{D}$の擬似逆行列$\mathbf{D}^+$は非ゼロの要素の逆数を取り、その結果の行列の転置を取ることで得られる。
+$\mathbf{A}$が行より多い列を持つとき、擬似逆行列を用いて一次方程式を解くことは多くの取り得る解のひとつをもたらす。具体的には、すべての取り得る解の中で最小ユークリッドノルム$\|\mathbf{x}\|_2$を持つ解$\mathbf{x} = \mathbf{A}^+ \mathbf{y}$をもたらす。
+$\mathbf{A}$が列より多い行を持つとき、解を持たない可能性がある。この場合、擬似逆行列を用いると、$\mathbf{A} \mathbf{x}$がユークリッドノルム$\|\mathbf{A} \mathbf{x} - \mathbf{y}\|_2$に関する$\mathbf{y}$にできるだけ近いときの$\mathbf{x}$をもたらす。
+
+## トレース演算子
+
+トレース演算子は行列のすべての対角成分の総和を求める。
+
+$$
+\text{Tr}(\mathbf{A}) = \sum_i \mathbf{A}_{i,i}
+$$
+
+トレース演算子は様々な理由により有用である。総和の表記法に頼らずに記述することが困難ないくつかの操作は行列の積とトレース演算子を用いて記述ことができる。例えば、トレース演算子は行列のFrobeniusノルムを書き表す代替方法をもたらす。
+
+$$
+\|A\|_F = \sqrt{\text{Tr}(\mathbf{A} \mathbf{A}^\top)}
+$$
+
+トレース演算子の観点から式を書き表すと、多くの有用な恒等式[identities]を用いて式を操作する機会が開ける。例えば、トレース演算子は転置に対して不変である。
+
+$$
+\text{Tr}(\mathbf{A}) = \text(\mathbf{A}^\top)
+$$
+
+対応する行列の形状が結果の積を定義させることを可能にするならば、多くのファクタから構成される正方行列のトレースは最初の位置に最後のファクタを移動しても不変である。
+
+$$
+\text{Tr}(\mathbf{A} \mathbf{B} \mathbf{C}) = \text{Tr}(\mathbf{C} \mathbf{A} \mathbf{B}) = \text{Tr}(\mathbf{B} \mathbf{C} \mathbf{A})
+$$
+
+または、より一般的に、
+
+$$
+\text{Tr} \left( \prod_{i=1}^n F^{(i)} \right) = \text{Tr} \left( F^{(n)} \prod_{i=1}^{n-1} F^{(i)} \right)
+$$
+
+この循環置換に対する不変性は結果の積が異なる形状を持っていても成り立つ。例えば、$\mathbf{A} \in \mathbb{R}^{m \times n}$と$\mathbf{B} \in \mathbb{R}^{n \times m}$に対して、$\mathbf{A}\mathbf{B} \in \mathbb{R}^{m \times m}$であり$\mathbf{B}\mathbf{A} \in \mathbb{R}^{n \times n}$であるとしても、いかが成り立つ。
+
+$$
+\text{Tr}(\mathbf{A}\mathbf{B}) = \text{Tr}(\mathbf{B}\mathbf{A})
+$$
+
+もうひとつの覚えておきたい有用な事実として、スカラはそれ自身のトレースであるということである。すなわち、$a = \text{Tr}(a)$である。
+
+## 行列式
+
+$\det(\mathbf{A})$と表記される正方行列の行列式は***。
 
 ## 9.10 {#sec:9.10}
 
