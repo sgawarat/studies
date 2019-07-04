@@ -166,10 +166,10 @@ connectionismの中心的なアイデアは多数の単純な計算ユニット�
 線形代数の研究はいくつかの種類の数学的対象[mathematical objects]を伴う。
 
 - スカラ：線形数学で研究される他のほとんどの対象が通常では複数の数値の列であるのに対して、スカラはただの単一の数値である。我々はスカラをイタリック体で記述する。我々は通常、スカラに小文字の変数名を与える。これらを導入するとき、それらが何の種類の数値であるかを指定する。例えば、実数のスカラを定義するのに「線の傾斜を$s \in \mathbb{R}$とする」と言えるし、自然数のスカラを定義するのに「単位の数を$n \in \mathbb{N}$とする」と言える。
-- ベクトル：ベクトルは数値の列である。数値は順に配置される。我々はその順番の番号でそれぞれ個別の数値を識別できる。一般に、我々はベクトルに、$\mathbf{x}$のように、太字の小文字の名前を与える。ベクトルの要素は下付き文字を持つイタリック体でその名前を記述することで識別される。＄$\mathbf{x}$の1番目の要素は$x_1$であり、2番目の要素は$x_2$であり、3番目以降も同様である。我々はどんな種類の数値がベクトルに格納されるかを言う必要もある。各要素が$\mathbb{R}$にあり、ベクトルが$n$個の要素を持つならば、ベクトルは、$\mathbb{R}^n$と表記される、$\mathbb{R}$のデカルト積を$n$回行うことで形成される集合の中にある。ベクトルの要素を明示的に区別する必要があるとき、角括弧でトジされる列として記述する。
+- ベクトル：ベクトルは数値の列である。数値は順に配置される。我々はその順番の番号でそれぞれ個別の数値を識別できる。一般に、我々はベクトルに、$\boldsymbol{x}$のように、太字の小文字の名前を与える。ベクトルの要素は下付き文字を持つイタリック体でその名前を記述することで識別される。＄$\boldsymbol{x}$の1番目の要素は$x_1$であり、2番目の要素は$x_2$であり、3番目以降も同様である。我々はどんな種類の数値がベクトルに格納されるかを言う必要もある。各要素が$\mathbb{R}$にあり、ベクトルが$n$個の要素を持つならば、ベクトルは、$\mathbb{R}^n$と表記される、$\mathbb{R}$のデカルト積を$n$回行うことで形成される集合の中にある。ベクトルの要素を明示的に区別する必要があるとき、角括弧でトジされる列として記述する。
 
 $$
-\mathbf{x} = \left[ \begin{array}{c}
+\boldsymbol{x} = \left[ \begin{array}{c}
 x_1 \\
 x_2 \\
 \vdots \\
@@ -178,8 +178,8 @@ x_n
 $$
 
 我々はベクトルが、異なる軸に沿った座標をもたらす各要素を持つ、空間上の点を識別するとみなすことができる。
-時折、我々はベクトルの要素の集合を指し示す必要がある。この場合、我々はその番号を含む集合を定義し、下付き文字として集合を記述する。例えば、$x_1$、$x_3$、$x_6$にアクセスするためには、集合$S = {1, 3, 6}$を定義し、$\mathbf{x}_S$と記述する。我々は補集合を示すために$-$記号を用いる。例えば、$\mathbf{x}_{-1}$は$x_1$を除く$\mathbf{x}$のすべての要素を含むベクトルであり、$\mathbf{x}_{-S}$は$x_1$、$x_3$、$x_6$を除く$\mathbf{x}$のすべての要素を含むベクトルである。
-- 行列：行列は数値の２次元配列である。つまり、各要素は1つではなく2つの番号で識別される。我々は通常、$\mathbf{A}$のように、行列にボールド体で大文字の変数名を与える。実数値の行列$\mathbf{A}$が高さ$h$と幅$n$を持つならば、$\mathbf{A} \in \mathbb{R}^{m \times n}$と言う。我々は通常、行列の要素をボールド体ではなくイタリックでその名前を用いて識別する。また、その番号はコンマで分けて並べられる。例えば、$A_{1,1}$は$\mathbf{A}$の左上の成分であり、$A_{m,n}$は右下の成分である。我々は水平座標として$:$を記述することで垂直座標$i$のすべての数値を識別できる。例えば、$\mathbf{A}_{i,:}$は垂直座標$i$と$\mathbf{A}$の水平の交差領域を示す。これは$\mathbf{A}$の$i$番目の行として知られる。同様に、$\mathbf{A}_{:,i}$は$\mathbf{A}$の$i$番目の列である。我々が行列の要素を明示的に認識する必要があるとき、各カッコでトジされる列として記述する。
+時折、我々はベクトルの要素の集合を指し示す必要がある。この場合、我々はその番号を含む集合を定義し、下付き文字として集合を記述する。例えば、$x_1$、$x_3$、$x_6$にアクセスするためには、集合$S = {1, 3, 6}$を定義し、$\boldsymbol{x}_S$と記述する。我々は補集合を示すために$-$記号を用いる。例えば、$\boldsymbol{x}_{-1}$は$x_1$を除く$\boldsymbol{x}$のすべての要素を含むベクトルであり、$\boldsymbol{x}_{-S}$は$x_1$、$x_3$、$x_6$を除く$\boldsymbol{x}$のすべての要素を含むベクトルである。
+- 行列：行列は数値の２次元配列である。つまり、各要素は1つではなく2つの番号で識別される。我々は通常、$\boldsymbol{A}$のように、行列にボールド体で大文字の変数名を与える。実数値の行列$\boldsymbol{A}$が高さ$h$と幅$n$を持つならば、$\boldsymbol{A} \in \mathbb{R}^{m \times n}$と言う。我々は通常、行列の要素をボールド体ではなくイタリックでその名前を用いて識別する。また、その番号はコンマで分けて並べられる。例えば、$A_{1,1}$は$\boldsymbol{A}$の左上の成分であり、$A_{m,n}$は右下の成分である。我々は水平座標として$:$を記述することで垂直座標$i$のすべての数値を識別できる。例えば、$\boldsymbol{A}_{i,:}$は垂直座標$i$と$\boldsymbol{A}$の水平の交差領域を示す。これは$\boldsymbol{A}$の$i$番目の行として知られる。同様に、$\boldsymbol{A}_{:,i}$は$\boldsymbol{A}$の$i$番目の列である。我々が行列の要素を明示的に認識する必要があるとき、各カッコでトジされる列として記述する。
 
 $$
 \left[ \begin{array}{cc}
@@ -188,30 +188,30 @@ A_{3,1} & A_{3,2}
 \end{array} \right]
 $$
 
-時折、我々は単一の文字でない行列の値の表記を示す必要があるかもしれない。この場合、ひその表記の後に下付き文字を用いるが、いずれも小文字に変換しない。例えば、$f(\mathbf{A})_{i,j}$は関数$f$を$\mathbf{A}$に適用して計算した行列の要素$(i,j)$をもたらす。
+時折、我々は単一の文字でない行列の値の表記を示す必要があるかもしれない。この場合、ひその表記の後に下付き文字を用いるが、いずれも小文字に変換しない。例えば、$f(\boldsymbol{A})_{i,j}$は関数$f$を$\boldsymbol{A}$に適用して計算した行列の要素$(i,j)$をもたらす。
 - テンソル：いくつかの場合、我々は2つより多い軸を持つ配列を必要とするだろう。一般的な場合、軸の変数を持つ規則的な格子上に配置される数値の配列はテンソルとして知られる。我々は"A"という名前のテンソルを$\mathsf{A}$の書体で表記する。我々は$\mathit{\mathsf{A}}_{i,j,k}$と記述することで座標$(i,j,k)$における$\mathsf{A}$の要素を識別する。
 
-行列での重要な操作のひとつは転置である。行列の転置は対角線を境にした行列の鏡像である。この対角線は主対角線と呼ばれ、左上のカドから始まり、右下へと向かう。この操作の図解は[@fig:2.1]を参照のこと。我々は行列$\mathbf{A}$の転置を$\mathbf{A}^\top$と示し、これは以下のように定義される。
+行列での重要な操作のひとつは転置である。行列の転置は対角線を境にした行列の鏡像である。この対角線は主対角線と呼ばれ、左上のカドから始まり、右下へと向かう。この操作の図解は[@fig:2.1]を参照のこと。我々は行列$\boldsymbol{A}$の転置を$\boldsymbol{A}^\top$と示し、これは以下のように定義される。
 
 $$
-(\mathbf{A}^\top)_{i,j} = A_{j,i}
+(\boldsymbol{A}^\top)_{i,j} = A_{j,i}
 $$
 
-ベクトルは1列のみを含む行列として考えることができる。故に、ベクトルの転置は1行のみを持つ行列である。時折、我々は1行の行列として文中にその要素を書き出すことで、例えば$\mathbf{x} = [x_1, x_2, x_3]$のように、ベクトルを定義する。
+ベクトルは1列のみを含む行列として考えることができる。故に、ベクトルの転置は1行のみを持つ行列である。時折、我々は1行の行列として文中にその要素を書き出すことで、例えば$\boldsymbol{x} = [x_1, x_2, x_3]$のように、ベクトルを定義する。
 
 ![行列の転置は主対角線を境にした鏡像としてみなすことができる。](fig/2-1.png){#fig:2.1}
 
 スカラは単一の成分のみを持つ行列として考えることができる。これにより、スカラはそれ自身の転置$a = a^\top$であることがわかる。
-我々は、それらが同じ形である場合に限り、単に対応する要素を足し合わせることで、行列を互いに足すことができる。すなわち、$\mathbf{C} = \mathbf{A} + \mathbf{B}$は$C_{i,j} = A_{i,j} + B_{i,j}$である。
-我々は、行列の各要素にその操作を行うことで、スカラを行列に足したり掛けたりできる。すなわち、$\mathbf{D} = a \cdot \mathbf{B} + c$は$D_{i,j} = a \cdot B_{i,j} + c$である。
-深層学習の文脈では、我々はいくつかの従来とは異なる表記法も用いる。我々は行列とベクトルを足し合わせて別の行列を生み出すことを許可する。すまわち、$\mathbf{C} = \mathbf{A} + \mathbf{b}$は$C_{i,j} = A_{i,j} + b_{j}$である。言い換えれば、ベクトル$\mathbf{b}$は行列の各行に足される。この省略表記は加算を行う前に各行にコピーされる$\mathbf{b}$で行列を定義する必要性を取り除く。この多くの場所への$\mathbf{b}$の暗黙的なコピーはbroadcastingと呼ばれる。
+我々は、それらが同じ形である場合に限り、単に対応する要素を足し合わせることで、行列を互いに足すことができる。すなわち、$\boldsymbol{C} = \boldsymbol{A} + \boldsymbol{B}$は$C_{i,j} = A_{i,j} + B_{i,j}$である。
+我々は、行列の各要素にその操作を行うことで、スカラを行列に足したり掛けたりできる。すなわち、$\boldsymbol{D} = a \cdot \boldsymbol{B} + c$は$D_{i,j} = a \cdot B_{i,j} + c$である。
+深層学習の文脈では、我々はいくつかの従来とは異なる表記法も用いる。我々は行列とベクトルを足し合わせて別の行列を生み出すことを許可する。すまわち、$\boldsymbol{C} = \boldsymbol{A} + \boldsymbol{b}$は$C_{i,j} = A_{i,j} + b_{j}$である。言い換えれば、ベクトル$\boldsymbol{b}$は行列の各行に足される。この省略表記は加算を行う前に各行にコピーされる$\boldsymbol{b}$で行列を定義する必要性を取り除く。この多くの場所への$\boldsymbol{b}$の暗黙的なコピーはbroadcastingと呼ばれる。
 
 ## 行列とベクトルの乗算
 
-行列を伴う最も重要な操作のひとつは2つの行列の掛け算である。行列$\mathbf{A}$と$\mathbf{B}$の行列積は第三の行列$\mathbf{C}$である。この積が定義されるために、$\mathbf{A}$は$\mathbf{B}$が持つ行数と同じ列数を持たなければならない。$\mathbf{A}$が$m \times n$の形であり、$\mathbf{B}$が$n \times p$であれば、$\mathbf{C}$は$m \times p$の形である。我々は単に2つ以上の行列同士を配置することで行列積を記述できる。例えば以下のようになる。
+行列を伴う最も重要な操作のひとつは2つの行列の掛け算である。行列$\boldsymbol{A}$と$\boldsymbol{B}$の行列積は第三の行列$\boldsymbol{C}$である。この積が定義されるために、$\boldsymbol{A}$は$\boldsymbol{B}$が持つ行数と同じ列数を持たなければならない。$\boldsymbol{A}$が$m \times n$の形であり、$\boldsymbol{B}$が$n \times p$であれば、$\boldsymbol{C}$は$m \times p$の形である。我々は単に2つ以上の行列同士を配置することで行列積を記述できる。例えば以下のようになる。
 
 $$
-\mathbf{C} = \mathbf{A} \mathbf{B}
+\boldsymbol{C} = \boldsymbol{A} \boldsymbol{B}
 $$
 
 この積の演算は以下のように定義される。
@@ -220,55 +220,55 @@ $$
 C_{i,j} = \sum_k A_{i,k} B_{k,j}
 $$
 
-2つの行列の標準的な積は単に個々の要素の積を含む行列ではないことに注意したい。そのような操作は存在し、要素ごとの積[element-wise product]とかアダマール積[Hadamard product]と呼ばれ、$\mathbf{A}　\odot \mathbf{B}$と表記する。
-同じ次元のベクトル$\mathbf{x}$と$\mathbf{y}$の内積は行列の積$\mathbf{x}^\top \mathbf{y}$である。我々は行列の積$\mathbf{C} = \mathbf{A} \mathbf{B}$を$\mathbf{A}$の$i$行目と$\mathbf{B}$の$j$列目の内積として$C_{i,j}$を計算するとみなすことができる。
+2つの行列の標準的な積は単に個々の要素の積を含む行列ではないことに注意したい。そのような操作は存在し、要素ごとの積[element-wise product]とかアダマール積[Hadamard product]と呼ばれ、$\boldsymbol{A}　\odot \boldsymbol{B}$と表記する。
+同じ次元のベクトル$\boldsymbol{x}$と$\boldsymbol{y}$の内積は行列の積$\boldsymbol{x}^\top \boldsymbol{y}$である。我々は行列の積$\boldsymbol{C} = \boldsymbol{A} \boldsymbol{B}$を$\boldsymbol{A}$の$i$行目と$\boldsymbol{B}$の$j$列目の内積として$C_{i,j}$を計算するとみなすことができる。
 行列の積の演算は行列の数学的な解析をより便利にする多くの有用な特性を持つ。例えば、行列の乗算は分配法則を満たす[distributive]。
 
 $$
-\mathbf{A} (\mathbf{B} + \mathbf{C}) = \mathbf{A} \mathbf{B} + \mathbf{A} \mathbf{C}
+\boldsymbol{A} (\boldsymbol{B} + \boldsymbol{C}) = \boldsymbol{A} \boldsymbol{B} + \boldsymbol{A} \boldsymbol{C}
 $$
 
 また、結合法則も満たす[associative]。
 
 $$
-\mathbf{A} (\mathbf{B} \mathbf{C}) = (\mathbf{A} \mathbf{B}) \mathbf{C}
+\boldsymbol{A} (\boldsymbol{B} \boldsymbol{C}) = (\boldsymbol{A} \boldsymbol{B}) \boldsymbol{C}
 $$
 {#eq:2.8}
 
-行列の乗算は、スカラの乗算とは異なり、交換法則を満たさない[not commutative]（$\mathbf{A} \mathbf{B} = \mathbf{B} \mathbf{A}$は常に成り立つとは限らない）。しかし、2つのベクトルの内積は交換法則を満たす。
+行列の乗算は、スカラの乗算とは異なり、交換法則を満たさない[not commutative]（$\boldsymbol{A} \boldsymbol{B} = \boldsymbol{B} \boldsymbol{A}$は常に成り立つとは限らない）。しかし、2つのベクトルの内積は交換法則を満たす。
 
 $$
-\mathbf{x}^\top \mathbf{y} = \mathbf{y}^\top \mathbf{x}
+\boldsymbol{x}^\top \boldsymbol{y} = \boldsymbol{y}^\top \boldsymbol{x}
 $$
 
 行列の積の転置は以下のような単純な形式を持つ。
 
 $$
-(\mathbf{A} \mathbf{B})^\top = \mathbf{B}^\top \mathbf{A}^\top
+(\boldsymbol{A} \boldsymbol{B})^\top = \boldsymbol{B}^\top \boldsymbol{A}^\top
 $$
 
 これは、そのような積の値がスカラであるということ活用することで[@eq:2.8]を実証することができるようになる。故に、それ自身の転置と等価である。
 
 $$
-\mathbf{x}^\top \mathbf{y} = (mathbf{x}^\top \mathbf{y})^\top = \mathbf{y}^\top \mathbf{x}
+\boldsymbol{x}^\top \boldsymbol{y} = (\boldsymbol{x}^\top \boldsymbol{y})^\top = \boldsymbol{y}^\top \boldsymbol{x}
 $$
 
 本書の焦点は線形代数ではないので、我々はここで行列の積の有用な特性の包括的なリストを明らかにしようとはしないが、読者の皆は更にたくさん存在することに気付いているはずである。
 今や我々は一次方程式の系を書き記すための線形代数の表記法を十分に知っている。
 
 $$
-\mathbf{A} \mathbf{x} = \mathbf{b}
+\boldsymbol{A} \boldsymbol{x} = \boldsymbol{b}
 $$
 {#eq:2.11}
 
-ここで、$\mathbf{A} \in \mathbb{R}^{m \times n}$は既知の行列であり、$\mathbf{b} \in \mathbb{R}^m$は既知のベクトルであり、$\mathbf{x} \in \mathbb{R}^n$は解きたい未知の変数のベクトルである。$\mathbf{x}$の各要素$x_i$はこれらの未知の変数の1つである。$\mathbf{A}$の各行と$\mathbf{b}$の各要素は別の制約をもたらす。我々は[@eq:2.11]を以下のように書き直すことができる。
+ここで、$\boldsymbol{A} \in \mathbb{R}^{m \times n}$は既知の行列であり、$\boldsymbol{b} \in \mathbb{R}^m$は既知のベクトルであり、$\boldsymbol{x} \in \mathbb{R}^n$は解きたい未知の変数のベクトルである。$\boldsymbol{x}$の各要素$x_i$はこれらの未知の変数の1つである。$\boldsymbol{A}$の各行と$\boldsymbol{b}$の各要素は別の制約をもたらす。我々は[@eq:2.11]を以下のように書き直すことができる。
 
 $$
-\mathbf{A}_{1,:} \mathbf{x} = b_1
+\boldsymbol{A}_{1,:} \boldsymbol{x} = b_1
 $$
 
 $$
-\mathbf{A}_{2,:} \mathbf{x} = b_2
+\boldsymbol{A}_{2,:} \boldsymbol{x} = b_2
 $$
 
 $$
@@ -276,17 +276,17 @@ $$
 $$
 
 $$
-\mathbf{A}_{m,:} \mathbf{x} = b_m
+\boldsymbol{A}_{m,:} \boldsymbol{x} = b_m
 $$
 
 また、より明示的にするならば、
 
 $$
-\mathbf{A}_{1,1} x_1 + \mathbf{A}_{1,2} x_2 + \cdots \mathbf{A}_{1,n} x_n = b_1
+\boldsymbol{A}_{1,1} x_1 + \boldsymbol{A}_{1,2} x_2 + \cdots \boldsymbol{A}_{1,n} x_n = b_1
 $$
 
 $$
-\mathbf{A}_{2,1} x_1 + \mathbf{A}_{2,2} x_2 + \cdots \mathbf{A}_{2,n} x_n = b_2
+\boldsymbol{A}_{2,1} x_1 + \boldsymbol{A}_{2,2} x_2 + \cdots \boldsymbol{A}_{2,n} x_n = b_2
 $$
 
 $$
@@ -294,82 +294,82 @@ $$
 $$
 
 $$
-\mathbf{A}_{m,1} x_1 + \mathbf{A}_{m,2} x_2 + \cdots \mathbf{A}_{m,n} x_n = b_m
+\boldsymbol{A}_{m,1} x_1 + \boldsymbol{A}_{m,2} x_2 + \cdots \boldsymbol{A}_{m,n} x_n = b_m
 $$
 
 行列対ベクトルの積の表記法はこの形式の式に対するよりコンパクトな表現をもたらす。
 
 ## 単位行列と逆行列
 
-線形代数は$\mathbf{A}$の多くの値に対して[@eq:2.11]を解析的に解くことができるようになる逆行列と呼ばれる強力なツールをもたらす。
-逆行列を説明するためには、まず、単位行列の概念を定義する必要がある。単位行列は、その行列をベクトルにかけたとき、いかなるベクトルも変化させない行列である。我々は$n$次元のベクトルを保持する単位行列を$\mathbf{I}_n$と表記する。正式には、$\mathbf{I}_n \in \mathbb{R}^{n \times n}$であり、
+線形代数は$\boldsymbol{A}$の多くの値に対して[@eq:2.11]を解析的に解くことができるようになる逆行列と呼ばれる強力なツールをもたらす。
+逆行列を説明するためには、まず、単位行列の概念を定義する必要がある。単位行列は、その行列をベクトルにかけたとき、いかなるベクトルも変化させない行列である。我々は$n$次元のベクトルを保持する単位行列を$\boldsymbol{I}_n$と表記する。正式には、$\boldsymbol{I}_n \in \mathbb{R}^{n \times n}$であり、
 
 $$
-\forall \mathbf{x} \in \mathbf{R}^n, \mathbf{I}_n \mathbf{x} = \mathbf{x}
+\forall \boldsymbol{x} \in \boldsymbol{R}^n, \boldsymbol{I}_n \boldsymbol{x} = \boldsymbol{x}
 $$
 
 単位行列の構造は単純である。主対角線に沿ったすべての成分は1であり、その他のすべての成分は0である。例として[@fig:2.2]を参照のこと。
 
-![単位行列の例。これは$\mathbf{I}_3$](fig/2-2.png){#fig:2.2}
+![単位行列の例。これは$\boldsymbol{I}_3$](fig/2-2.png){#fig:2.2}
 
-$\mathbf{A}$の逆行列は$\mathbf{A}^{-1}$と表記し、以下のような行列として定義される。
+$\boldsymbol{A}$の逆行列は$\boldsymbol{A}^{-1}$と表記し、以下のような行列として定義される。
 
 $$
-\mathbf{A}^{-1} \mathbf{A} = \mathbf{I}_n
+\boldsymbol{A}^{-1} \boldsymbol{A} = \boldsymbol{I}_n
 $$
 
 すると、以下の手順を用いて[@eq:2.11]を解くことができる。
 
 $$
-\mathbf{A} \mathbf{x} = \mathbf{b}
+\boldsymbol{A} \boldsymbol{x} = \boldsymbol{b}
 $$
 
 $$
-\mathbf{A}^{-1} \mathbf{A} \mathbf{x} = \mathbf{A}^{-1} \mathbf{b}
+\boldsymbol{A}^{-1} \boldsymbol{A} \boldsymbol{x} = \boldsymbol{A}^{-1} \boldsymbol{b}
 $$
 
 $$
-\mathbf{I}_n \mathbf{x} = \mathbf{A}^{-1} \mathbf{b}
+\boldsymbol{I}_n \boldsymbol{x} = \boldsymbol{A}^{-1} \boldsymbol{b}
 $$
 
 $$
-\mathbf{x} = \mathbf{A}^{-1} \mathbf{b}
+\boldsymbol{x} = \boldsymbol{A}^{-1} \boldsymbol{b}
 $$
 
-もちろん、この処理は$\mathbf{A}^{-1}$を見つけられるということに依存する。我々は以下の章で$\mathbf{A}^{-1}$が存在する条件を検討する。
-$\mathbf{A}^{-1}$が存在するとき、いくつかの異なるアルゴリズムは閉形式においてこれを見つけることができる。理論上、同じ逆行列は$\mathbf{b}$の様々な値に対して何度もその式を解くことに使える。$\mathbf{A}^{-1}$は主に理論的なツールとして役に立つが、実際には多くのソフトウェアアプリケーションに対して実践で使わるべきではない。$\mathbf{A}^{-1}$はディジタルコンピュータ上では限定的な精度でのみ表現される可能性があるので、$\mathbf{b}$の値を使うアルゴリズムは通常、$\mathbf{x}$のより正確な推定値を得ることができる。
+もちろん、この処理は$\boldsymbol{A}^{-1}$を見つけられるということに依存する。我々は以下の章で$\boldsymbol{A}^{-1}$が存在する条件を検討する。
+$\boldsymbol{A}^{-1}$が存在するとき、いくつかの異なるアルゴリズムは閉形式においてこれを見つけることができる。理論上、同じ逆行列は$\boldsymbol{b}$の様々な値に対して何度もその式を解くことに使える。$\boldsymbol{A}^{-1}$は主に理論的なツールとして役に立つが、実際には多くのソフトウェアアプリケーションに対して実践で使わるべきではない。$\boldsymbol{A}^{-1}$はディジタルコンピュータ上では限定的な精度でのみ表現される可能性があるので、$\boldsymbol{b}$の値を使うアルゴリズムは通常、$\boldsymbol{x}$のより正確な推定値を得ることができる。
 
 ## 線形従属と線形包
 
-存在する$\mathbf{A}^{-1}$に対して、[@eq:2.11]は$\mathbf{b}$の値ごとにたった1つの解のみをもたなければならない。式の系がある$\mathbf{b}$の値に対する解を持たなかったり無限に多くの解を持ったりする可能性もある。しかし、特定の$\mathbf{b}$に対して無限より少なく1つより多い解を取りえない。つまり、$\mathbf{x}$と$\mathbf{y}$の両方が解でありならば、以下はいかなる実数$\alpha$において解でもある。
+存在する$\boldsymbol{A}^{-1}$に対して、[@eq:2.11]は$\boldsymbol{b}$の値ごとにたった1つの解のみをもたなければならない。式の系がある$\boldsymbol{b}$の値に対する解を持たなかったり無限に多くの解を持ったりする可能性もある。しかし、特定の$\boldsymbol{b}$に対して無限より少なく1つより多い解を取りえない。つまり、$\boldsymbol{x}$と$\boldsymbol{y}$の両方が解でありならば、以下はいかなる実数$\alpha$において解でもある。
 
 $$
-\mathbf{z} = \alpha \mathbf{x} + (1 - \alpha) \mathbf{y}
+\boldsymbol{z} = \alpha \boldsymbol{x} + (1 - \alpha) \boldsymbol{y}
 $$
 
-その式がいくつの解を持つかを解析するため、$\mathbf{A}$の列を原点（すべて0のベクトルで指定される点）から向かうことができる様々な方向を指定すると考え、そして、$\mathbf{b}$に至る道がいくつあるかを決定する。この視点では、$\mathbf{x}$の各要素はこれらの方向のそれぞれにどれだけ距離だけ向かうべきであるかを指定する。$i$列目の方向にどれだけの距離を移動するかを指定する$x_i$として、
+その式がいくつの解を持つかを解析するため、$\boldsymbol{A}$の列を原点（すべて0のベクトルで指定される点）から向かうことができる様々な方向を指定すると考え、そして、$\boldsymbol{b}$に至る道がいくつあるかを決定する。この視点では、$\boldsymbol{x}$の各要素はこれらの方向のそれぞれにどれだけ距離だけ向かうべきであるかを指定する。$i$列目の方向にどれだけの距離を移動するかを指定する$x_i$として、
 
 $$
-\mathbf{A} \mathbf{x} = \sum_i x_i \mathbf{A}_{:,i}
+\boldsymbol{A} \boldsymbol{x} = \sum_i x_i \boldsymbol{A}_{:,i}
 $$
 
-一般に、この種の操作は線形結合[linear combination]と呼ばれる。正式には、あるベクトルの集合${\mathbf{v}^{(1)}, \dots, \mathbf{v}^{(n)}}$の線形結合は対応するスカラの係数を各ベクトル$v^{(i)}$にかけ、その結果を足し合わせることで求められる。
+一般に、この種の操作は線形結合[linear combination]と呼ばれる。正式には、あるベクトルの集合${\boldsymbol{v}^{(1)}, \dots, \boldsymbol{v}^{(n)}}$の線形結合は対応するスカラの係数を各ベクトル$v^{(i)}$にかけ、その結果を足し合わせることで求められる。
 
 $$
-\sum_i c_i \mathbf{v}^{(i)}
+\sum_i c_i \boldsymbol{v}^{(i)}
 $$
 
-ベクトルの集合の張る空間[span]は元のベクトルの線形結合によって得られるすべての点の集合である。故に、$\mathbf{A} \mathbf{x} = \mathbf{b}$が解を持つかどうかを決定することは$\mathbf{b}$が$\mathbf{A}$の列の張る空間の中にあるかどうかを確かめることに等しい。この特定の張る空間は$\mathbf{A}$の列空間とか値域[range]として知られる。
-したがって、系$\mathbf{A} \mathbf{x} = \mathbf{b}$が$\mathbf{b} \in \mathbb{R}^m$のすべての値に対して解を持つために、我々はその列空間が$\mathbb{R}^m$全体であることを必要とする。$\mathbb{R}^m$におけるいずれかの点がその列空間から外れている場合、その点は解を持たない$\mathbf{b}$の潜在的な値である。$\mathbf{A}$の列空間が$\mathbb{R}^m$全体であるという必要条件は$\mathbf{A}$が少なくとも$m$個の列を持つことを即座に暗示する。このとき、$n \ge m$である。そうでなければ、列空間の次元は$m$より小さくなるだろう。例えば、3x2行列を考えよう。対象の$\mathbf{b}$は3次元であるが、$\mathbf{x}$は2次元である。なので、最善の状態で$\mathbf{x}$の値を修正することは2次元平面を$\mathbb{R}^3$の内に描き出すことを可能にする。この式は$\mathbf{b}$がその平面上にある場合に限り解を持つ。
+ベクトルの集合の張る空間[span]は元のベクトルの線形結合によって得られるすべての点の集合である。故に、$\boldsymbol{A} \boldsymbol{x} = \boldsymbol{b}$が解を持つかどうかを決定することは$\boldsymbol{b}$が$\boldsymbol{A}$の列の張る空間の中にあるかどうかを確かめることに等しい。この特定の張る空間は$\boldsymbol{A}$の列空間とか値域[range]として知られる。
+したがって、系$\boldsymbol{A} \boldsymbol{x} = \boldsymbol{b}$が$\boldsymbol{b} \in \mathbb{R}^m$のすべての値に対して解を持つために、我々はその列空間が$\mathbb{R}^m$全体であることを必要とする。$\mathbb{R}^m$におけるいずれかの点がその列空間から外れている場合、その点は解を持たない$\boldsymbol{b}$の潜在的な値である。$\boldsymbol{A}$の列空間が$\mathbb{R}^m$全体であるという必要条件は$\boldsymbol{A}$が少なくとも$m$個の列を持つことを即座に暗示する。このとき、$n \ge m$である。そうでなければ、列空間の次元は$m$より小さくなるだろう。例えば、3x2行列を考えよう。対象の$\boldsymbol{b}$は3次元であるが、$\boldsymbol{x}$は2次元である。なので、最善の状態で$\boldsymbol{x}$の値を修正することは2次元平面を$\mathbb{R}^3$の内に描き出すことを可能にする。この式は$\boldsymbol{b}$がその平面上にある場合に限り解を持つ。
 $n \ge m$は解を持つためのすべての点に対するただ一つの必要条件である。これは、列のいくつかが冗長である可能性があるので、十分条件ではない。列の両方が同一である2x2行列を考えよう。これは、複製された列の1つ分のみを含むので、2x1行列と同じ列空間を持つ。言い換えれば、その列空間は依然として単なる線であり、2個の列があったとしても、$\mathbb{R}^2$全体を取り囲むことができない。
-正式には、この種の冗長性は線形従属[linear dependence]として知られる。その集合のベクトルが他のベクトルの線形結合でないならば、ベクトルの集合は線形独立[linear independent]である。その集合における他のベクトルの線形結合である集合にベクトルを追加するならば、その新しいベクトルはその集合の張る空間にいかなる点も追加しない。これは行列の列空間が$\mathbb{R}^m$全体を取り囲むことを意味し、その行列は$m$個の線形独立の列の少なくとも1つの集合を含まなければならない。この条件は[@eq:2.11]が$\mathbf{b}$のすべての値に対して解を持つための必要十分条件である。その必要条件は集合が、少なくとも$m$個ではなく、厳密に$m$個の線形独立な列を持つことに注意すること。$m$次元のベクトルの集合は$m$個より多い相互に線形独立な列を持ち得ないが、$m$個より多い列を持つ行列はそのような集合を1より多く持ち得る。
-行列が逆行列を持つためには、追加で[@eq:2.11]が$\mathbf{b}$の各値に対して多くとも1つの解を持つことを保証する必要がある。そうするために、その行列が多くとも$m$個の列を持つことを確かめる必要がある。そうでなければ、各解をパラメータ化する1つより多い方法が存在する。
+正式には、この種の冗長性は線形従属[linear dependence]として知られる。その集合のベクトルが他のベクトルの線形結合でないならば、ベクトルの集合は線形独立[linear independent]である。その集合における他のベクトルの線形結合である集合にベクトルを追加するならば、その新しいベクトルはその集合の張る空間にいかなる点も追加しない。これは行列の列空間が$\mathbb{R}^m$全体を取り囲むことを意味し、その行列は$m$個の線形独立の列の少なくとも1つの集合を含まなければならない。この条件は[@eq:2.11]が$\boldsymbol{b}$のすべての値に対して解を持つための必要十分条件である。その必要条件は集合が、少なくとも$m$個ではなく、厳密に$m$個の線形独立な列を持つことに注意すること。$m$次元のベクトルの集合は$m$個より多い相互に線形独立な列を持ち得ないが、$m$個より多い列を持つ行列はそのような集合を1より多く持ち得る。
+行列が逆行列を持つためには、追加で[@eq:2.11]が$\boldsymbol{b}$の各値に対して多くとも1つの解を持つことを保証する必要がある。そうするために、その行列が多くとも$m$個の列を持つことを確かめる必要がある。そうでなければ、各解をパラメータ化する1つより多い方法が存在する。
 両方とも、これは行列が正方[square]でなければならないことを意味する。つまり、$m = n$、かつ、すべての列が線形独立である。線形従属な列を持つ正方行列は特異[singular]として知られる。
-$\mathbf{A}$が正則でない、または、正則だが特異であるならば、その式を解くことは依然として可能であるが、我々は解を求めるために行列の逆を求める手法を用いることが出来ない。
+$\boldsymbol{A}$が正則でない、または、正則だが特異であるならば、その式を解くことは依然として可能であるが、我々は解を求めるために行列の逆を求める手法を用いることが出来ない。
 ここまで、我々は左から掛けられるものとして逆行列を述べてきた。右からかけられる逆行列を定義することも可能である。
 
 $$
-\mathbf{A} \mathbf{A}^{-1} = \mathbf{I}
+\boldsymbol{A} \boldsymbol{A}^{-1} = \boldsymbol{I}
 $$
 
 正則行列では、左の逆と右の逆は等しい。
@@ -380,28 +380,28 @@ $$
 
 
 $$
-\|\mathbf{x}\|_p = \left( \sum_i |x_i|^p \right)^{\frac{1}{p}}
+\|\boldsymbol{x}\|_p = \left( \sum_i |x_i|^p \right)^{\frac{1}{p}}
 $$
 
-$L^p$ノルムを含むノルムはベクトルを非負の値にマッピングする関数である。直観レベルでは、ベクトル$\mathbf{x}$のノルムは原点から点$\mathbf{x}$までの距離を測る。より厳密に言えば、ノルムは以下の性質を満たす任意の関数$f$である。
+$L^p$ノルムを含むノルムはベクトルを非負の値にマッピングする関数である。直観レベルでは、ベクトル$\boldsymbol{x}$のノルムは原点から点$\boldsymbol{x}$までの距離を測る。より厳密に言えば、ノルムは以下の性質を満たす任意の関数$f$である。
 
-- $f(\mathbf{x}) = 0 \Leftarrow \mathbf{x} = \mathbf{0}$
-- $f(\mathbf{x} + \mathbf{y}) \le f(\mathbf{x}) + f(\mathbf{y})$（三角不等式）
-- $\forall \alpha \in \mathbb{R}, f(\alpha \mathbf{x}) = |\alpha| f(\mathbf{x})$
+- $f(\boldsymbol{x}) = 0 \Leftarrow \boldsymbol{x} = \boldsymbol{0}$
+- $f(\boldsymbol{x} + \boldsymbol{y}) \le f(\boldsymbol{x}) + f(\boldsymbol{y})$（三角不等式）
+- $\forall \alpha \in \mathbb{R}, f(\alpha \boldsymbol{x}) = |\alpha| f(\boldsymbol{x})$
 
-$p = 2$を持つ$L^2$ノルムは、単に原点から$\mathbf{x}$で示される点までのユークリッド距離である、ユークリッドノルム[Euclidean norm]として知られる。$L^2$ノルムは、下付きの2が省かれて、単に$\|\mathbf{x}\|$としてしばしば表記され、機械学習においてかなり頻繁に使われる。$\mathbf{x}^\top \mathbf{x}$として簡単に計算できる$L^2$ノルムの二乗を使ってベクトルの大きさを測ることも一般的である。
-$L^2$ノルムの二乗は$L^2$ノルムそれ自体よりも数学的にも計算的にも更に便利に機能する。例えば、$\mathbf{x}$の各要素に関する$L^2$ノルムの二乗のそれぞれの微分は$\mathbf{x}$の関連する要素にのみ依存するが、$L^2$ノルムのすべての微分はベクトル全体に依存する。多くの状況で、$L^2$ノルムの二乗は、原点近くで非常にゆっくりと増加するので、望ましくないかもしれない。いくつかの機械学習アプリケーションでは、ピッタリ0である要素と0でない小さい要素との間を区別することが重要である。これらの場合、我々は、数学的な単純さを維持するがすべての位置で同じ割合で成長するような関数に切り替える。すなわち、$L^1$ノルムである。$L^1$ノルムは以下のように単純化され得る。
+$p = 2$を持つ$L^2$ノルムは、単に原点から$\boldsymbol{x}$で示される点までのユークリッド距離である、ユークリッドノルム[Euclidean norm]として知られる。$L^2$ノルムは、下付きの2が省かれて、単に$\|\boldsymbol{x}\|$としてしばしば表記され、機械学習においてかなり頻繁に使われる。$\boldsymbol{x}^\top \boldsymbol{x}$として簡単に計算できる$L^2$ノルムの二乗を使ってベクトルの大きさを測ることも一般的である。
+$L^2$ノルムの二乗は$L^2$ノルムそれ自体よりも数学的にも計算的にも更に便利に機能する。例えば、$\boldsymbol{x}$の各要素に関する$L^2$ノルムの二乗のそれぞれの微分は$\boldsymbol{x}$の関連する要素にのみ依存するが、$L^2$ノルムのすべての微分はベクトル全体に依存する。多くの状況で、$L^2$ノルムの二乗は、原点近くで非常にゆっくりと増加するので、望ましくないかもしれない。いくつかの機械学習アプリケーションでは、ピッタリ0である要素と0でない小さい要素との間を区別することが重要である。これらの場合、我々は、数学的な単純さを維持するがすべての位置で同じ割合で成長するような関数に切り替える。すなわち、$L^1$ノルムである。$L^1$ノルムは以下のように単純化され得る。
 
 $$
-\|\mathbf{x}\|_1 = \sum_i |x_i|
+\|\boldsymbol{x}\|_1 = \sum_i |x_i|
 $$
 
-$L^1$ノルムはゼロと非ゼロの違いが非常に重要であるときに機械学習で一般的に使われる。毎回、$\mathbf{x}$の要素は$\epsilon$だけ0から離れる。つまり、$L^1$ノルムは$\epsilon$だけ増加する。
+$L^1$ノルムはゼロと非ゼロの違いが非常に重要であるときに機械学習で一般的に使われる。毎回、$\boldsymbol{x}$の要素は$\epsilon$だけ0から離れる。つまり、$L^1$ノルムは$\epsilon$だけ増加する。
 我々は時折に非ゼロの要素数を数えることでベクトルの大きさを測る。ある著者はこの関数を「$L^0$ノルム」としているが、これは不正確な用語である。ベクトルにおける非ゼロの成分の個数は、$\alpha$でベクトルをスケーリングしても非ゼロの成分の個数が変化しないので、ノルムではない。$L^1$ノルムは非ゼロの成分の個数の代わりとしてしばしば用いられる。
 機械学習で一般的に現れる他のノルムのひとつとして$L^\infty$があり、最大ノルム[max norm]としても知られる。このノルムはベクトルにおいて最大の大きさを持つ要素の絶対値に単純化する。
 
 $$
-\|\mathbf{x}\|_\infty = \max_i |x_i|
+\|\boldsymbol{x}\|_\infty = \max_i |x_i|
 $$
 
 時折、我々は行列の大きさを測ることも望むかもしれない。深層学習の文脈において、これを行う最も一般的な方法は、ベクトルの$L^2$と似ている、otherwise obscure Frobenius normを用いることである。
@@ -413,40 +413,40 @@ $$
 2つのベクトルの内積はノルムに関して書き直すことができる。具体的には、
 
 $$
-\mathbf{x}^\top \mathbf{y} = \|\mathbf{x}\|_2 \|\mathbf{y}\|_2 \cos \theta
+\boldsymbol{x}^\top \boldsymbol{y} = \|\boldsymbol{x}\|_2 \|\boldsymbol{y}\|_2 \cos \theta
 $$
 
-ここで、$\theta$は$\mathbf{x}$と$\mathbf{y}$のなす角である。
+ここで、$\theta$は$\boldsymbol{x}$と$\boldsymbol{y}$のなす角である。
 
 ## 特別な種類の行列およびベクトル
 
 いくつかの特別な種類の行列やベクトルは特に有用である。
-対角行列[diagonal matrix]はほとんどが0で構成され、主対角線に沿ってのみ非ゼロの成分を持つ。正式には、行列$\mathbf{D}$は$i \ne j$のすべてに対して$D_{i,j} = 0$である場合に限り対角である。我々は対角行列の例のひとつをすでに見てきている。それは、対角成分がすべて1である単位行列である。我々は、その対角成分がベクトル$\mathbf{v}$の成分によって与えられる正方対角行列を示すために$\text{diag}(\mathbf{v})$と記述する。対角行列は、対角行列との乗算が効率よく計算できるので、いくらか興味深い。$\text{diag}(\mathbf{v}) \mathbf{x}$をけいさんするためには、各要素$x_i$を$v_i$でスケールするだけでよい。言い換えれば、$\text{diag}(\mathbf{v}) \mathbf{x} = \mathbf{v} \odot \mathbf{x}$である。正方対角行列の逆もまた効率的である。その逆行列は対角成分が非ゼロである場合にのみ存在し、その場合、$\text{diag}(\mathbf{v})^{-1} = \text{diag}([1/v_1, \dots, 1/v_n]^\top)$である。多くの場合、我々は任意の行列に関して汎用的な機械学習アルゴリズムを導くかもしれないが、いくつかの行列を対角であると制限することでより安価な（かつ、説明の少ない[less descriptive]）アルゴリズムを得るかもしれない。
-すべての対角行列が正方である必要はない。矩形[rectangular]の対角行列を構築することが可能である。正方でない対角行列は逆を持たないが、依然として安価に乗算することができる。正方でない対角行列$\mathbf{D}$に対して、積$\mathbf{D} \mathbf{x}$は$\mathbf{x}$の各要素をスケーリングすること、$\mathbf{D}$が縦長の場合はその結果にいくつかの0を連結するか、$\mathbf{D}$が横長の場合はベクトルの最後の要素のいくつかを破棄するか、のいずれかを行うことを伴うだろう。
+対角行列[diagonal matrix]はほとんどが0で構成され、主対角線に沿ってのみ非ゼロの成分を持つ。正式には、行列$\boldsymbol{D}$は$i \ne j$のすべてに対して$D_{i,j} = 0$である場合に限り対角である。我々は対角行列の例のひとつをすでに見てきている。それは、対角成分がすべて1である単位行列である。我々は、その対角成分がベクトル$\boldsymbol{v}$の成分によって与えられる正方対角行列を示すために$\text{diag}(\boldsymbol{v})$と記述する。対角行列は、対角行列との乗算が効率よく計算できるので、いくらか興味深い。$\text{diag}(\boldsymbol{v}) \boldsymbol{x}$をけいさんするためには、各要素$x_i$を$v_i$でスケールするだけでよい。言い換えれば、$\text{diag}(\boldsymbol{v}) \boldsymbol{x} = \boldsymbol{v} \odot \boldsymbol{x}$である。正方対角行列の逆もまた効率的である。その逆行列は対角成分が非ゼロである場合にのみ存在し、その場合、$\text{diag}(\boldsymbol{v})^{-1} = \text{diag}([1/v_1, \dots, 1/v_n]^\top)$である。多くの場合、我々は任意の行列に関して汎用的な機械学習アルゴリズムを導くかもしれないが、いくつかの行列を対角であると制限することでより安価な（かつ、説明の少ない[less descriptive]）アルゴリズムを得るかもしれない。
+すべての対角行列が正方である必要はない。矩形[rectangular]の対角行列を構築することが可能である。正方でない対角行列は逆を持たないが、依然として安価に乗算することができる。正方でない対角行列$\boldsymbol{D}$に対して、積$\boldsymbol{D} \boldsymbol{x}$は$\boldsymbol{x}$の各要素をスケーリングすること、$\boldsymbol{D}$が縦長の場合はその結果にいくつかの0を連結するか、$\boldsymbol{D}$が横長の場合はベクトルの最後の要素のいくつかを破棄するか、のいずれかを行うことを伴うだろう。
 対称行列は自身の転置と等しい行列である。
 
 $$
-\mathbf{A} = \mathbf{A}^\top
+\boldsymbol{A} = \boldsymbol{A}^\top
 $$
 
-対称行列[symmetric matrix]は、その成分が引数の順番に依存しない2つの引数の関数によって生成されるとき、しばしば発生する。例えば、$\mathbf{A}$が点$i$から点$j$までの距離を求める$\mathbf{A}_{i,j}$と持つ距離測定の行列であるならば、距離関数は対称であるので、$\mathbf{A}_{i,j} = \mathbf{A}_{j,i}$である。
+対称行列[symmetric matrix]は、その成分が引数の順番に依存しない2つの引数の関数によって生成されるとき、しばしば発生する。例えば、$\boldsymbol{A}$が点$i$から点$j$までの距離を求める$\boldsymbol{A}_{i,j}$と持つ距離測定の行列であるならば、距離関数は対称であるので、$\boldsymbol{A}_{i,j} = \boldsymbol{A}_{j,i}$である。
 単位ベクトル[unit vector]は単位ノルム[unit norm]を持つベクトルである。
 
 $$
-\|\mathbf{x}\|_2 = 1
+\|\boldsymbol{x}\|_2 = 1
 $$
 
-ベクトル$\mathbf{x}$とベクトル$\mathbf{y}$は、$\mathbf{x}^\top \mathbf{y} = 0$であるならば、互いに直交[orthogonal]である。両方のベクトルが非ゼロのノルムを持つならば、これは互いに90度の角度にあることを意味する。$\mathbb{R}^n$においｙｒ，多くとも$n$個のベクトルは非ゼロのノルムと互いに直交であるかもしれない。そのベクトルが直交であるだけでなく単位ベクトルも持つならば、我々はそれを正規直交[orthonormal]と呼ぶ。
+ベクトル$\boldsymbol{x}$とベクトル$\boldsymbol{y}$は、$\boldsymbol{x}^\top \boldsymbol{y} = 0$であるならば、互いに直交[orthogonal]である。両方のベクトルが非ゼロのノルムを持つならば、これは互いに90度の角度にあることを意味する。$\mathbb{R}^n$においｙｒ，多くとも$n$個のベクトルは非ゼロのノルムと互いに直交であるかもしれない。そのベクトルが直交であるだけでなく単位ベクトルも持つならば、我々はそれを正規直交[orthonormal]と呼ぶ。
 直交行列[orthogonal matrix]は、その行が互いに正規直交であり、その列が互いに正規直交であるような正方行列である。
 
 $$
-\mathbf{A}^\top \mathbf{A} = \mathbf{A} \mathbf{A}^\top = \mathbf{I}
+\boldsymbol{A}^\top \boldsymbol{A} = \boldsymbol{A} \boldsymbol{A}^\top = \boldsymbol{I}
 $$
 
 これは暗に以下であることを示す。
 
 $$
-\mathbf{A}^{-1} = \mathbf{A}^\top
+\boldsymbol{A}^{-1} = \boldsymbol{A}^\top
 $$
 
 つまり、その逆を計算するのが非常に安価であるので、直交行列は興味深い。直交行列の定義には細心の注意を払ってほしい。直観に反して、これらの行は直交であるだけではなく、まったくもって正規直交である。その行や列が直交であるが正規直交ではない行列に特別な用語は当てられていない。
@@ -457,113 +457,113 @@ $$
 例えば、整数は素因数に分解できる。数$12$を表現する方法は10進数と2進数のどちらで記述するかに依存して変化するだろうが、$12 = 2 \times 2 \times 3$は常に真であるだろう。この表現により、我々は、例えば、$12$は$5$で割れないとか、12の倍数は3で割れるといった、有用な特性を結論付けることができる。
 我々が整数の真の性質に関することを素因数に分解することで発見できるのと同じように、我々は、要素の配列としての行列の表現では明らかでない機能特性に関する情報を示す方法で行列を分解することもできる。
 最も広く使われる種類の行列分解のひとつは固有値分解[eigendecomposition]と呼ばれる。これは、行列を固有ベクトルと固有値の集合に分解する。
-正方行列$\mathbf{A}$の固有ベクトル[eigenvector]は、$\mathbf{A}$による乗算が$\mathbf{v}$のスケーリングのみに置き換えるような非ゼロのベクトル$\mathbf{v}$である。
+正方行列$\boldsymbol{A}$の固有ベクトル[eigenvector]は、$\boldsymbol{A}$による乗算が$\boldsymbol{v}$のスケーリングのみに置き換えるような非ゼロのベクトル$\boldsymbol{v}$である。
 
 $$
-\mathbf{A} \mathbf{v} = \lambda \mathbf{v}
+\boldsymbol{A} \boldsymbol{v} = \lambda \boldsymbol{v}
 $$
 
-スカラ$\lambda$はこの固有ベクトルに対応する固有値[eigenvalue]として知られる（$\mathbf{v}^\top \mathbf{A} = \lambda \mathbf{v}^\top$のような左固有ベクトルを求めることもできるが、我々は通常、右固有ベクトルについて考える）。
-$\mathbf{v}$が$\mathbf{A}$の固有ベクトルであるならば、$s \in \mathbb{R}, s \ne 0$に対する任意の再スケーリングされたベクトル$s \mathbf{v}$である。更に、$s \mathbf{v}$は依然として同じ固有値を持つ。この理由のため、我々は通常、単位固有ベクトルのみを探す。
-行列$\mathbf{A}$が固有値${\lambda_1, \dots, \lambda_n}$に対応する$n$個の線形独立な固有ベクトル${\mathbf{v}^{(1)}, \dots, \mathbf{v}^{(n)}}$を持つとする。我々は列あたり1つの行列ベクトルを持つ$\mathbf{V}$を形作るためにすべての固有ベクトルを結合しても良い。つまり、$\mathbf{V} = [\mathbf{v}^{(1)}, \dots, \mathbf{v}^{(n)}]$である。同様に、我々はベクトル$\mathbf{\lambda} = [\lambda_1, \dots, \lambda_n]^\top$を形成するために固有値を結合できる。$\mathbf{A}$の固有値分解は以下で求められる。
+スカラ$\lambda$はこの固有ベクトルに対応する固有値[eigenvalue]として知られる（$\boldsymbol{v}^\top \boldsymbol{A} = \lambda \boldsymbol{v}^\top$のような左固有ベクトルを求めることもできるが、我々は通常、右固有ベクトルについて考える）。
+$\boldsymbol{v}$が$\boldsymbol{A}$の固有ベクトルであるならば、$s \in \mathbb{R}, s \ne 0$に対する任意の再スケーリングされたベクトル$s \boldsymbol{v}$である。更に、$s \boldsymbol{v}$は依然として同じ固有値を持つ。この理由のため、我々は通常、単位固有ベクトルのみを探す。
+行列$\boldsymbol{A}$が固有値${\lambda_1, \dots, \lambda_n}$に対応する$n$個の線形独立な固有ベクトル${\boldsymbol{v}^{(1)}, \dots, \boldsymbol{v}^{(n)}}$を持つとする。我々は列あたり1つの行列ベクトルを持つ$\boldsymbol{V}$を形作るためにすべての固有ベクトルを結合しても良い。つまり、$\boldsymbol{V} = [\boldsymbol{v}^{(1)}, \dots, \boldsymbol{v}^{(n)}]$である。同様に、我々はベクトル$\boldsymbol{\lambda} = [\lambda_1, \dots, \lambda_n]^\top$を形成するために固有値を結合できる。$\boldsymbol{A}$の固有値分解は以下で求められる。
 
 $$
-\mathbf{A} = \mathbf{V} \text{diag}(\mathbf{\lambda}) \mathbf{V}^{-1}
+\boldsymbol{A} = \boldsymbol{V} \text{diag}(\boldsymbol{\lambda}) \boldsymbol{V}^{-1}
 $$
 
 我々は特定の固有値と固有ベクトルを持つ行列を*作る*ことが望ましい方向に空間を引き伸ばすことを可能にすることを見たことがある。それでも、我々はしばしば行列を固有値と固有ベクトルに分解したい。そうすることは、整数を素因数に分解することが整数の振る舞いを理解するのに役立つ可能性があることと同様に、行列のある特性を解析するのに役立つ可能性がある。
 すべての行列が固有値と固有ベクトルに分解できるわけではない。ある場合では、分解は存在するが、実数ではなく複素数を伴う。幸いにも、本書では、通常、単純な分解を持つ特定の種類の行列のみを分解する必要がある。具体的には、すべてが実対称行列は実数値の固有ベクトルと固有値のみを用いた式に分解することができる。
 
 $$
-\mathbf{A} = \mathbf{Q} \mathbf{\Lambda} \mathbf{Q}^\top
+\boldsymbol{A} = \boldsymbol{Q} \boldsymbol{\Lambda} \boldsymbol{Q}^\top
 $$
 
-ここで、$\mathbf{Q}$は行列$\mathbf{A}$の固有値から成る直交行列であり、$\mathbf{\Lambda}$は対角行列である。固有値$\Lambda_{i,i}$は、$\mathbf{Q}_{:,i}$と表記される$\mathbf{Q}$の列$i$における固有ベクトルと関連している。$\mathbf{Q}$は直交行列であるので、我々は$\mathbf{A}$を方向$\mathbf{v}^{(i)}$に$\lambda_i$だけ空間をスケーリングするとみなすことができる。例として[@fig:2.3]を参照のこと。
+ここで、$\boldsymbol{Q}$は行列$\boldsymbol{A}$の固有値から成る直交行列であり、$\boldsymbol{\Lambda}$は対角行列である。固有値$\Lambda_{i,i}$は、$\boldsymbol{Q}_{:,i}$と表記される$\boldsymbol{Q}$の列$i$における固有ベクトルと関連している。$\boldsymbol{Q}$は直交行列であるので、我々は$\boldsymbol{A}$を方向$\boldsymbol{v}^{(i)}$に$\lambda_i$だけ空間をスケーリングするとみなすことができる。例として[@fig:2.3]を参照のこと。
 
-![固有ベクトルと固有値の影響の例。ここに、固有値$\lambda_1$を持つ$\mathbf{v}^{(1)}$と$\lambda_2$を持つ$\mathbf{v}^{(2)}$という2つの正規直交な固有ベクトルを持つ行列$\mathbf{A}$がある。（左）すべての単位ベクトル$\mathbf{u} \in \mathbb{R}^2$の集合を単位円としてプロットした。（右）すべての点$\mathbf{A} \mathbf{u}$の集合をプロットした。$\mathbf{A}$の単位円の歪ませ方を観察することで、方向$\mathbf{v}^{(i)}$に$\lambda_i$だけ空間をスケールすることを確認できる。](fig/2-3.png){#fig:2.3}
+![固有ベクトルと固有値の影響の例。ここに、固有値$\lambda_1$を持つ$\boldsymbol{v}^{(1)}$と$\lambda_2$を持つ$\boldsymbol{v}^{(2)}$という2つの正規直交な固有ベクトルを持つ行列$\boldsymbol{A}$がある。（左）すべての単位ベクトル$\boldsymbol{u} \in \mathbb{R}^2$の集合を単位円としてプロットした。（右）すべての点$\boldsymbol{A} \boldsymbol{u}$の集合をプロットした。$\boldsymbol{A}$の単位円の歪ませ方を観察することで、方向$\boldsymbol{v}^{(i)}$に$\lambda_i$だけ空間をスケールすることを確認できる。](fig/2-3.png){#fig:2.3}
 
-いかなる実対称行列$\mathbf{A}$も固有値分解を持つことが保証されているが、その固有値分解はユニークではないかもしれない。いずれかの2つ以上の固有ベクトルが同じ固有値を共有するならば、その張る空間にある任意の直交ベクトルの集合もその固有値を持つ固有ベクトルであり、代わりに、これらの固有ベクトルを用いて$\mathbf{Q}$を同等に選択することができるだろう。慣例により、我々は通常、降順に$\mathbf{A}$の成分を並べ替える。この慣例のもとでは、固有値分解は、すべての固有値がユニークである場合に限り、ユニークである。
-行列の固有値分解はその行列に関する多くの有用な事実を教えてくれる。その行列は、固有値のいずれかがゼロである場合に限り、特異である。実対称行列の固有値分解は、$\|\mathbf{x}\|_2 = 1$に従う$f(\mathbf{x}) = \mathbf{x}^\top \mathbf{A} \mathbf{x}$の形の二次方程式を最適化するのにも使うことができる。$\mathbf{x}$が$\mathbf{A}$の固有ベクトルに等しいならば、$f$は対応する固有値の値を取る。制約領域内での$f$の最大値は最大の固有値であり、制約領域内でのその最小値は最小の固有値である。
-固有値がすべて正である行列は正定値[positive definite]と呼ばれる。固有値がすべて正かゼロである行列は半正定値[positive semidefinite]と呼ばれる。同様に、すべての固有値が負であれば、それは負定値[negative definite]であり、すべての固有値が負かゼロであれば、それは半負定値[negative semidefinite]である。半正定値行列は、$\forall \mathbf{x}, \mathbf{x}^\top \mathbf{A} \mathbf{x} \ge 0$であることがほしょうされるので、興味深い。正定値行列は加えて$\mathbf{x}^\top \mathbf{A} \mathbf{x} = 0 \Rightarrow \mathbf{x} = \mathbf{0}$であることが保証される。
+いかなる実対称行列$\boldsymbol{A}$も固有値分解を持つことが保証されているが、その固有値分解はユニークではないかもしれない。いずれかの2つ以上の固有ベクトルが同じ固有値を共有するならば、その張る空間にある任意の直交ベクトルの集合もその固有値を持つ固有ベクトルであり、代わりに、これらの固有ベクトルを用いて$\boldsymbol{Q}$を同等に選択することができるだろう。慣例により、我々は通常、降順に$\boldsymbol{A}$の成分を並べ替える。この慣例のもとでは、固有値分解は、すべての固有値がユニークである場合に限り、ユニークである。
+行列の固有値分解はその行列に関する多くの有用な事実を教えてくれる。その行列は、固有値のいずれかがゼロである場合に限り、特異である。実対称行列の固有値分解は、$\|\boldsymbol{x}\|_2 = 1$に従う$f(\boldsymbol{x}) = \boldsymbol{x}^\top \boldsymbol{A} \boldsymbol{x}$の形の二次方程式を最適化するのにも使うことができる。$\boldsymbol{x}$が$\boldsymbol{A}$の固有ベクトルに等しいならば、$f$は対応する固有値の値を取る。制約領域内での$f$の最大値は最大の固有値であり、制約領域内でのその最小値は最小の固有値である。
+固有値がすべて正である行列は正定値[positive definite]と呼ばれる。固有値がすべて正かゼロである行列は半正定値[positive semidefinite]と呼ばれる。同様に、すべての固有値が負であれば、それは負定値[negative definite]であり、すべての固有値が負かゼロであれば、それは半負定値[negative semidefinite]である。半正定値行列は、$\forall \boldsymbol{x}, \boldsymbol{x}^\top \boldsymbol{A} \boldsymbol{x} \ge 0$であることがほしょうされるので、興味深い。正定値行列は加えて$\boldsymbol{x}^\top \boldsymbol{A} \boldsymbol{x} = 0 \Rightarrow \boldsymbol{x} = \boldsymbol{0}$であることが保証される。
 
 ## 特異値分解
 
 [@sec:2.7]では、行列を固有ベクトルと固有値に分解する方法を確認した。特異値分解[singular value decomposition; SVD]は行列を特異ベクトルと特異値に分解するもうひとつの方法をもたらす。SVDは固有値分解が明らかにするようないくつかの同種の情報を見つけることができる。しかし、SVDはより一般に適用できる。すべての実行列は特異値分解を持つが、固有値分解でも同様に真であるとは限らない。例えば、行列が正方でないならば、固有値分解は定義されず、代わりに、特異値分解を使わなければならない。
-固有値分解が、以下のように$\mathbf{A}$を書き直せるような、固有ベクトルの行列$\mathbf{V}$と固有値のベクトル$\mathbf{\lambda}$を見つけるために行列$\mathbf{A}$を解析することを伴うことを思い出してほしい。
+固有値分解が、以下のように$\boldsymbol{A}$を書き直せるような、固有ベクトルの行列$\boldsymbol{V}$と固有値のベクトル$\boldsymbol{\lambda}$を見つけるために行列$\boldsymbol{A}$を解析することを伴うことを思い出してほしい。
 
 $$
-\mathbf{A} = \mathbf{V} \text{diag}(\mathbf{\lambda}) \mathbf{V}^{-1}
+\boldsymbol{A} = \boldsymbol{V} \text{diag}(\boldsymbol{\lambda}) \boldsymbol{V}^{-1}
 $$
 
-特異値分解は、今度は3つの行列の積として$\mathbf{A}$を記述しようとすることを除いて、似ている。
+特異値分解は、今度は3つの行列の積として$\boldsymbol{A}$を記述しようとすることを除いて、似ている。
 
 $$
-\mathbf{A} = \mathbf{U} \mathbf{D} \mathbf{V}^\top
+\boldsymbol{A} = \boldsymbol{U} \boldsymbol{D} \boldsymbol{V}^\top
 $$
 
-$\mathbf{A}$が$m \times n$行列であるとする。すると、$\mathbf{U}$は$m \times m$行列、$\mathbf{D}$は$m \times n$行列、$\mathbf{V}$は$n \times n$行列として定義される。
-これらの行列のそれぞれは特別な構造を持つように定義される。行列$\mathbf{U}$および$\mathbf{V}$は両方とも直交行列として定義される。行列$\mathbf{D}$は対角行列として定義される。$\mathbf{D}$は正方である必要はないことに注意する。
-$\mathbf{D}$の対角に沿った要素は行列$\mathbf{A}$の特異値[singular values]として知られる。$\mathbf{U}$の列は左特異ベクトル[left-singular vectors]として知られる。$\mathbf{V}$の列は右特異ベクトル[right-singular vectors]として知られる。
-我々は$\mathbf{A}$の関数の固有値分解に関して$\mathbf{A}$の特異値分解を読み替えることができる。$\mathbf{A}$の左特異ベクトルは$\mathbf{A} \mathbf{A}^\top$の固有ベクトルである。$\mathbf{A}$の右特異ベクトルは$\mathbf{A}^\top \mathbf{A}$の固有ベクトルである。$\mathbf{A}$の非ゼロの特異値は$\mathbf{A}^\top \mathbf{A}$の固有値の平方根である。$\mathbf{A} \mathbf{A}^\top$についても同様に真である。
+$\boldsymbol{A}$が$m \times n$行列であるとする。すると、$\boldsymbol{U}$は$m \times m$行列、$\boldsymbol{D}$は$m \times n$行列、$\boldsymbol{V}$は$n \times n$行列として定義される。
+これらの行列のそれぞれは特別な構造を持つように定義される。行列$\boldsymbol{U}$および$\boldsymbol{V}$は両方とも直交行列として定義される。行列$\boldsymbol{D}$は対角行列として定義される。$\boldsymbol{D}$は正方である必要はないことに注意する。
+$\boldsymbol{D}$の対角に沿った要素は行列$\boldsymbol{A}$の特異値[singular values]として知られる。$\boldsymbol{U}$の列は左特異ベクトル[left-singular vectors]として知られる。$\boldsymbol{V}$の列は右特異ベクトル[right-singular vectors]として知られる。
+我々は$\boldsymbol{A}$の関数の固有値分解に関して$\boldsymbol{A}$の特異値分解を読み替えることができる。$\boldsymbol{A}$の左特異ベクトルは$\boldsymbol{A} \boldsymbol{A}^\top$の固有ベクトルである。$\boldsymbol{A}$の右特異ベクトルは$\boldsymbol{A}^\top \boldsymbol{A}$の固有ベクトルである。$\boldsymbol{A}$の非ゼロの特異値は$\boldsymbol{A}^\top \boldsymbol{A}$の固有値の平方根である。$\boldsymbol{A} \boldsymbol{A}^\top$についても同様に真である。
 おそらく、SVDの最も有用な特徴は、次の章で見ていくが、正方でない行列への行列の逆を部分的に一般化するのに使えることである。
 
 ## Moore-Penroseの擬似逆行列
 
-逆行列は正方出ない行列に対して定義されない。以下の一次方程式を解くことができるような、行列$\mathbf{A}$の左逆行列$\mathbf{B}$を作りたいとする。
+逆行列は正方出ない行列に対して定義されない。以下の一次方程式を解くことができるような、行列$\boldsymbol{A}$の左逆行列$\boldsymbol{B}$を作りたいとする。
 
 $$
-\mathbf{A} \mathbf{x} = \mathbf{y}
+\boldsymbol{A} \boldsymbol{x} = \boldsymbol{y}
 $$
 
 両辺に左から掛けることで、以下を得る。
 
 $$
-\mathbf{x} = \mathbf{B} \mathbf{y}
+\boldsymbol{x} = \boldsymbol{B} \boldsymbol{y}
 $$
 
-問題の構造に依存して、$\mathbf{A}$から$\mathbf{B}$へのユニークなマッピングを設計できないかもしれない。
-$\mathbf{A}$が縦長の場合、この式が解を持たない可能性がある。$\mathbf{A}$が横長の場合、取り得る複数の解が存在する。
-Moore-Penroseの擬似逆行列はこれらの場合にいくらかの進展をもたらすことを可能とする。$\mathbf{A}$の擬似逆行列は以下の
+問題の構造に依存して、$\boldsymbol{A}$から$\boldsymbol{B}$へのユニークなマッピングを設計できないかもしれない。
+$\boldsymbol{A}$が縦長の場合、この式が解を持たない可能性がある。$\boldsymbol{A}$が横長の場合、取り得る複数の解が存在する。
+Moore-Penroseの擬似逆行列はこれらの場合にいくらかの進展をもたらすことを可能とする。$\boldsymbol{A}$の擬似逆行列は以下の
 行列として定義される。
 
 $$
-\mathbf{A}^+ = \lim_{\alpha \searrow 0} (\mathbf{A}^\top \mathbf{A} + \alpha \mathbf{I})^{-1} \mathbf{A}^\top
+\boldsymbol{A}^+ = \lim_{\alpha \searrow 0} (\boldsymbol{A}^\top \boldsymbol{A} + \alpha \boldsymbol{I})^{-1} \boldsymbol{A}^\top
 $$
 
 擬似逆行列を計算するための実践的なアルゴリズムはこの定義ではなく以下の式に基づく。
 
 $$
-\mathbf{A}^+ = \mathbf{V} \mathbf{D}^+ \mathbf{U}^\top
+\boldsymbol{A}^+ = \boldsymbol{V} \boldsymbol{D}^+ \boldsymbol{U}^\top
 $$
 
-ここで、$\mathbf{U}$、$\mathbf{D}$、$\mathbf{V}$は$\mathbf{A}$の特異値分解であり、対角行列$\mathbf{D}$の擬似逆行列$\mathbf{D}^+$は非ゼロの要素の逆数を取り、その結果の行列の転置を取ることで得られる。
-$\mathbf{A}$が行より多い列を持つとき、擬似逆行列を用いて一次方程式を解くことは多くの取り得る解のひとつをもたらす。具体的には、すべての取り得る解の中で最小ユークリッドノルム$\|\mathbf{x}\|_2$を持つ解$\mathbf{x} = \mathbf{A}^+ \mathbf{y}$をもたらす。
-$\mathbf{A}$が列より多い行を持つとき、解を持たない可能性がある。この場合、擬似逆行列を用いると、$\mathbf{A} \mathbf{x}$がユークリッドノルム$\|\mathbf{A} \mathbf{x} - \mathbf{y}\|_2$に関する$\mathbf{y}$にできるだけ近いときの$\mathbf{x}$をもたらす。
+ここで、$\boldsymbol{U}$、$\boldsymbol{D}$、$\boldsymbol{V}$は$\boldsymbol{A}$の特異値分解であり、対角行列$\boldsymbol{D}$の擬似逆行列$\boldsymbol{D}^+$は非ゼロの要素の逆数を取り、その結果の行列の転置を取ることで得られる。
+$\boldsymbol{A}$が行より多い列を持つとき、擬似逆行列を用いて一次方程式を解くことは多くの取り得る解のひとつをもたらす。具体的には、すべての取り得る解の中で最小ユークリッドノルム$\|\boldsymbol{x}\|_2$を持つ解$\boldsymbol{x} = \boldsymbol{A}^+ \boldsymbol{y}$をもたらす。
+$\boldsymbol{A}$が列より多い行を持つとき、解を持たない可能性がある。この場合、擬似逆行列を用いると、$\boldsymbol{A} \boldsymbol{x}$がユークリッドノルム$\|\boldsymbol{A} \boldsymbol{x} - \boldsymbol{y}\|_2$に関する$\boldsymbol{y}$にできるだけ近いときの$\boldsymbol{x}$をもたらす。
 
 ## トレース演算子
 
 トレース演算子は行列のすべての対角成分の総和を求める。
 
 $$
-\text{Tr}(\mathbf{A}) = \sum_i \mathbf{A}_{i,i}
+\text{Tr}(\boldsymbol{A}) = \sum_i \boldsymbol{A}_{i,i}
 $$
 
 トレース演算子は様々な理由により有用である。総和の表記法に頼らずに記述することが困難ないくつかの操作は行列の積とトレース演算子を用いて記述ことができる。例えば、トレース演算子は行列のFrobeniusノルムを書き表す代替方法をもたらす。
 
 $$
-\|A\|_F = \sqrt{\text{Tr}(\mathbf{A} \mathbf{A}^\top)}
+\|A\|_F = \sqrt{\text{Tr}(\boldsymbol{A} \boldsymbol{A}^\top)}
 $$
 
 トレース演算子の観点から式を書き表すと、多くの有用な恒等式[identities]を用いて式を操作する機会が開ける。例えば、トレース演算子は転置に対して不変である。
 
 $$
-\text{Tr}(\mathbf{A}) = \text(\mathbf{A}^\top)
+\text{Tr}(\boldsymbol{A}) = \text(\boldsymbol{A}^\top)
 $$
 
 対応する行列の形状が結果の積を定義させることを可能にするならば、多くのファクタから構成される正方行列のトレースは最初の位置に最後のファクタを移動しても不変である。
 
 $$
-\text{Tr}(\mathbf{A} \mathbf{B} \mathbf{C}) = \text{Tr}(\mathbf{C} \mathbf{A} \mathbf{B}) = \text{Tr}(\mathbf{B} \mathbf{C} \mathbf{A})
+\text{Tr}(\boldsymbol{A} \boldsymbol{B} \boldsymbol{C}) = \text{Tr}(\boldsymbol{C} \boldsymbol{A} \boldsymbol{B}) = \text{Tr}(\boldsymbol{B} \boldsymbol{C} \boldsymbol{A})
 $$
 
 または、より一般的に、
@@ -572,17 +572,17 @@ $$
 \text{Tr} \left( \prod_{i=1}^n F^{(i)} \right) = \text{Tr} \left( F^{(n)} \prod_{i=1}^{n-1} F^{(i)} \right)
 $$
 
-この循環置換に対する不変性は結果の積が異なる形状を持っていても成り立つ。例えば、$\mathbf{A} \in \mathbb{R}^{m \times n}$と$\mathbf{B} \in \mathbb{R}^{n \times m}$に対して、$\mathbf{A}\mathbf{B} \in \mathbb{R}^{m \times m}$であり$\mathbf{B}\mathbf{A} \in \mathbb{R}^{n \times n}$であるとしても、いかが成り立つ。
+この循環置換に対する不変性は結果の積が異なる形状を持っていても成り立つ。例えば、$\boldsymbol{A} \in \mathbb{R}^{m \times n}$と$\boldsymbol{B} \in \mathbb{R}^{n \times m}$に対して、$\boldsymbol{A}\boldsymbol{B} \in \mathbb{R}^{m \times m}$であり$\boldsymbol{B}\boldsymbol{A} \in \mathbb{R}^{n \times n}$であるとしても、いかが成り立つ。
 
 $$
-\text{Tr}(\mathbf{A}\mathbf{B}) = \text{Tr}(\mathbf{B}\mathbf{A})
+\text{Tr}(\boldsymbol{A}\boldsymbol{B}) = \text{Tr}(\boldsymbol{B}\boldsymbol{A})
 $$
 
 もうひとつの覚えておきたい有用な事実として、スカラはそれ自身のトレースであるということである。すなわち、$a = \text{Tr}(a)$である。
 
 ## 行列式
 
-$\det(\mathbf{A})$と表記される正方行列の行列式は***。
+$\det(\boldsymbol{A})$と表記される正方行列の行列式は***。
 
 ## 9.10 {#sec:9.10}
 
