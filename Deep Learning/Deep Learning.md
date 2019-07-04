@@ -382,6 +382,7 @@ $$
 $$
 \|\boldsymbol{x}\|_p = \left( \sum_i |x_i|^p \right)^{\frac{1}{p}}
 $$
+{#eq:2.30}
 
 $L^p$ノルムを含むノルムはベクトルを非負の値にマッピングする関数である。直観レベルでは、ベクトル$\boldsymbol{x}$のノルムは原点から点$\boldsymbol{x}$までの距離を測る。より厳密に言えば、ノルムは以下の性質を満たす任意の関数$f$である。
 
@@ -582,7 +583,74 @@ $$
 
 ## 行列式
 
-$\det(\boldsymbol{A})$と表記される正方行列の行列式は***。
+$\det(\boldsymbol{A})$と表記される正方行列の行列式は行列を実スカラにマッピングする関数である。行列式はその行列のすべての固有値の積に等しい。行列式の絶対値は行列による乗算が空間をどれだけ拡大または縮小するかの尺度とみなすことができる。行列式が0であれば、そのボリュームのすべてを失わせるように、空間は少なくとも1次元に完全に縮小される。行列式が1であれば、その変換はボリュームを維持する。
+
+## 例：主成分分析
+
+単純な機械学習アルゴリズムのひとつである、主成分分析[principal components analysis; PCA]は基本的な線形代数の知識のみを用いて導出できる。
+$\mathbb{R}^n$にある$m$個の点の集合${\boldsymbol{x}^{(1)}, \dots, \boldsymbol{x}^{(m)}}$があるとして、これらの点に非可逆圧縮を適用したい。非可逆圧縮は、メモリをそれほど必要としないがいくらかの精度が失われるかもしれない方法でその点を格納することを意味する。我々はできるだけ失う精度を少なくしたい。
+これらの点をエンコードする方法のひとつは、こららの低次元バージョンを表現することである。各点$\boldsymbol{x}^{(i)} \in \mathbb{R}^n$に対して、対応するコードベクトル$\boldsymbol{c}^{(i)} \in \mathbb{R}^l$を求める。$l$が$n$より小さければ、コードの点を格納することは元データを格納するよりも使うメモリが少なくなるだろう。我々は入力に対するコードを生み出すいくつかのエンコード関数$f(\boldsymbol{x}) = \boldsymbol{c}$とそのコードを与えると再構築された入力を生み出すデコード関数$\boldsymbol{x} \approx g(f(\boldsymbol{x}))$を見つけたい。
+PCAはデコード関数の選択として定義される。具体的には、デコーダを非常に単純にするために、我々はコードを$\mathbb{R}^n$にマッピングし直そうと行列の乗算を用いることにする。$g(\boldsymbol{c}) = \boldsymbol{D} \boldsymbol{c}$とする。ここで、$\boldsymbol{D} \in \mathbb{R}^{n \times l}$はデコードを定義する行列である。
+このデコーダに対する最適なコードを計算することは難しい問題となり得るかもしれない。エンコードの問題を簡単に保つため、PCAは$\boldsymbol{D}$の列が互いに直交することを強いる。（$l = n$でない限り、$\boldsymbol{D}$は厳密に言えば「直交行列」ではないことに注意する。）
+これまでに述べたような問題は、すべての点に対して比例して$c_i$を減らす場合、$\boldsymbol{D}_{:,i}$のスケールを増やすことができるので、多くの解を取り得る。その問題に単独の解を与えるため、$\boldsymbol{D}$のすべての列を単位ノルムを持つように制限する。
+この基本アイデアを我々が実装できるアルゴリズムへ変えるため、我々がすべき最初のことは入力の点$\boldsymbol{x}$ごとに最適なコード点$\boldsymbol{c}^*$を生成する方法を理解することである。これを行う方法のひとつは入力の点$\boldsymbol{x}$とその再構築されたもの$g(\boldsymbol{c}^*)$の距離を最小化することである。我々はこの距離をノルムを用いて測ることができる。主成分アルゴリズムにおいて、我々は$L^2$ノルムを用いる。
+
+$$
+\boldsymbol{c}^* \argmin_{\boldsymbol{c}} \|\boldsymbol{x} - g(\boldsymbol{c})\|_2
+$$
+
+我々は、その両方が同じ$\boldsymbol{c}$の値に最小化されうので、$L^2$ノルムそれ自体を用いる代わりに$L^2$ノルムの二乗に切り替えることができる。両方は、$L^2$ノルムが非負であり、二乗の演算が非負の変数に対して単調増加するので、同じ$\boldsymbol{c}$の値によって最小化される。
+
+$$
+\boldsymbol{c}^* \argmin_{\boldsymbol{c}} \|\boldsymbol{x} - g(\boldsymbol{c})\|^2_2
+$$
+
+最小化する関数は以下のように単純化する。
+
+$$
+(\boldsymbol{x} - g(\boldsymbol{c}))^\top (\boldsymbol{x} - g(\boldsymbol{c}))
+$$
+
+（[@eq:2.30]の$L^2$ノルムの定義より）
+
+$$
+= \boldsymbol{x}^\top \boldsymbol{x} - \boldsymbol{x}^\top g(\boldsymbol{c}) - g(\boldsymbol{c})^\top \boldsymbol{x} + g(\boldsymbol{c})^\top g(\boldsymbol{c})
+$$
+
+（分配法則により、$g(\boldsymbol{c})^\top \boldsymbol{x}$がそれ自身の転置と等しいので）
+
+$$
+= \boldsymbol{x}^\top \boldsymbol{x} - 2\boldsymbol{x}^\top g(\boldsymbol{c}) + g(\boldsymbol{c})^\top g(\boldsymbol{c})
+$$
+
+我々は、$\boldsymbol{c}$に依存しない第一の項を省略するように、再び最小化される関数を変化させることができる。
+
+$$
+\boldsymbol{c}^* = \argmin_{\boldsymbol{c}} -2\boldsymbol{x}^\top g(\boldsymbol{c}) + g(\boldsymbol{c})^\top g(\boldsymbol{c})
+$$
+
+さらに歩みを進めるため、$g(\boldsymbol{c})$の定義で置き換えなければならない。
+
+$$
+\boldsymbol{c}^* = \argmin_{\boldsymbol{c}} -2\boldsymbol{x}^\top \boldsymbol{D} \boldsymbol{c} + \boldsymbol{c}^\top \boldsymbol{D}^\top  \boldsymbol{D} \boldsymbol{c}
+$$
+
+$$
+\boldsymbol{c}^* = \argmin_{\boldsymbol{c}} -2\boldsymbol{x}^\top \boldsymbol{D} \boldsymbol{c} + \boldsymbol{c}^\top \boldsymbol{I}_l \boldsymbol{c}
+$$
+
+（$\boldsymbol{D}$の直交性と単位ノルム制約により）
+
+$$
+\boldsymbol{c}^* = \argmin_{\boldsymbol{c}} -2\boldsymbol{x}^\top \boldsymbol{D} \boldsymbol{c} + \boldsymbol{c}^\top \boldsymbol{c}
+$$
+
+我々はこの最適化問題をベクトル解析[vector calculus]を用いて解くことができる（どうやってこれを行うかを知らないならば[@sec:4.3]を参照）。
+
+$$
+$$
+
+## 4.3 {#sec:4.3}
 
 ## 9.10 {#sec:9.10}
 
