@@ -8,8 +8,12 @@
 - $\boldsymbol{\omega}$：方向を表すベクトル
 - $f_p(\boldsymbol{x}, \boldsymbol{\omega}, \boldsymbol{\omega}')$：位相関数
   - 地点$\boldsymbol{x}$において方向$\boldsymbol{\omega}$から入射する光が関与媒質中で散乱して方向$\boldsymbol{\omega}'$へ出射する確率
+- $\sigma_a$：吸収係数
+- $\sigma_s$：散乱係数
+- $\sigma_t$：消散係数
+- $\rho$：アルベド
 
-## Volume Rendering Equeation
+## Volume Rendering Equation
 
 - 真空でない空間を通る光の放射輝度を求める方程式
 - $d$だけ離れた表面で$\boldsymbol{\omega}$の方向に反射した光が$\boldsymbol{x}$の位置に到達したときの放射輝度を求める
@@ -71,6 +75,41 @@ $$
 
 - 光が関与媒質中を微小距離だけ$\boldsymbol{\omega}$の方向に進むとき、関与媒質内部で発生した光が方向$\mathbf{\omega}_i$にどれだけ向かうかを示す
   - このときの放射輝度は増加するのでマイナスが付かない
+
+## Physically Based and Unified Volumetric Rendering in Frostbite [@Hillaire2015]
+
+- 単一散乱のみを扱う
+- クリップ空間のボリュームを用いる
+  - 錘台に平行な3Dテクスチャに格納する
+    - ワールド空間から見ると、錐台型のボクセル[frustum voxel; froxel]になる
+  - タイルベースのシェーディングで使っているライトリストを利用する
+
+### データフロー
+
+1. 関与媒質の特性をV-Bufferにボクセル化する
+   - V-Bufferは2つのRGBA16Fテクスチャで構成される
+     - 1つ目は散乱(RGB)と消散(A)の値を累加する
+       - 消散が波長に非依存なのは、バッファサイズを小さくするため
+     - 2つ目は放射(RGB)の値を累加し、位相(A)の値を平均する
+2. froxelごとに関与媒質の特性をサンプリングして積分する
+   - 1つのRGBA16Fテクスチャに格納する
+     - 散乱光(RGB)
+       - froxelあたり1サンプル
+       - すべての光源（間接光、太陽、ローカルライト）を積分する
+         - 間接光：ボリュームの中心にあるプロブ1つをSHコサインローブとして位相関数を積分する？^[TODO:要検証]
+         - 太陽光：Cascaded shadow mapsをサンプリングする
+         - ローカルライト：タイルベースライティングのライトリストを使う
+     - 消散(A)
+       - 時間的に積分するので、非線形な透過率ではなく線形な消散を用いる
+3. 視線に沿ってfroxelを積分する
+   - froxelごとに散乱光の放射輝度と透過率を求める
+   - 散乱光の積分を解析的に求める：$\int_0^D e^{-\sigma_t x} \times S dx = \frac{S - S \times e^{\sigma_t D}}{\sigma_t}$
+
+### 時間的な積分
+
+- 視線に沿ってすべてのサンプルを同じオフセットでジッタリングする
+- 前フレームの結果を現在のフレームに再投影する
+  - 指数関数的な移動平均を用いて5%だけブレンドする
 
 # 参考文献
 
