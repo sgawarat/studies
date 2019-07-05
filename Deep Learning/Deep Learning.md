@@ -648,7 +648,132 @@ $$
 我々はこの最適化問題をベクトル解析[vector calculus]を用いて解くことができる（どうやってこれを行うかを知らないならば[@sec:4.3]を参照）。
 
 $$
+\nabla_{\boldsymbol{c}} (-2\boldsymbol{x}^\top \boldsymbol{D} \boldsymbol{c} + \boldsymbol{c}^\top \boldsymbol{c}) = \boldsymbol{0}
 $$
+
+$$
+-2\boldsymbol{D}^\top \boldsymbol{x} + 2\boldsymbol{c} = \boldsymbol{0}
+$$
+
+$$
+\boldsymbol{c} = \boldsymbol{D}^\top \boldsymbol{x}
+$$
+
+これはアルゴリズムを効率的にする。つまり、行列対ベクトルの操作だけを用いて$\boldsymbol{x}$を最適にエンコードすることができる。ベクトルをエンコードするため、我々はエンコーダ関数を適用する。
+
+$$
+f(\boldsymbol{x}) = \boldsymbol{D}^\top \boldsymbol{x}
+$$
+
+さらなる行列の乗算を用いて、PCA reconstructionの演算を定義することもできる。
+
+$$
+r(\boldsymbol{x}) = g(f(\boldsymbol{x})) = \boldsymbol{D} \boldsymbol{D}^\top \boldsymbol{x}
+$$
+{#eq:2.67}
+
+次に、エンコード行列$\boldsymbol{D}$を決める必要がある。そうするために、我々は入力と再構築との間の$L^2$距離を最小化するというアイデアに立ち戻る。我々はすべての点をデコードするのに同一の行列$\boldsymbol{D}$を用いるつもりなので、点を分けて考えなくてよくなる。代わりに、すべての次元とすべての点上で計算される誤差の行列のFrobeniusノルムを最小化しなければならない。
+
+$$
+\boldsymbol{D}^* = \argmin_{\boldsymbol{D}} \sqrt{\sum_{i,j} \left( x_j^{(i)} - r(\boldsymbol{x}^{(i)})_j \right)^2} \text{ subject to } \boldsymbol{D}^\top \boldsymbol{D} = \boldsymbol{I}_l
+$$
+{#eq:2.68}
+
+$\boldsymbol{D}^*$を求めるアルゴリズムを導くため、我々は$l = 1$の場合を考えることから始める。この場合、$\boldsymbol{D}$はただの単一のベクトル$\boldsymbol{d}$である。[@eq:2.67]を[@eq:2.68]に置き換え、$\boldsymbol{D}$を$\boldsymbol{d}$に単純化すると、この問題は以下のように整理される。
+
+$$
+\boldsymbol{d}^* = \argmin_{\boldsymbol{d}} \sum_i \| \boldsymbol{x}^{(i)} - \boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{x}^{(i)} \|_2^2 \text{ subject to } \|\boldsymbol{d}\|_2 = 1
+$$
+
+上記の式は置換を行う最も直接的な方法であるが、式を記述するための最も様式的に満足のいく方法ではない。これはスカラの値$\boldsymbol{d}^\top \boldsymbol{x}^{(i)}$がベクトル$\boldsymbol{d}$の右側にある。スカラの係数は慣例的には操作するベクトルの左側に記述される。故に、このような式は通常、以下のように書く。
+
+$$
+\boldsymbol{d}^* = \argmin_{\boldsymbol{d}} \sum_i \| \boldsymbol{x}^{(i)} - \boldsymbol{d}^\top \boldsymbol{x}^{(i)} \boldsymbol{d} \|_2^2 \text{ subject to } \|\boldsymbol{d}\|_2 = 1
+$$
+
+または、スカラがそれ自体の転置であることを活用して、以下のようになる。
+
+$$
+\boldsymbol{d}^* = \argmin_{\boldsymbol{d}} \sum_i \| \boldsymbol{x}^{(i)} - \boldsymbol{x}^{(i)\top} \boldsymbol{d} \boldsymbol{d} \|_2^2 \text{ subject to } \|\boldsymbol{d}\|_2 = 1
+$$
+
+読者はこのようなcosmeticな並び替えに慣れることを目標にすべきである。
+
+この時点で、別個のexampleのベクトルの合計としてではなく、examplesの単一の計画行列[design matrix]に関する問題に書き換えるのに役立ち得る。これはよりコンパクトな表記法を用いることを可能にする。$\boldsymbol{X} \in \mathbb{R}^{m \times n}$を、$\boldsymbol{X}_{i,:} = \boldsymbol{x}^{(i)\top}$のような、点を説明するすべてのベクトルを積み上げることで定義される行列とする。すると、我々は以下のようにこの問題を書き直すことができる。
+
+$$
+\boldsymbol{d}^* = \argmin_{\boldsymbol{d}} \| \boldsymbol{X} - \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top \|_F^2 \text{ subject to } \boldsymbol{d}^\top \boldsymbol{d} = 1
+$$
+
+とりあえず制約を無視すると、Frobeniusノルムの部分を以下のように単純化できる。
+
+$$
+\argmin_{\boldsymbol{d}} \| \boldsymbol{X} - \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top \|_F^2
+$$
+
+$$
+= \argmin_{\boldsymbol{d}} \text{Tr} \left( (\boldsymbol{X} - \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top)^\top (\boldsymbol{X} - \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) \right)
+$$
+
+（[@eq:2.49]により）
+
+$$
+= \argmin_{\boldsymbol{d}} \text{Tr} \left( \boldsymbol{X}^\top \boldsymbol{X} - \boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top - \boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{X}^\top \boldsymbol{X} + \boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top \right)
+$$
+
+$$
+= \argmin_{\boldsymbol{d}} \text{Tr}(\boldsymbol{X}^\top \boldsymbol{X}) - \text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) - \text{Tr}(\boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{X}^\top \boldsymbol{X}) + \text{Tr}(\boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top)
+$$
+
+$$
+= \argmin_{\boldsymbol{d}} - \text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) - \text{Tr}(\boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{X}^\top \boldsymbol{X}) + \text{Tr}(\boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top)
+$$
+
+（$\boldsymbol{d}$を伴わない項は$\argmin$に影響を及ぼさないので）
+
+$$
+= \argmin_{\boldsymbol{d}} - 2\text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) + \text{Tr}(\boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top)
+$$
+
+（[@eq:2.52]から、トレース内の行列の順番を回転させることができるので）
+
+$$
+= \argmin_{\boldsymbol{d}} - 2\text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) + \text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{d} \boldsymbol{d}^\top)
+$$
+
+（もう一度同じ特性を使う）
+
+この時点で、制約を再導入する。
+
+$$
+\argmin_{\boldsymbol{d}} - 2\text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) + \text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top \boldsymbol{d} \boldsymbol{d}^\top) \text{ subject to } \boldsymbol{d}^\top \boldsymbol{d} = 1
+$$
+
+$$
+= \argmin_{\boldsymbol{d}} - 2\text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) + \text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) \text{ subject to } \boldsymbol{d}^\top \boldsymbol{d} = 1
+$$
+
+（制約により）
+
+$$
+= \argmin_{\boldsymbol{d}} -\text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) \text{ subject to } \boldsymbol{d}^\top \boldsymbol{d} = 1
+$$
+
+$$
+= \argmax_{\boldsymbol{d}} \text{Tr}(\boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d} \boldsymbol{d}^\top) \text{ subject to } \boldsymbol{d}^\top \boldsymbol{d} = 1
+$$
+
+$$
+= \argmax_{\boldsymbol{d}} \text{Tr}(\boldsymbol{d}^\top \boldsymbol{X}^\top \boldsymbol{X} \boldsymbol{d}) \text{ subject to } \boldsymbol{d}^\top \boldsymbol{d} = 1
+$$
+
+この最適化問題は固有値分解を用いて解かれるかもしれない。具体的には、最適な$\boldsymbol{d}$は最大の固有値に対応する$\boldsymbol{X}^\top \boldsymbol{X}$固有ベクトルによって与えられる。
+この導出は$l = 1$の場合に特有であり、第一主成分のみを復元する。より一般的に言えば、主成分の基底を復元したいとき、行列$\boldsymbol{D}$は最大の固有値に対応する$l$個の固有ベクトルによって与えられる。これは帰納法による証明[proof by induction]を用いて示されるかもしれない。我々は演習としてこの証明を書いてみることをオススメする。
+線形代数は深層学習を理解するのに必要な基礎数学の分野のひとつである。もうひとつの重要となる、機械学習においていたるところにに存在する数学の分野は確率論であり、次章で示される。
+
+# 確率論と情報理論
+
+この章では、***。
 
 ## 4.3 {#sec:4.3}
 
