@@ -4,6 +4,38 @@
 
 ## 理論
 
+### Beer-Lambertの法則
+
+- 光が散乱によって減衰するときの振る舞いを定義する法則
+
+$$
+T(\boldsymbol{x}, \boldsymbol{y}) = \exp \left( -\int_0^y \sigma_t(\boldsymbol{x} - s \boldsymbol{\omega}) ds \right)
+$$
+
+- 位置$\boldsymbol{x}$から位置$\boldsymbol{y}$までの間を方向$\boldsymbol{\omega}$に向かって関与媒質中を通る光の透過率を求める
+- 光は関与媒質中を通るとき、距離に対して指数関数的に減衰するということがわかる
+
+### 位相関数
+
+- 散乱した光の分布を表す関数
+  - ある位置において、ある方向から入射する光が散乱して、ある方向へ出射する確率を求める
+  - $f_p$で表されることが多い
+
+#### Henyey-Greensteinの位相関数
+
+- 異方的な散乱を求めるときによく使われる
+- Zonal球面調和関数への展開が自明である
+  - 4次のZonal SHでは$(1, g, g^2, g^3)$となる
+- 多くの計算を事前に行うことができる
+
+$$
+p(\theta) = \frac{1}{4\pi} \frac{1 - g^2}{(1 + g^2 - 2g \cos \theta)^\frac{3}{2}}
+$$
+
+- $g \in [-1, 1]$は異方性を表すパラメータ
+  - $-1$で後方散乱に、$0$で等方散乱に、$1$で前方散乱になる
+- $\theta$は光線と視線のなす角
+
 ### Volume Rendering Equation
 
 - 表面で反射した光が真空でない空間を通るときの放射輝度を求める方程式
@@ -79,10 +111,40 @@ $$
 - 視線に平行な放射輝度マップがあれば、$L$を積分するのに使える
 
 
+### Volumetric Fog: Unified compute shader based solution to atmospheric scattering [@Wronski2014]
+
+- 単一散乱のみを扱う
+- 錐台に平行な3Dテクスチャに中間値を格納する
+  - サイズは160x90x64または160x90x128
+  - 奥行方向は指数関数的に分割される
+
+#### 詳細
+
+1. 太陽光のシャドウマップをダウンサンプリングする
+   - 指数シャドウマップの手法を用いて格納する
+2. 関与媒質の密度を推定してライティングする
+   - プロシージャルな方法で散乱係数を計算してAに格納する
+     - 風の影響を表現するためのパーリンノイズ
+     - 重い粒子を表現するための鉛直方向の減衰
+   - 密度で変化させたライティング結果を合計してRGBに格納する
+     - シャドウイングされたメインライト（太陽光または月光）
+     - 定数のアンビエント項
+     - 点光源
+   - このときに用いる位相関数は完全にアートドリブンなもの
+     - 物理ベースではない
+     - 太陽方向の色とその反対方向の色の2色から成る
+3. 散乱の方程式を解く
+   - 透過率を計算してAに格納する
+   - 散乱光を合計して透過率を適用してRGBに格納する
+4. 効果を適用する
+   - 3Dテクスチャから透過率と散乱光を取り出す
+     - バイリニア補間してサンプルする
+   - ピクセル色にかけ合わせる
+
 ### Physically Based and Unified Volumetric Rendering in Frostbite [@Hillaire2015]
 
 - 単一散乱[single scattering]のみを扱う
-- 錘台に平行な3Dテクスチャに値を格納する
+- 錐台に平行な3Dテクスチャに値を格納する
   - ワールド空間から見ると、錐台型のボクセル[frustum voxel; froxel]になる
 - タイルベースのライティングで生成されるライトリストを利用して放射輝度を計算する
 
@@ -120,3 +182,4 @@ $$
 - [Physically Based and Unified Volumetric Rendering in Frostbite](https://www.slideshare.net/DICEStudio/physically-based-and-unified-volumetric-rendering-in-frostbite)
 - [Production Volume Rendering](http://graphics.pixar.com/library/ProductionVolumeRendering/paper.pdf)
 - [Monte Carlo Methods for Volumetric Light Transport Simulation - Disney Research Studios](https://studios.disneyresearch.com/2018/04/16/monte-carlo-methods-for-volumetric-light-transport-simulation/)
+- [Volumetric Fog: Unified compute shader-based solution to atomospheric scattering](http://advances.realtimerendering.com/s2014/wronski/bwronski_volumetric_fog_siggraph2014.pdf)
