@@ -111,6 +111,8 @@ $$
 - 視線に平行な放射輝度マップがあれば、$L$を積分するのに使える
 
 
+## 事例
+
 ### Volumetric Fog: Unified compute shader based solution to atmospheric scattering [@Wronski2014]
 
 - 単一散乱のみを扱う
@@ -175,6 +177,19 @@ $$
 - 前フレームの散乱と消散を現在のフレームに再投影する
   - 指数関数的な移動平均を用いて5%だけブレンドする
 
+### The lighting technology of Detroit: Become Human [@Caurant2018]
+
+- [@Wronski2014; @Hillaire2015]の手法を用いる
+  - ライトクラスタの奥行きに合わせる
+  - チェッカーボードレンダリングを用いる
+    - PS4で192x108x64、PS4 Proで240x135x64
+  - ブルーノイズでジッタリングしてTAAをかける
+  - 直接光とディフューズプロブでライティングする
+- ライトリークを防ぐテクニックを追加する
+  - タイルごとの最大深度でボクセルの厚さクランプする
+  - テクスチャサンプリングにZバイアスを適用する
+    - タイル深度の分散 > しきい値
+
 # 参考文献
 
 - [ボリュームレンダリング方程式1 - memoRANDOM](https://rayspace.xyz/CG/contents/VLTE1/)
@@ -183,3 +198,4 @@ $$
 - [Production Volume Rendering](http://graphics.pixar.com/library/ProductionVolumeRendering/paper.pdf)
 - [Monte Carlo Methods for Volumetric Light Transport Simulation - Disney Research Studios](https://studios.disneyresearch.com/2018/04/16/monte-carlo-methods-for-volumetric-light-transport-simulation/)
 - [Volumetric Fog: Unified compute shader-based solution to atomospheric scattering](http://advances.realtimerendering.com/s2014/wronski/bwronski_volumetric_fog_siggraph2014.pdf)
+- [The lighting technology of Detroit: Become Human](https://www.gdcvault.com/play/1025339/The-Lighting-Technology-of-Detroit)
