@@ -190,6 +190,37 @@ $$
   - テクスチャサンプリングにZバイアスを適用する
     - タイル深度の分散 > しきい値
 
+### Rendering of Call of Duty: Infinite Warfare [@Drobot2017]
+
+- [@Wronski2014; @Hillaire2015]のfroxelバッファを用いる
+- ローカルな密度ボリュームを配置できる
+  - ワールド空間の境界ボックス、ベースとなる密度、照度を持つ
+  - 最大4つの軸平行な投影テクスチャでマスクできる
+  - UVスクロールでアニメーションできる
+
+### 詳細
+
+1. 密度ボリュームのカリング
+   - 4x4x4スレッドカーネル
+   - カリングされた密度ボリュームのバッファを作る
+2. 密度の注入
+   - 4x4x4スレッドカーネル
+   - 密度を書き込む
+3. ライティング
+   - 4x4x4スレッドカーネル
+   - 密度を読み出して、消散と散乱を書き込む
+4. 積分
+   - 8x8x1スレッドカーネルで、Z方向にループ
+   - 散乱と消散を読み出して、積分した消散と散乱を書き込む
+5. レンダリング
+   - 積分した消散と散乱を読み出す
+
+#### 最適化
+
+- 密度の注入、ライティング、積分を1パスで行う
+  - 積分した消散と散乱のみを書き込む
+  - 8x8x1スレッドの積分を4x4x4スレッドで行うためのInclusive Prefix Sumを用いる
+
 # 参考文献
 
 - [ボリュームレンダリング方程式1 - memoRANDOM](https://rayspace.xyz/CG/contents/VLTE1/)
@@ -199,3 +230,4 @@ $$
 - [Monte Carlo Methods for Volumetric Light Transport Simulation - Disney Research Studios](https://studios.disneyresearch.com/2018/04/16/monte-carlo-methods-for-volumetric-light-transport-simulation/)
 - [Volumetric Fog: Unified compute shader-based solution to atomospheric scattering](http://advances.realtimerendering.com/s2014/wronski/bwronski_volumetric_fog_siggraph2014.pdf)
 - [The lighting technology of Detroit: Become Human](https://www.gdcvault.com/play/1025339/The-Lighting-Technology-of-Detroit)
+- [Rendering of Call of Duty: Infinite Warfare](https://research.activision.com/publications/archives/rendering-of-call-of-dutyinfinite-warfare)
