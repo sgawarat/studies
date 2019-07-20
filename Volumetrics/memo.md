@@ -234,6 +234,28 @@ $$
   - 積分した消散と散乱のみを書き込む
   - 8x8x1スレッドの積分を4x4x4スレッドで行うためのInclusive Prefix Sumを用いる
 
+### The Road toward Unified Rendering with Unity's High Definition Render Pipeline [@Lagarde2018]
+
+- froxelベース
+
+#### 詳細
+
+1. ボリュームのボクセル化
+   - ボクセルのpartial coverageを求める
+   - Clustered Lightingと同様に、ボリュームをカリングする
+2. ライティング
+   - ボクセルの積分を求める
+      - ボクセル内は均質であるとする
+      - モンテカルロ法を用いる
+        - $I = \int_0^x T(t) L_s(t) dt \approx \frac{1}{n} \sum_{i=1}^n \frac{f(X_i)}{p(X_i)}$
+        - 重点サンプリングを用いて分散低減を図る
+          - directional light -> 解析的な自由行程サンプリング[@Novak2018]
+          - punctual light -> 等角サンプリング[@Kulla2011]
+   - カメラから見た透過率の累積値を計算する
+      - 視線に沿って乗算する
+   - カメラから見た散乱光の累積値を計算する
+      - 視線に沿って加算する
+
 # 参考文献
 
 - [ボリュームレンダリング方程式1 - memoRANDOM](https://rayspace.xyz/CG/contents/VLTE1/)
@@ -244,3 +266,4 @@ $$
 - [Volumetric Fog: Unified compute shader-based solution to atomospheric scattering](http://advances.realtimerendering.com/s2014/wronski/bwronski_volumetric_fog_siggraph2014.pdf)
 - [The lighting technology of Detroit: Become Human](https://www.gdcvault.com/play/1025339/The-Lighting-Technology-of-Detroit)
 - [Rendering of Call of Duty: Infinite Warfare](https://research.activision.com/publications/archives/rendering-of-call-of-dutyinfinite-warfare)
+- [The Road toward Unified Rendering with Unity's High Definition Render Pipeline](http://advances.realtimerendering.com/s2018/Siggraph%202018%20HDRP%20talk_with%20notes.pdf)
