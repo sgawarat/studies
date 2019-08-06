@@ -8,6 +8,8 @@ numberSections: false
 
 - [@Goodfellow2016]
     - 深層学習
+- [@Laine2013]
+  - ボクセル化
 - [@Dutre2002]
     - 光輸送の基礎とGIアルゴリズムの解説
 - [@Pettineo2018]
