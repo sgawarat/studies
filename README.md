@@ -8,8 +8,6 @@ numberSections: false
 
 - [@Goodfellow2016]
     - 深層学習
-- [@Laine2013]
-  - ボクセル化
 - [@Dutre2002]
     - 光輸送の基礎とGIアルゴリズムの解説
 - [@Pettineo2018]
@@ -390,7 +388,7 @@ numberSections: false
 - [@Jimenez2015]
     - Separable Subsurface Scattering
 
-# ボリューメトリクス
+### ボリューメトリクス
 
 - [@Hillaire2015]
     - 物理ベースボリューメトリックレンダリング
@@ -398,6 +396,11 @@ numberSections: false
     - ボリューメトリックな光輸送シミュレーションに対するモンテカルロ的手法のまとめ
 - [@Wronski2014]
     - ボリューメトリックフォグ
+
+### ボクセル化
+
+- [@Laine2013]
+  - ボクセル化手法
 
 ## 保留文献
 
