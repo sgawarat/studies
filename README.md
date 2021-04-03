@@ -4,53 +4,6 @@ numberSections: false
 ---
 # memo
 
-## いま読む
-
-- [@Goodfellow2016]
-    - 深層学習
-- [@Dutre2002]
-    - 光輸送の基礎とGIアルゴリズムの解説
-- [@Pettineo2018]
-    - D3D12やVulkanで導入されるバリアについての解説
-
-## あとで読む
-
-- [@Cigolle2014]
-    - GPUで単位ベクトルを表現する方法について調査
-- [@Jimenez2016]
-    - Filmic SMAA
-- [@Lottes2016]
-    - AMDの次世代カラーグレーディング
-- [@Mikkelsen2010]
-    - GPUでのパラメタライズされていない表面のバンプマッピング
-- [@True2017]
-    - NVIDIAの次世代カラーグレーディング
-- [@Sawicki2018b]
-    - VulkanまたはDX12へのポーティングのためのtips
-
-## 注目人物
-
-- Michal Drobot [[blog](https://michaldrobot.com/)]
-    - 2017年現在は、Infinity Wardの主席レンダリングエンジニア
-- Eric Heitz
-    - シェーディング[@Heitz2014]やライティング[@Heitz2017]の研究
-    - 2017年現在は、Unity所属
-- Stephen Hill [[blog](http://blog.selfshadow.com/)]
-    - SIGGRAPHのPBSコースの資料を毎年まとめている、Self Shadowブログの管理人
-    - 2017年現在は、Lucasfilm所属
-- Natty Hoffman
-- Sébastien Lagarde [[blog](https://seblagarde.wordpress.com/)]
-    - Frostbiteのエンジン大改造をした人[@Lagarde2014]
-    - 2017年現在は、Unityのレンダリングリサーチ・ディレクター
-- Morgan McGuire [[blog](https://casual-effects.com/)]
-    - AA[@McGuire2011]、AO[@McGuire2012]、OIT[@McGuire2013]、GI[@McGuire2017]など、リアルタイム系の研究が主
-    - 2018年現在、Williams大学の准教授、NVIDIAのDistinguished Research Scientist、など
-- Tiago Sousa
-    - id Softwareの人[@Sousa2016]
-    - CryENGINE3の開発に参加している[@Sousa2013]
-- Bruce Walter
-    - GGX[@Walter2007]
-
 ## 文献目録
 
 ### アンチエイリアシング
@@ -156,6 +109,8 @@ numberSections: false
     - Vulkanの仕様書
 - [@Lorach2016]
     - AZDOなOpenGLとVulkanのtips
+- [@NVIDIA2016]
+    - DirectX 12のtips
 - [@Olson2016]
     - モバイル系メーカーによるVulkan APIの概要
 - [@Sawicki2018]
@@ -402,16 +357,31 @@ numberSections: false
 - [@Laine2013]
   - ボクセル化手法
 
-## 保留文献
+## 後で読む
 
+- [@Goodfellow2016]
+    - 深層学習
+- [@Dutre2002]
+    - 光輸送の基礎とGIアルゴリズムの解説
+- [@Pettineo2018]
+    - D3D12やVulkanで導入されるバリアについての解説
+- [@Cigolle2014]
+    - GPUで単位ベクトルを表現する方法について調査
+- [@Jimenez2016]
+    - Filmic SMAA
+- [@Lottes2016]
+    - AMDの次世代カラーグレーディング
+- [@Mikkelsen2010]
+    - GPUでのパラメタライズされていない表面のバンプマッピング
+- [@True2017]
+    - NVIDIAの次世代カラーグレーディング
+- [@Sawicki2018b]
+    - VulkanまたはDX12へのポーティングのためのtips
 - [@Fernando2005]
     - Percentage-Closer Soft Shadows
-    - 多くのソフトシャドウ手法が再掲しているので
 - [@Jansen2010]
     - Fourier Opacity Maps
-    - あまり主流ではなさそうなので
 - [@Peters2016]
     - Moment Shadow Mapsの応用
-    - 大体の内容が[@Peters2017]と重なっているので
 
-# References
+## References
