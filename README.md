@@ -103,6 +103,8 @@ numberSections: false
     - Vulkanのレンダパスのtips
 - [@Hodes2016]
     - DirectX12のtips
+- [@Hodes2016b]
+    - 非同期コンピュートのチュートリアル記事
 - [@Hodes2017]
     - 非同期コンピュートのAMDとNVIDIAのプラクティス
 - [@Khronos2018]
