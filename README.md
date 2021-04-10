@@ -280,6 +280,8 @@ numberSections: false
     - "CryEngine 3"のアンチエイリアシング、カメラのポストプロセスなど
 - [@Sousa2016]
     - idSoftwareの"idTech6"が採用した、Clusterd Shadingとライティングシステム
+- [@Tanaka2019]
+    - "RE ENGINE"におけるDirectX 12のための最適化
 - [@Tatarchuk2015]
     - Destinyのマルチスレッド化されたゲームエンジン
 - [@Tatarchuk2017]
